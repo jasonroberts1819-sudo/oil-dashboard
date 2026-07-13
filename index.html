@@ -1,0 +1,647 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>US Crude Balance Dashboard — 2026 vs 2018–25</title>
+<style>
+  :root{
+    --bg:#f7f8fa; --surface:#ffffff; --surface-2:#f1f3f6; --border:#e3e7ec;
+    --ink:#12151b; --ink-2:#4a5261; --ink-3:#828b9a;
+    --c2026:#2563eb; --cavg:#f59e0b; --ccomm:#2563eb; --cspr:#f59e0b;
+    --pos:#0f9d6b; --neg:#e0533d;
+    --grid:#eceef2; --axis:#c6ccd6;
+    --shadow:0 1px 2px rgba(16,20,28,.04),0 8px 24px rgba(16,20,28,.06);
+    --radius:14px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#0d1017; --surface:#151a22; --surface-2:#1b212b; --border:#262e3a;
+      --ink:#eef1f6; --ink-2:#aeb7c4; --ink-3:#7c8697;
+      --c2026:#60a5fa; --cavg:#fbbf24; --ccomm:#60a5fa; --cspr:#fbbf24;
+      --pos:#34d399; --neg:#f87171;
+      --grid:#20262f; --axis:#39424f;
+      --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0d1017; --surface:#151a22; --surface-2:#1b212b; --border:#262e3a;
+    --ink:#eef1f6; --ink-2:#aeb7c4; --ink-3:#7c8697;
+    --c2026:#60a5fa; --cavg:#fbbf24; --ccomm:#60a5fa; --cspr:#fbbf24;
+    --pos:#34d399; --neg:#f87171; --grid:#20262f; --axis:#39424f;
+  }
+  :root[data-theme="light"]{
+    --bg:#f7f8fa; --surface:#ffffff; --surface-2:#f1f3f6; --border:#e3e7ec;
+    --ink:#12151b; --ink-2:#4a5261; --ink-3:#828b9a;
+    --c2026:#2563eb; --cavg:#f59e0b; --ccomm:#2563eb; --cspr:#f59e0b;
+    --pos:#0f9d6b; --neg:#e0533d; --grid:#eceef2; --axis:#c6ccd6;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;line-height:1.45}
+  .wrap{max-width:1120px;margin:0 auto;padding:28px 20px 64px}
+  header.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px;margin-bottom:22px}
+  h1{font-size:22px;margin:0 0 4px;letter-spacing:-.01em}
+  .sub{color:var(--ink-2);font-size:13.5px;margin:0;max-width:64ch}
+  .asof{font-size:12px;color:var(--ink-3);text-align:right;white-space:nowrap}
+  .asof b{color:var(--ink-2)}
+  .ustat{font-size:11.5px;font-weight:600;padding:2px 9px;border-radius:20px;white-space:nowrap;display:inline-block}
+  .ustat.updated{color:var(--pos);background:color-mix(in srgb,var(--pos) 14%,transparent)}
+  .ustat.nochange{color:var(--ink-2);background:var(--surface-2)}
+  .ustat.error{color:var(--neg);background:color-mix(in srgb,var(--neg) 15%,transparent)}
+  .usummary{font-size:13px;color:var(--ink-2);margin:0 0 12px}
+  .usummary b{color:var(--ink)}
+  .uempty{color:var(--ink-3);font-size:13px;padding:8px 2px}
+
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
+  @media(max-width:760px){.kpis{grid-template-columns:repeat(2,1fr)}}
+  .kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+    padding:15px 16px;box-shadow:var(--shadow)}
+  .kpi .label{font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-3);margin-bottom:6px}
+  .kpi .val{font-size:25px;font-weight:640;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+  .kpi .val small{font-size:13px;font-weight:500;color:var(--ink-3);margin-left:3px}
+  .kpi .note{font-size:11.5px;color:var(--ink-2);margin-top:5px;line-height:1.35}
+  .kpi .note.dn{color:var(--neg)} .kpi .note.up{color:var(--pos)}
+
+  .controls{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;margin-bottom:18px;
+    background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:11px 15px;box-shadow:var(--shadow)}
+  .controls .grp{display:flex;align-items:center;gap:8px}
+  .controls label.t{font-size:12px;color:var(--ink-2)}
+  .seg{display:inline-flex;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:2px}
+  .seg button{border:0;background:transparent;color:var(--ink-2);font-size:12.5px;padding:5px 11px;border-radius:6px;cursor:pointer;font-weight:540}
+  .seg button[aria-pressed="true"]{background:var(--c2026);color:#fff}
+  .switch{display:inline-flex;align-items:center;gap:7px;cursor:pointer;font-size:12.5px;color:var(--ink-2);user-select:none}
+  .switch input{appearance:none;width:34px;height:19px;background:var(--surface-2);border:1px solid var(--border);border-radius:20px;position:relative;cursor:pointer;transition:.15s}
+  .switch input::after{content:"";position:absolute;top:1px;left:1px;width:15px;height:15px;border-radius:50%;background:var(--ink-3);transition:.15s}
+  .switch input:checked{background:var(--c2026);border-color:var(--c2026)}
+  .switch input:checked::after{transform:translateX(15px);background:#fff}
+
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+    padding:18px 18px 12px;box-shadow:var(--shadow);margin-bottom:20px}
+  .card h2{font-size:15.5px;margin:0 0 2px;letter-spacing:-.01em}
+  .card .csub{font-size:12.5px;color:var(--ink-2);margin:0 0 6px}
+  .legend{display:flex;flex-wrap:wrap;gap:14px;margin:8px 0 2px;font-size:12px;color:var(--ink-2)}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .swatch{width:13px;height:13px;border-radius:3px;display:inline-block}
+  .swatch.hatch{background-image:repeating-linear-gradient(45deg,transparent,transparent 3px,rgba(255,255,255,.55) 3px,rgba(255,255,255,.55) 4px)}
+  .chartbox{position:relative;width:100%}
+  svg{display:block;width:100%;height:auto;overflow:visible}
+  .tip{position:absolute;pointer-events:none;z-index:5;background:var(--ink);color:var(--bg);
+    font-size:12px;line-height:1.5;padding:8px 10px;border-radius:8px;box-shadow:0 6px 20px rgba(0,0,0,.28);
+    opacity:0;transition:opacity .09s;white-space:nowrap;transform:translate(-50%,-108%)}
+  .tip b{font-size:12.5px}
+  .tip .row{display:flex;justify-content:space-between;gap:14px;font-variant-numeric:tabular-nums}
+  .tip .mut{color:var(--axis)}
+
+  table.data{width:100%;border-collapse:collapse;font-size:12.5px;font-variant-numeric:tabular-nums;margin-top:6px}
+  table.data th,table.data td{padding:6px 8px;text-align:right;border-bottom:1px solid var(--border)}
+  table.data th:first-child,table.data td:first-child{text-align:left}
+  table.data thead th{color:var(--ink-3);font-weight:600;font-size:11.5px;text-transform:uppercase;letter-spacing:.04em}
+  td.neg{color:var(--neg)} td.pos{color:var(--pos)}
+  .hidden{display:none}
+
+  footer{margin-top:26px;font-size:12px;color:var(--ink-3);line-height:1.6}
+  footer h3{font-size:12.5px;color:var(--ink-2);margin:0 0 4px;text-transform:uppercase;letter-spacing:.05em}
+  footer code{background:var(--surface-2);padding:1px 5px;border-radius:4px;font-size:11.5px}
+  details{margin-top:10px} summary{cursor:pointer;color:var(--ink-2)}
+  .badge{display:inline-block;font-size:10.5px;padding:1px 6px;border-radius:5px;background:var(--surface-2);border:1px solid var(--border);color:var(--ink-2);margin-left:6px;vertical-align:middle}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>US Crude Supply / Demand Balance <span class="badge" id="themeBadge" role="button" tabindex="0" title="Toggle light/dark">◐ theme</span></h1>
+      <p class="sub">Monthly crude stock builds (+) and draws (−), 2026 versus the 2018–2025 seasonal average. Crude only — total stocks including SPR (EIA code EPC0 / series MCRSCUS1). Excludes NGLs, products and lease stocks.</p>
+    </div>
+    <div class="asof">
+      As of <b id="asof">2026-07-13</b><br/>
+      Source: EIA PSM + WPSR
+    </div>
+  </header>
+
+  <section class="kpis" id="kpis"></section>
+
+  <div class="controls">
+    <div class="grp">
+      <label class="t">Average basis</label>
+      <span class="switch" title="2020 was a COVID demand-shock outlier">
+        <input type="checkbox" id="ex2020" />
+        <span>Exclude 2020 (COVID)</span>
+      </span>
+    </div>
+    <div class="grp">
+      <label class="t">View</label>
+      <span class="seg" role="group" aria-label="View mode">
+        <button id="vChart" aria-pressed="true">Charts</button>
+        <button id="vTable" aria-pressed="false">Table</button>
+        <button id="vUpdates" aria-pressed="false">Updates</button>
+      </span>
+    </div>
+  </div>
+
+  <div id="chartsView">
+    <section class="card">
+      <h2>US Total Crude — builds / draws by month</h2>
+      <p class="csub">2026 actual vs 2018–2025 average · million barrels (mmbbl). Zero line = no change; bars above = build, below = draw.</p>
+      <div class="legend" id="legend1"></div>
+      <div class="chartbox"><div class="tip" id="tip1"></div><svg id="chart1"></svg></div>
+    </section>
+
+    <section class="card">
+      <h2>Cushing, OK hub — builds / draws by month</h2>
+      <p class="csub">2026 vs 2018–2025 average · mmbbl · commercial only (no SPR at Cushing). Weekly-derived — EIA publishes Cushing weekly, not monthly. Hub near its ~20 mmbbl operational floor.</p>
+      <div class="legend" id="legend2"></div>
+      <div class="chartbox"><div class="tip" id="tip2"></div><svg id="chart2"></svg></div>
+    </section>
+
+    <section class="card">
+      <h2>What's driving the 2026 draws — Commercial vs SPR</h2>
+      <p class="csub">2026 total-crude stock change split into commercial and Strategic Petroleum Reserve · mmbbl. Segments sum to the total change.</p>
+      <div class="legend" id="legend3"></div>
+      <div class="chartbox"><div class="tip" id="tip3"></div><svg id="chart3"></svg></div>
+    </section>
+  </div>
+
+  <div id="tableView" class="hidden"></div>
+
+  <div id="updatesView" class="hidden"></div>
+
+  <footer>
+    <h3>Methodology &amp; sources</h3>
+    Balance identity (EIA Petroleum Supply Monthly): <code>field production + transfers to crude supply + imports + adjustment = refinery &amp; blender net inputs + exports + stock change (incl. SPR)</code>.
+    <b>Basis:</b> Jan–Apr 2026 are PSM monthly actuals; May–Jun are WPSR weekly-implied; the July bar is a single weekly report (partial — shown hatched, not a full month). Cushing is weekly-derived throughout (EIA has no monthly Cushing series).
+    The 2018–2025 average line is computed from EIA series <code>MCRSCUS1</code> (monthly total-crude stock change), pulled 2026-07-13 and verified against the 2026 PSM actuals (May+Jun avg = −22.2 mmbbl).
+    <details>
+      <summary>How this updates as new data lands</summary>
+      <div style="margin-top:8px">
+        Data lives in the <code>DATA</code> object at the top of this file's script. To refresh: re-run the EIA pull in
+        <code>reference data/</code> (series <code>MCRSCUS1</code> for total-crude change; WPSR weekly levels for May–Jul implieds), then update the
+        <code>usTotal2026</code>, <code>cushing2026</code> and <code>levels</code> values. The May PSM print (lands 31-Jul) is the first hard check on the weekly-implied May figure.
+        Numbers here reflect the vintage available on the "as of" date; weekly-implied months typically land 1–3 mmbbl from the monthly survey.
+      </div>
+    </details>
+  </footer>
+</div>
+
+<script>
+/* ===== DATA:START — auto-generated by update_oil_dashboard.py (project root).
+   Do NOT hand-edit between the START/END markers; the updater overwrites this block.
+   Run:  python update_oil_dashboard.py   (pulls latest EIA data only if it changed)
+   Units: million barrels (mmbbl), monthly stock change (build +, draw -). ===== */
+const DATA = {
+  "asOf": "2026-07-03",
+  "months": [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec"
+  ],
+  "usTotal2026": {
+    "Jan": -3.3,
+    "Feb": 29.0,
+    "Mar": 17.9,
+    "Apr": -23.6,
+    "May": -66.6,
+    "Jun": -56.8,
+    "Jul": -3.2
+  },
+  "usBasis": {
+    "Jan": "psm",
+    "Feb": "psm",
+    "Mar": "psm",
+    "Apr": "psm",
+    "May": "weekly",
+    "Jun": "weekly",
+    "Jul": "partial"
+  },
+  "usAvgIncl": {
+    "Jan": 4.07,
+    "Feb": 8.69,
+    "Mar": 4.84,
+    "Apr": 6.12,
+    "May": -7.12,
+    "Jun": -15.1,
+    "Jul": -10.86,
+    "Aug": -13.6,
+    "Sep": -4.59,
+    "Oct": 7.17,
+    "Nov": -1.52,
+    "Dec": -10.63
+  },
+  "usAvgEx2020": {
+    "Jan": 3.58,
+    "Feb": 8.18,
+    "Mar": 1.13,
+    "Apr": 0.06,
+    "May": -8.57,
+    "Jun": -19.93,
+    "Jul": -10.64,
+    "Aug": -12.07,
+    "Sep": -3.53,
+    "Oct": 9.26,
+    "Nov": -2.65,
+    "Dec": -9.96
+  },
+  "usComm2026": {
+    "Jan": -5.1,
+    "Feb": 28.8,
+    "Mar": 18.5,
+    "Apr": -3.3,
+    "May": -25.8,
+    "Jun": -25.4,
+    "Jul": 3.0
+  },
+  "usSpr2026": {
+    "Jan": 1.7,
+    "Feb": 0.2,
+    "Mar": -0.6,
+    "Apr": -20.3,
+    "May": -40.8,
+    "Jun": -31.5,
+    "Jul": -6.2
+  },
+  "cush2026": {
+    "Jan": 1.9,
+    "Feb": 2.4,
+    "Mar": 5.0,
+    "Apr": -1.7,
+    "May": -7.3,
+    "Jun": -2.8,
+    "Jul": -0.1
+  },
+  "cushBasis": {
+    "Jan": "weekly",
+    "Feb": "weekly",
+    "Mar": "weekly",
+    "Apr": "weekly",
+    "May": "weekly",
+    "Jun": "weekly",
+    "Jul": "partial"
+  },
+  "cushAvg": {
+    "Jan": -3.03,
+    "Feb": -0.01,
+    "Mar": 0.94,
+    "Apr": 2.95,
+    "May": -0.65,
+    "Jun": -2.73,
+    "Jul": -1.97,
+    "Aug": -1.55,
+    "Sep": -0.82,
+    "Oct": 1.59,
+    "Nov": 0.57,
+    "Dec": 1.36
+  },
+  "levels": [
+    {
+      "label": "Commercial crude",
+      "val": "411.4",
+      "unit": "mmbbl",
+      "note": "03-Jul \u00b7 +3.0 vs prior wk",
+      "dir": "dn"
+    },
+    {
+      "label": "SPR crude",
+      "val": "319.5",
+      "unit": "mmbbl",
+      "note": "03-Jul \u00b7 -96 mmbbl since 06-Mar peak",
+      "dir": "dn"
+    },
+    {
+      "label": "Cushing hub",
+      "val": "19.6",
+      "unit": "mmbbl",
+      "note": "03-Jul \u00b7 -0.1 vs prior wk \u00b7 below ~20 floor",
+      "dir": "dn"
+    },
+    {
+      "label": "Total crude + SPR",
+      "val": "731",
+      "unit": "mmbbl",
+      "note": "03-Jul \u00b7 lowest since May-1984",
+      "dir": "dn"
+    }
+  ]
+};
+/* ===== DATA:END ===== */
+
+/* ===== LOG:START — auto-maintained by update_oil_dashboard.py (newest first). Do not hand-edit. ===== */
+const UPDATE_LOG = [
+  {
+    "time": "2026-07-13 12:33",
+    "outcome": "nochange",
+    "label": "No new EIA data",
+    "detail": "",
+    "dataThrough": "2026-07-03"
+  }
+];
+/* ===== LOG:END ===== */
+
+/* ------------------------------- helpers -------------------------------- */
+const $ = s => document.querySelector(s);
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const fmt = v => (v==null? "—" : (v>0?"+":"")+v.toFixed(1));
+const basisWord = b => b==='psm'?'PSM actual':b==='weekly'?'weekly-implied':'weekly (partial — 1 report)';
+let state = {ex2020:false};
+
+/* --------------------------- grouped bar chart --------------------------- */
+/* series: [{key,name,color,vals:{month:num}, basisMap?, hatchBasis:['weekly','partial'], muteBasis:['partial']}] */
+function drawGrouped(svgId, tipId, months, series){
+  const svg = $(svgId), tip = $(tipId);
+  const W = svg.clientWidth || svg.parentElement.clientWidth || 720;
+  const H = Math.round(Math.min(360, Math.max(260, W*0.44)));
+  const m = {t:16,r:12,b:34,l:40};
+  const iw = W-m.l-m.r, ih = H-m.t-m.b;
+
+  // y-domain across all series
+  let lo=0, hi=0;
+  series.forEach(s=>months.forEach(mo=>{const v=s.vals[mo]; if(v!=null){lo=Math.min(lo,v);hi=Math.max(hi,v);}}));
+  const pad=(hi-lo)*0.10||1; hi+=pad; lo-=pad;
+  const y = v => m.t + ih*(hi-v)/(hi-lo);
+  const y0 = y(0);
+
+  const NS="http://www.w3.org/2000/svg";
+  svg.setAttribute("viewBox",`0 0 ${W} ${H}`); svg.innerHTML="";
+  const add=(t,a)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);svg.appendChild(e);return e;};
+
+  // hatch patterns per series color
+  const defs=document.createElementNS(NS,"defs"); svg.appendChild(defs);
+  series.forEach((s,si)=>{
+    const p=document.createElementNS(NS,"pattern");
+    p.setAttribute("id",`hatch${svgId.replace('#','')}_${si}`);
+    p.setAttribute("width","5");p.setAttribute("height","5");
+    p.setAttribute("patternTransform","rotate(45)");p.setAttribute("patternUnits","userSpaceOnUse");
+    const bg=document.createElementNS(NS,"rect");bg.setAttribute("width","5");bg.setAttribute("height","5");bg.setAttribute("fill",s.color);bg.setAttribute("opacity","0.42");
+    const ln=document.createElementNS(NS,"rect");ln.setAttribute("width","2.4");ln.setAttribute("height","5");ln.setAttribute("fill",s.color);
+    p.appendChild(bg);p.appendChild(ln);defs.appendChild(p);
+  });
+
+  // gridlines (nice ~5)
+  const ticks=niceTicks(lo,hi,5);
+  ticks.forEach(t=>{
+    add("line",{x1:m.l,x2:W-m.r,y1:y(t),y2:y(t),stroke:t===0?css('--axis'):css('--grid'),"stroke-width":t===0?1.4:1});
+    add("text",{x:m.l-7,y:y(t)+3.5,"text-anchor":"end","font-size":10.5,fill:css('--ink-3')}).textContent = t>0?("+"+t):t;
+  });
+
+  const n=months.length, band=iw/n;
+  const nS=series.length, gap=3;
+  const groupW=Math.min(band*0.72, 64);
+  const bw=(groupW-gap*(nS-1))/nS;
+
+  months.forEach((mo,i)=>{
+    const cx=m.l+band*i+band/2;
+    // x label
+    add("text",{x:cx,y:H-12,"text-anchor":"middle","font-size":11,fill:css('--ink-2')}).textContent=mo;
+    series.forEach((s,si)=>{
+      const v=s.vals[mo]; if(v==null) return;
+      const bx=cx-groupW/2+si*(bw+gap);
+      const top=Math.min(y(v),y0), hgt=Math.abs(y(v)-y0);
+      const bmap = s.basisMap? s.basisMap[mo] : null;
+      const hatch = s.hatchBasis && bmap && s.hatchBasis.includes(bmap);
+      const fill = hatch? `url(#hatch${svgId.replace('#','')}_${si})` : s.color;
+      const r=Math.min(4,bw/2,hgt);
+      // rounded data-end via path
+      const up=v>=0;
+      const path=roundedBar(bx,top,bw,hgt,r,up);
+      const rect=add("path",{d:path,fill,stroke:css('--surface'),"stroke-width":1.2});
+      rect.style.cursor="default";
+      // hover
+      const enter=ev=>{
+        rect.setAttribute("opacity","0.82");
+        const rows=series.map(ss=>`<div class="row"><span class="mut">${ss.name}</span><b>${fmt(ss.vals[mo])}</b></div>`).join("");
+        const bnote = s.basisMap? `<div class="row"><span class="mut">basis</span><span>${basisWord(bmap)}</span></div>`:"";
+        tip.innerHTML=`<b>${mo} — ${monthLong(mo)}</b>${rows}${bnote}`;
+        const box=svg.getBoundingClientRect(), pb=svg.parentElement.getBoundingClientRect();
+        tip.style.left=(cx*(box.width/W)+(box.left-pb.left))+"px";
+        tip.style.top=(Math.min(top,y0)*(box.height/H)+(box.top-pb.top))+"px";
+        tip.style.opacity=1;
+      };
+      rect.addEventListener("mouseenter",enter);
+      rect.addEventListener("mousemove",enter);
+      rect.addEventListener("mouseleave",()=>{rect.setAttribute("opacity","1");tip.style.opacity=0;});
+    });
+  });
+}
+
+/* stacked (commercial + SPR), diverging around zero */
+function drawStacked(svgId, tipId, months, comm, spr, colC, colS){
+  const svg=$(svgId), tip=$(tipId);
+  const W=svg.clientWidth||svg.parentElement.clientWidth||720;
+  const H=Math.round(Math.min(360,Math.max(260,W*0.44)));
+  const m={t:16,r:12,b:34,l:40}, iw=W-m.l-m.r, ih=H-m.t-m.b;
+  let lo=0,hi=0;
+  months.forEach(mo=>{
+    const c=comm[mo]||0,s=spr[mo]||0;
+    const posT=(c>0?c:0)+(s>0?s:0), negT=(c<0?c:0)+(s<0?s:0);
+    hi=Math.max(hi,posT); lo=Math.min(lo,negT);
+  });
+  const pad=(hi-lo)*0.10||1; hi+=pad; lo-=pad;
+  const y=v=>m.t+ih*(hi-v)/(hi-lo), y0=y(0);
+  const NS="http://www.w3.org/2000/svg";
+  svg.setAttribute("viewBox",`0 0 ${W} ${H}`); svg.innerHTML="";
+  const add=(t,a)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);svg.appendChild(e);return e;};
+  const ticks=niceTicks(lo,hi,5);
+  ticks.forEach(t=>{
+    add("line",{x1:m.l,x2:W-m.r,y1:y(t),y2:y(t),stroke:t===0?css('--axis'):css('--grid'),"stroke-width":t===0?1.4:1});
+    add("text",{x:m.l-7,y:y(t)+3.5,"text-anchor":"end","font-size":10.5,fill:css('--ink-3')}).textContent=t>0?("+"+t):t;
+  });
+  const n=months.length, band=iw/n, bw=Math.min(band*0.5,44);
+  months.forEach((mo,i)=>{
+    const cx=m.l+band*i+band/2;
+    add("text",{x:cx,y:H-12,"text-anchor":"middle","font-size":11,fill:css('--ink-2')}).textContent=mo;
+    const segs=[{v:comm[mo],c:colC,name:"Commercial"},{v:spr[mo],c:colS,name:"SPR"}];
+    // stack positives up, negatives down, preserving order
+    let posBase=0,negBase=0;
+    segs.forEach(seg=>{
+      const v=seg.v; if(v==null||v===0) return;
+      let yTop,yBot;
+      if(v>0){yBot=y(posBase);posBase+=v;yTop=y(posBase);}
+      else{yTop=y(negBase);negBase+=v;yBot=y(negBase);}
+      const hgt=Math.abs(yBot-yTop);
+      const rect=add("rect",{x:cx-bw/2,y:Math.min(yTop,yBot),width:bw,height:hgt,fill:seg.c,stroke:css('--surface'),"stroke-width":1.4,rx:2});
+      const enter=()=>{
+        rect.setAttribute("opacity","0.82");
+        const tot=(comm[mo]||0)+(spr[mo]||0);
+        tip.innerHTML=`<b>${mo} — ${monthLong(mo)}</b>`+
+          `<div class="row"><span class="mut">Commercial</span><b>${fmt(comm[mo])}</b></div>`+
+          `<div class="row"><span class="mut">SPR</span><b>${fmt(spr[mo])}</b></div>`+
+          `<div class="row"><span class="mut">Total</span><b>${fmt(tot)}</b></div>`;
+        const box=svg.getBoundingClientRect(),pb=svg.parentElement.getBoundingClientRect();
+        tip.style.left=(cx*(box.width/W)+(box.left-pb.left))+"px";
+        tip.style.top=(Math.min(yTop,yBot,y0)*(box.height/H)+(box.top-pb.top))+"px";
+        tip.style.opacity=1;
+      };
+      rect.addEventListener("mouseenter",enter);rect.addEventListener("mousemove",enter);
+      rect.addEventListener("mouseleave",()=>{rect.setAttribute("opacity","1");tip.style.opacity=0;});
+    });
+  });
+}
+
+function roundedBar(x,top,w,h,r,up){
+  r=Math.max(0,Math.min(r,w/2,h));
+  if(h<0.5) return `M${x} ${top} h${w} v0 h${-w} Z`;
+  if(up){ // rounded top
+    return `M${x} ${top+h} L${x} ${top+r} Q${x} ${top} ${x+r} ${top} L${x+w-r} ${top} Q${x+w} ${top} ${x+w} ${top+r} L${x+w} ${top+h} Z`;
+  } else { // rounded bottom
+    const b=top+h;
+    return `M${x} ${top} L${x} ${b-r} Q${x} ${b} ${x+r} ${b} L${x+w-r} ${b} Q${x+w} ${b} ${x+w} ${b-r} L${x+w} ${top} Z`;
+  }
+}
+function niceTicks(lo,hi,count){
+  const span=hi-lo, step0=span/count, mag=Math.pow(10,Math.floor(Math.log10(step0)));
+  const norm=step0/mag; let step=(norm<1.5?1:norm<3?2:norm<7?5:10)*mag;
+  const start=Math.ceil(lo/step)*step, out=[];
+  for(let v=start;v<=hi+1e-9;v+=step) out.push(Math.round(v*100)/100);
+  if(!out.includes(0)&&lo<0&&hi>0) out.push(0);
+  return out.sort((a,b)=>a-b);
+}
+const LONG={Jan:"January",Feb:"February",Mar:"March",Apr:"April",May:"May",Jun:"June",Jul:"July",Aug:"August",Sep:"September",Oct:"October",Nov:"November",Dec:"December"};
+const monthLong=m=>LONG[m]||m;
+
+/* ------------------------------- legends -------------------------------- */
+function legend(id, items){
+  $(id).innerHTML = items.map(it=>`<span><i class="swatch ${it.hatch?'hatch':''}" style="background:${it.hatch?'':it.color};${it.hatch?'background-color:'+it.color+';':''}"></i>${it.name}</span>`).join("");
+}
+
+/* -------------------------------- KPIs ---------------------------------- */
+function renderKpis(){
+  $("#kpis").innerHTML = DATA.levels.map(k=>`
+    <div class="kpi">
+      <div class="label">${k.label}</div>
+      <div class="val">${k.val}<small>${k.unit}</small></div>
+      <div class="note ${k.dir||''}">${k.note}</div>
+    </div>`).join("");
+}
+
+/* -------------------------------- table --------------------------------- */
+function renderTable(){
+  const avg = state.ex2020? DATA.usAvgEx2020 : DATA.usAvgIncl;
+  const cell=v=>`<td class="${v==null?'':v<0?'neg':'pos'}">${fmt(v)}</td>`;
+  const usRows=DATA.months.map(mo=>{
+    const a=avg[mo], y=DATA.usTotal2026[mo], d=(y!=null&&a!=null)?y-a:null;
+    return `<tr><td>${mo}</td>${cell(y)}${cell(a)}${cell(d)}<td>${DATA.usBasis[mo]?basisWord(DATA.usBasis[mo]):'—'}</td></tr>`;
+  }).join("");
+  const cushMonths=Object.keys(DATA.cush2026);
+  const cushRows=cushMonths.map(mo=>{
+    const y=DATA.cush2026[mo],a=DATA.cushAvg[mo],d=(y!=null&&a!=null)?y-a:null;
+    return `<tr><td>${mo}</td>${cell(y)}${cell(a)}${cell(d)}<td>${basisWord(DATA.cushBasis[mo])}</td></tr>`;
+  }).join("");
+  $("#tableView").innerHTML=`
+    <div class="card">
+      <h2>US Total Crude — 2026 vs 2018–25 average (mmbbl)</h2>
+      <table class="data"><thead><tr><th>Month</th><th>2026</th><th>Avg 18–25</th><th>vs avg</th><th>Basis</th></tr></thead><tbody>${usRows}</tbody></table>
+    </div>
+    <div class="card">
+      <h2>Cushing hub — 2026 vs 2018–25 average (mmbbl)</h2>
+      <table class="data"><thead><tr><th>Month</th><th>2026</th><th>Avg 18–25</th><th>vs avg</th><th>Basis</th></tr></thead><tbody>${cushRows}</tbody></table>
+    </div>`;
+}
+
+/* ------------------------------- render --------------------------------- */
+function renderCharts(){
+  const c2026=css('--c2026'), cavg=css('--cavg'), ccomm=css('--ccomm'), cspr=css('--cspr');
+  const avg = state.ex2020? DATA.usAvgEx2020 : DATA.usAvgIncl;
+
+  drawGrouped("#chart1","#tip1",DATA.months,[
+    {key:"y2026",name:"2026 actual",color:c2026,vals:DATA.usTotal2026,basisMap:DATA.usBasis,hatchBasis:['weekly','partial']},
+    {key:"avg",name:"2018–25 avg",color:cavg,vals:avg}
+  ]);
+  legend("#legend1",[
+    {name:"2026 actual (PSM)",color:c2026},
+    {name:"2026 weekly-implied",color:c2026,hatch:true},
+    {name:`2018–25 average${state.ex2020?' (ex-2020)':''}`,color:cavg}
+  ]);
+
+  const cushMonths=Object.keys(DATA.cush2026);
+  drawGrouped("#chart2","#tip2",cushMonths,[
+    {key:"y2026",name:"2026 actual",color:c2026,vals:DATA.cush2026,basisMap:DATA.cushBasis,hatchBasis:['weekly','partial']},
+    {key:"avg",name:"2018–25 avg",color:cavg,vals:DATA.cushAvg}
+  ]);
+  legend("#legend2",[
+    {name:"2026 weekly-implied",color:c2026,hatch:true},
+    {name:"2018–25 average",color:cavg}
+  ]);
+
+  const cm=Object.keys(DATA.usComm2026);
+  drawStacked("#chart3","#tip3",cm,DATA.usComm2026,DATA.usSpr2026,ccomm,cspr);
+  legend("#legend3",[{name:"Commercial",color:ccomm},{name:"SPR",color:cspr}]);
+}
+
+/* ----------------------------- updates tab ------------------------------ */
+function renderUpdates(){
+  const log = (typeof UPDATE_LOG!=='undefined' && Array.isArray(UPDATE_LOG))? UPDATE_LOG : [];
+  const badge = o => o==='updated' ? '<span class="ustat updated">✓ Updated</span>'
+                    : o==='error'  ? '<span class="ustat error">✗ Failed</span>'
+                    :                '<span class="ustat nochange">✓ No new data</span>';
+  let summary;
+  if(!log.length){
+    summary = 'No automatic checks have run yet. The dashboard refreshes on EIA\'s schedule (Wed & Thu late morning, plus the last day of each month).';
+  } else {
+    const last = log[0];
+    const when = last.time;
+    const word = last.outcome==='updated' ? 'updated successfully' : last.outcome==='error' ? 'FAILED — data may be stale' : 'checked — no new data was available';
+    summary = `Last check: <b>${when}</b> — ${word}.`;
+  }
+  const rows = log.map(r=>{
+    const detail = r.detail || (r.dataThrough? ('data through '+r.dataThrough) : '');
+    return `<tr><td>${r.time}</td><td>${badge(r.outcome)}</td><td style="text-align:left">${detail||'—'}</td></tr>`;
+  }).join('');
+  $("#updatesView").innerHTML = `
+    <section class="card">
+      <h2>Update log</h2>
+      <p class="csub">Every automatic (and manual) refresh is recorded here — when it ran and whether it succeeded.</p>
+      <p class="usummary">${summary}</p>
+      ${log.length
+        ? `<table class="data"><thead><tr><th>Date &amp; time (local)</th><th>Result</th><th>Details</th></tr></thead><tbody>${rows}</tbody></table>`
+        : `<div class="uempty">Nothing logged yet.</div>`}
+    </section>`;
+}
+
+function renderAll(){
+  renderKpis();
+  if(!$("#chartsView").classList.contains("hidden")) renderCharts();
+  else if(!$("#tableView").classList.contains("hidden")) renderTable();
+  else renderUpdates();
+}
+
+/* ------------------------------ controls -------------------------------- */
+$("#ex2020").addEventListener("change",e=>{state.ex2020=e.target.checked; renderAll();});
+const VIEWS = {vChart:"chartsView", vTable:"tableView", vUpdates:"updatesView"};
+$("#vChart").addEventListener("click",()=>setView("vChart"));
+$("#vTable").addEventListener("click",()=>setView("vTable"));
+$("#vUpdates").addEventListener("click",()=>setView("vUpdates"));
+function setView(active){
+  for(const btn in VIEWS){
+    const on = btn===active;
+    $("#"+btn).setAttribute("aria-pressed",on);
+    $("#"+VIEWS[btn]).classList.toggle("hidden",!on);
+  }
+  renderAll();
+}
+// theme override toggle
+$("#themeBadge").addEventListener("click",toggleTheme);
+$("#themeBadge").addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" ")toggleTheme();});
+function toggleTheme(){
+  const cur=document.documentElement.getAttribute("data-theme");
+  const dark=window.matchMedia("(prefers-color-scheme: dark)").matches;
+  const next = cur? (cur==="dark"?"light":"dark") : (dark?"light":"dark");
+  document.documentElement.setAttribute("data-theme",next);
+  renderAll();
+}
+
+let rt; window.addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(()=>{if($("#chartsView").classList.contains("hidden"))return;renderCharts();},120);});
+$("#asof").textContent=DATA.asOf;
+renderAll();
+</script>
+</body>
+</html>
