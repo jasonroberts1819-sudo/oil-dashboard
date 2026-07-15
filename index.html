@@ -2255,8 +2255,8 @@ const INV = (function(){
   function renderGridShell(){
     $("#igrid").innerHTML = DATA.series.map((s,idx)=>`
       <section class="card">
-        <h2>${s.label}</h2>
-        <p class="csub">${s.code} · mmbbl</p>
+        <h2 title="EIA series ${s.code}">${s.label}</h2>
+        <p class="csub">million barrels (mmbbl)</p>
         <div class="chartbox"><div class="tip" id="tip_${idx}"></div><svg id="chart_${idx}"></svg></div>
       </section>`).join("");
   }
