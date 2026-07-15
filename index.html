@@ -10317,9 +10317,9 @@ const INV = (function(){
   const CUR = () => DATA.years.length? Math.max(...DATA.years) : null;
   let state = {product:null, metric:"level", focusYear:null, mode:"focus"};
   function PRD(){ const ps=DATA.products||[]; return ps.find(p=>p.key===state.product) || ps[0] || null; }
-  const fmtLevel = v => v==null? "—" : v.toFixed(1);
-  const fmtChange = v => v==null? "—" : (v>0?"+":"")+v.toFixed(1);
-  const fmtVal = v => state.metric==="change"? fmtChange(v) : fmtLevel(v);
+  const fmtLevel = (v,dec=1) => v==null? "—" : v.toFixed(dec);
+  const fmtChange = (v,dec=1) => v==null? "—" : (v>0?"+":"")+v.toFixed(dec);
+  const fmtVal = (v,dec=1) => state.metric==="change"? fmtChange(v,dec) : fmtLevel(v,dec);
   function niceTicks(lo,hi,count){
     if(hi<=lo){hi=lo+1;}
     const span=hi-lo, step0=span/count, mag=Math.pow(10,Math.floor(Math.log10(step0)));
@@ -10332,7 +10332,7 @@ const INV = (function(){
   function drawYearLines(svgId, tipId, code){
     const P=PRD(); if(!P) return;
     const svg=$(svgId), tip=$(tipId);
-    const metricData = (state.metric==="change"? P.change : P.level)[code] || {};
+    const metricData = (state.metric==="change"? P.change : P.level)[code] || {}; const dec = ((P.series.find(x=>x.code===code)||{}).unit)==="mmbbl/d" ? 3 : 1;
     const months = DATA.months, cur = CUR();
     const drawYears = (state.focusYear && state.mode==="solo") ? [state.focusYear] : DATA.years.slice();
     const W = svg.clientWidth || svg.parentElement.clientWidth || 520;
@@ -10351,7 +10351,7 @@ const INV = (function(){
     const ticks=niceTicks(lo,hi,4);
     ticks.forEach(t=>{
       add("line",{x1:m.l,x2:W-m.r,y1:y(t),y2:y(t),stroke:t===0&&state.metric==="change"?css('--axis'):css('--grid'),"stroke-width":t===0&&state.metric==="change"?1.4:1});
-      add("text",{x:m.l-6,y:y(t)+3.3,"text-anchor":"end","font-size":9.5,fill:css('--ink-3')}).textContent = (state.metric==="change"&&t>0?"+":"")+(Math.abs(t)>=100? t.toFixed(0): t.toFixed(t%1?1:0));
+      add("text",{x:m.l-6,y:y(t)+3.3,"text-anchor":"end","font-size":9.5,fill:css('--ink-3')}).textContent = (state.metric==="change"&&t>0?"+":"")+(Math.abs(t)>=100? t.toFixed(0): (+t.toFixed(dec)).toString());
     });
     months.forEach((mo,i)=>{ if(i%2!==0 && W<430) return;
       add("text",{x:x(i),y:H-9,"text-anchor":"middle","font-size":9.5,fill:css('--ink-3')}).textContent=mo[0];
@@ -10386,7 +10386,7 @@ const INV = (function(){
         const rows = ordered.slice().reverse().map(year=>{
           const v=(metricData[year]||[])[i];
           const em = (year===state.focusYear || (state.focusYear==null&&year===cur));
-          return `<div class="row"><span class="k"><i style="background:${yearColor(year)}"></i>${year}${em?' •':''}</span><b>${fmtVal(v)}</b></div>`;
+          return `<div class="row"><span class="k"><i style="background:${yearColor(year)}"></i>${year}${em?' •':''}</span><b>${fmtVal(v,dec)}</b></div>`;
         }).join("");
         tip.innerHTML=`<b>${LONG[mo]}</b>${rows}`;
         const box=svg.getBoundingClientRect(), pb=svg.parentElement.getBoundingClientRect();
