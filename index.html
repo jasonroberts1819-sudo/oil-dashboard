@@ -80,6 +80,28 @@
   .gd.up{color:var(--pos)} .gd.dn{color:var(--neg)} .gd.flat{color:var(--ink-3)}
   .yl.band i{border-radius:2px;border:1px solid var(--axis)}
 
+  /* positioning tab — z-score bars + PADD heatmap */
+  .poscap{font-size:12.5px;color:var(--ink-2);margin:0 0 14px;max-width:80ch}
+  .poscap b{color:var(--ink)}
+  .zgrid{display:grid;grid-template-columns:minmax(120px,180px) 1fr minmax(150px,auto);
+    gap:5px 14px;align-items:center}
+  .zgrid .zlab{font-size:12.5px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ztrack{position:relative;height:18px;background:var(--surface-2);border-radius:4px;overflow:hidden}
+  .ztrack .zmid{position:absolute;left:50%;top:0;bottom:0;width:1px;background:var(--axis)}
+  .ztrack .zfill{position:absolute;top:2px;bottom:2px;border-radius:3px}
+  .zmeta{font-size:12px;color:var(--ink-2);font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right}
+  .zmeta b{font-size:13px}
+  .zscale{display:flex;justify-content:space-between;font-size:10.5px;color:var(--ink-3);margin-top:4px}
+
+  .heat{border-collapse:separate;border-spacing:4px;width:100%;font-variant-numeric:tabular-nums}
+  .heat th{font-size:11px;color:var(--ink-3);font-weight:600;padding:3px 4px;text-align:center}
+  .heat th.rowh{text-align:left;color:var(--ink-2)}
+  .heat td{text-align:center;font-size:12.5px;font-weight:600;color:var(--ink);
+    border-radius:6px;padding:9px 4px;min-width:52px;border:1px solid var(--border)}
+  .heat td.na{color:var(--ink-3);font-weight:400}
+  .legrow{display:flex;align-items:center;gap:9px;margin-top:12px;font-size:11.5px;color:var(--ink-3);flex-wrap:wrap}
+  .legrow .sw{width:16px;height:12px;border-radius:3px;display:inline-block;vertical-align:middle;margin-right:4px}
+
   .controls{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;margin-bottom:18px;
     background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:11px 15px;box-shadow:var(--shadow)}
   .controls .grp{display:flex;align-items:center;gap:8px}
@@ -169,6 +191,7 @@
         <button id="tab_distillate" data-tab="distillate" aria-pressed="false">Distillate</button>
         <button id="tab_jet" data-tab="jet" aria-pressed="false">Jet</button>
         <button id="tab_refining" data-tab="refining" aria-pressed="false">Refining</button>
+        <button id="tab_positioning" data-tab="positioning" aria-pressed="false">Positioning</button>
         <button id="tab_table" data-tab="table" aria-pressed="false">Table</button>
         <button id="tab_updates" data-tab="updates" aria-pressed="false">Updates</button>
       </span>
@@ -176,6 +199,8 @@
   </div>
 
   <div id="tableView" class="hidden"></div>
+
+  <div id="positioningView" class="hidden"></div>
 
   <div id="updatesView" class="hidden"></div>
 
@@ -217,6 +242,7 @@
         <span class="seg" role="group" aria-label="Metric">
           <button id="iLevel" aria-pressed="true">Level</button>
           <button id="iChange" aria-pressed="false">MoM change</button>
+          <button id="iYoY" aria-pressed="false">YoY %</button>
         </span>
       </div>
       <div class="grp">
@@ -455,7 +481,7 @@ const UPDATE_LOG = [
    stock (mmbbl); change = month-over-month. ===== */
 const INV_DATA = {
   "asOf": "2026-07-10",
-  "generated": "2026-07-15 17:58",
+  "generated": "2026-07-15 18:18",
   "source": "WPSR psw09/psw01",
   "years": [
     2021,
@@ -10984,8 +11010,736 @@ const INV_DATA = {
         "dec": 1,
         "level": 96.2,
         "wow": 0.4
+      },
+      {
+        "code": "WRPUPUS2",
+        "label": "Total demand",
+        "unit": "kbbl/d",
+        "dec": 0,
+        "level": 19477.0,
+        "wow": -1040.0
       }
     ]
+  },
+  "positioning": {
+    "asOf": "2026-07-10",
+    "series": {
+      "WCESTUS1": {
+        "label": "U.S. commercial crude (excl SPR)",
+        "product": "crude",
+        "unit": "mmbbl",
+        "dec": 1,
+        "period": "2026-07-10",
+        "latest": 409.665,
+        "z": -2.05,
+        "surplus": -26.999,
+        "pct": 0,
+        "n": 15,
+        "mean": 436.664
+      },
+      "WCSSTUS1": {
+        "label": "U.S. SPR crude",
+        "product": "crude",
+        "unit": "mmbbl",
+        "dec": 1,
+        "period": "2026-07-10",
+        "latest": 316.504,
+        "z": -1.26,
+        "surplus": -128.392,
+        "pct": 0,
+        "n": 15,
+        "mean": 444.896
+      },
+      "W_EPC0_SAX_YCUOK_MBBL": {
+        "label": "Cushing, OK",
+        "product": "crude",
+        "unit": "mmbbl",
+        "dec": 1,
+        "period": "2026-07-10",
+        "latest": 20.044,
+        "z": -1.39,
+        "surplus": -10.299,
+        "pct": 0,
+        "n": 15,
+        "mean": 30.343
+      },
+      "WCESTP11": {
+        "label": "PADD 1 \u2014 East Coast",
+        "product": "crude",
+        "unit": "mmbbl",
+        "dec": 1,
+        "period": "2026-07-10",
+        "latest": 8.025,
+        "z": -0.37,
+        "surplus": -0.271,
+        "pct": 33,
+        "n": 15,
+        "mean": 8.296
+      },
+      "WCESTP21": {
+        "label": "PADD 2 \u2014 Midwest",
+        "product": "crude",
+        "unit": "mmbbl",
+        "dec": 1,
+        "period": "2026-07-10",
+        "latest": 97.885,
+        "z": -1.74,
+        "surplus": -14.508,
+        "pct": 0,
+        "n": 15,
+        "mean": 112.393
+      },
+      "WCESTP31": {
+        "label": "PADD 3 \u2014 Gulf Coast",
+        "product": "crude",
+        "unit": "mmbbl",
+        "dec": 1,
+        "period": "2026-07-10",
+        "latest": 235.123,
+        "z": -1.31,
+        "surplus": -9.549,
+        "pct": 0,
+        "n": 15,
+        "mean": 244.672
+      },
+      "WCESTP41": {
+        "label": "PADD 4 \u2014 Rocky Mountain",
+        "product": "crude",
+        "unit": "mmbbl",
+        "dec": 1,
+        "period": "2026-07-10",
+        "latest": 22.485,
+        "z": -1.63,
+        "surplus": -1.271,
+        "pct": 7,
+        "n": 15,
+        "mean": 23.756
+      },
+      "WCESTP51": {
+        "label": "PADD 5 \u2014 West Coast",
+        "product": "crude",
+        "unit": "mmbbl",
+        "dec": 1,
+        "period": "2026-07-10",
+        "latest": 46.147,
+        "z": -1.1,
+        "surplus": -1.4,
+        "pct": 13,
+        "n": 15,
+        "mean": 47.547
+      },
+      "WCRFPUS2": {
+        "label": "Crude production \u2014 U.S.",
+        "product": "crude",
+        "unit": "mmbbl/d",
+        "dec": 2,
+        "period": "2026-07-10",
+        "latest": 13.861,
+        "z": 1.75,
+        "surplus": 1.412,
+        "pct": 100,
+        "n": 15,
+        "mean": 12.449
+      },
+      "WCRAIUS2": {
+        "label": "Adjustment (unaccounted-for crude) \u2014 U.S.",
+        "product": "crude",
+        "unit": "kbbl/d",
+        "dec": 0,
+        "period": "2026-07-10",
+        "latest": 400.0,
+        "z": -0.2,
+        "surplus": -166.8,
+        "pct": 40,
+        "n": 15,
+        "mean": 566.8
+      },
+      "WCRTPUS2": {
+        "label": "Transfers to crude oil supply \u2014 U.S.",
+        "product": "crude",
+        "unit": "kbbl/d",
+        "dec": 0,
+        "period": "2026-07-10",
+        "latest": 225.0,
+        "z": -3.28,
+        "surplus": -297.5,
+        "pct": 0,
+        "n": 6,
+        "mean": 522.5
+      },
+      "WGTSTUS1": {
+        "label": "Gasoline stocks \u2014 U.S. total",
+        "product": "gasoline",
+        "unit": "mmbbl",
+        "dec": 1,
+        "period": "2026-07-10",
+        "latest": 210.529,
+        "z": -2.87,
+        "surplus": -17.777,
+        "pct": 0,
+        "n": 15,
+        "mean": 228.306
+      },
+      "WGTSTP11": {
+        "label": "Gasoline stocks \u2014 PADD 1 (East Coast)",
+        "product": "gasoline",
+        "unit": "mmbbl",
+        "dec": 1,
+        "period": "2026-07-10",
+        "latest": 54.08,
+        "z": -0.94,
+        "surplus": -4.878,
+        "pct": 7,
+        "n": 15,
+        "mean": 58.958
+      },
+      "WGTSTP21": {
+        "label": "Gasoline stocks \u2014 PADD 2 (Midwest)",
+        "product": "gasoline",
+        "unit": "mmbbl",
+        "dec": 1,
+        "period": "2026-07-10",
+        "latest": 44.726,
+        "z": -1.52,
+        "surplus": -3.226,
+        "pct": 0,
+        "n": 15,
+        "mean": 47.952
+      },
+      "WGTSTP31": {
+        "label": "Gasoline stocks \u2014 PADD 3 (Gulf Coast)",
+        "product": "gasoline",
+        "unit": "mmbbl",
+        "dec": 1,
+        "period": "2026-07-10",
+        "latest": 75.448,
+        "z": -3.23,
+        "surplus": -8.865,
+        "pct": 0,
+        "n": 15,
+        "mean": 84.313
+      },
+      "WGTSTP41": {
+        "label": "Gasoline stocks \u2014 PADD 4 (Rockies)",
+        "product": "gasoline",
+        "unit": "mmbbl",
+        "dec": 1,
+        "period": "2026-07-10",
+        "latest": 6.857,
+        "z": 0.43,
+        "surplus": 0.233,
+        "pct": 67,
+        "n": 15,
+        "mean": 6.624
+      },
+      "WGTSTP51": {
+        "label": "Gasoline stocks \u2014 PADD 5 (West Coast)",
+        "product": "gasoline",
+        "unit": "mmbbl",
+        "dec": 1,
+        "period": "2026-07-10",
+        "latest": 29.419,
+        "z": -0.8,
+        "surplus": -1.04,
+        "pct": 27,
+        "n": 15,
+        "mean": 30.459
+      },
+      "W_EPOBGRR_SAE_NUS_MBBL": {
+        "label": "RBOB stocks \u2014 U.S. total",
+        "product": "gasoline",
+        "unit": "mmbbl",
+        "dec": 1,
+        "period": "2026-07-10",
+        "latest": 39.616,
+        "z": -4.6,
+        "surplus": -11.397,
+        "pct": 0,
+        "n": 15,
+        "mean": 51.013
+      },
+      "W_EPOBGRR_SAE_R10_MBBL": {
+        "label": "RBOB stocks \u2014 PADD 1 (East Coast)",
+        "product": "gasoline",
+        "unit": "mmbbl",
+        "dec": 1,
+        "period": "2026-07-10",
+        "latest": 13.871,
+        "z": -2.25,
+        "surplus": -4.991,
+        "pct": 7,
+        "n": 15,
+        "mean": 18.862
+      },
+      "W_EPOBGRR_SAE_R30_MBBL": {
+        "label": "RBOB stocks \u2014 PADD 3 (Gulf Coast)",
+        "product": "gasoline",
+        "unit": "mmbbl",
+        "dec": 1,
+        "period": "2026-07-10",
+        "latest": 8.221,
+        "z": -5.31,
+        "surplus": -3.676,
+        "pct": 0,
+        "n": 15,
+        "mean": 11.897
+      },
+      "W_EPOBGRR_SAE_R50_MBBL": {
+        "label": "RBOB stocks \u2014 PADD 5 (West Coast)",
+        "product": "gasoline",
+        "unit": "mmbbl",
+        "dec": 1,
+        "period": "2026-07-10",
+        "latest": 12.959,
+        "z": -2.5,
+        "surplus": -1.304,
+        "pct": 0,
+        "n": 15,
+        "mean": 14.263
+      },
+      "W_EPM0F_EEX_NUS-Z00_MBBLD": {
+        "label": "Gasoline exports \u2014 U.S.",
+        "product": "gasoline",
+        "unit": "kbbl/d",
+        "dec": 0,
+        "period": "2026-07-10",
+        "latest": 967.0,
+        "z": 0.66,
+        "surplus": 83.4,
+        "pct": 73,
+        "n": 15,
+        "mean": 883.6
+      },
+      "WGTIMUS2": {
+        "label": "Gasoline imports \u2014 U.S.",
+        "product": "gasoline",
+        "unit": "kbbl/d",
+        "dec": 0,
+        "period": "2026-07-10",
+        "latest": 354.0,
+        "z": -2.31,
+        "surplus": -452.133,
+        "pct": 0,
+        "n": 15,
+        "mean": 806.133
+      },
+      "WGFUPUS2": {
+        "label": "Gasoline product supplied (demand) \u2014 U.S.",
+        "product": "gasoline",
+        "unit": "kbbl/d",
+        "dec": 0,
+        "period": "2026-07-10",
+        "latest": 8844.0,
+        "z": -0.31,
+        "surplus": -124.867,
+        "pct": 33,
+        "n": 15,
+        "mean": 8968.867
+      },
+      "WDISTUS1": {
+        "label": "Distillate stocks \u2014 U.S. total",
+        "product": "distillate",
+        "unit": "mmbbl",
+        "dec": 1,
+        "period": "2026-07-10",
+        "latest": 108.175,
+        "z": -1.02,
+        "surplus": -12.577,
+        "pct": 13,
+        "n": 15,
+        "mean": 120.752
+      },
+      "WDISTP11": {
+        "label": "Distillate stocks \u2014 PADD 1 (East Coast)",
+        "product": "distillate",
+        "unit": "mmbbl",
+        "dec": 1,
+        "period": "2026-07-10",
+        "latest": 22.627,
+        "z": -1.39,
+        "surplus": -8.173,
+        "pct": 0,
+        "n": 15,
+        "mean": 30.8
+      },
+      "WDISTP21": {
+        "label": "Distillate stocks \u2014 PADD 2 (Midwest)",
+        "product": "distillate",
+        "unit": "mmbbl",
+        "dec": 1,
+        "period": "2026-07-10",
+        "latest": 28.862,
+        "z": -0.22,
+        "surplus": -0.706,
+        "pct": 40,
+        "n": 15,
+        "mean": 29.568
+      },
+      "WDISTP31": {
+        "label": "Distillate stocks \u2014 PADD 3 (Gulf Coast)",
+        "product": "distillate",
+        "unit": "mmbbl",
+        "dec": 1,
+        "period": "2026-07-10",
+        "latest": 42.252,
+        "z": -0.73,
+        "surplus": -2.435,
+        "pct": 27,
+        "n": 15,
+        "mean": 44.687
+      },
+      "WDISTP41": {
+        "label": "Distillate stocks \u2014 PADD 4 (Rockies)",
+        "product": "distillate",
+        "unit": "mmbbl",
+        "dec": 1,
+        "period": "2026-07-10",
+        "latest": 3.493,
+        "z": -1.25,
+        "surplus": -0.304,
+        "pct": 20,
+        "n": 15,
+        "mean": 3.797
+      },
+      "WDISTP51": {
+        "label": "Distillate stocks \u2014 PADD 5 (West Coast)",
+        "product": "distillate",
+        "unit": "mmbbl",
+        "dec": 1,
+        "period": "2026-07-10",
+        "latest": 10.94,
+        "z": -0.92,
+        "surplus": -0.96,
+        "pct": 27,
+        "n": 15,
+        "mean": 11.9
+      },
+      "WDIEXUS2": {
+        "label": "Distillate exports \u2014 U.S.",
+        "product": "distillate",
+        "unit": "kbbl/d",
+        "dec": 0,
+        "period": "2026-07-10",
+        "latest": 1546.0,
+        "z": 0.92,
+        "surplus": 179.733,
+        "pct": 80,
+        "n": 15,
+        "mean": 1366.267
+      },
+      "WDIIMUS2": {
+        "label": "Distillate imports \u2014 U.S.",
+        "product": "distillate",
+        "unit": "kbbl/d",
+        "dec": 0,
+        "period": "2026-07-10",
+        "latest": 93.0,
+        "z": -0.5,
+        "surplus": -19.733,
+        "pct": 33,
+        "n": 15,
+        "mean": 112.733
+      },
+      "WDIUPUS2": {
+        "label": "Distillate product supplied (demand) \u2014 U.S.",
+        "product": "distillate",
+        "unit": "kbbl/d",
+        "dec": 0,
+        "period": "2026-07-10",
+        "latest": 3156.0,
+        "z": -1.32,
+        "surplus": -441.467,
+        "pct": 7,
+        "n": 15,
+        "mean": 3597.467
+      },
+      "WKJSTUS1": {
+        "label": "Jet stocks \u2014 U.S. total",
+        "product": "jet",
+        "unit": "mmbbl",
+        "dec": 1,
+        "period": "2026-07-10",
+        "latest": 48.418,
+        "z": 2.12,
+        "surplus": 4.829,
+        "pct": 100,
+        "n": 15,
+        "mean": 43.589
+      },
+      "WKJSTP11": {
+        "label": "Jet stocks \u2014 PADD 1 (East Coast)",
+        "product": "jet",
+        "unit": "mmbbl",
+        "dec": 1,
+        "period": "2026-07-10",
+        "latest": 12.437,
+        "z": 1.13,
+        "surplus": 1.046,
+        "pct": 80,
+        "n": 15,
+        "mean": 11.391
+      },
+      "WKJSTP21": {
+        "label": "Jet stocks \u2014 PADD 2 (Midwest)",
+        "product": "jet",
+        "unit": "mmbbl",
+        "dec": 1,
+        "period": "2026-07-10",
+        "latest": 7.324,
+        "z": 0.31,
+        "surplus": 0.134,
+        "pct": 67,
+        "n": 15,
+        "mean": 7.19
+      },
+      "WKJSTP31": {
+        "label": "Jet stocks \u2014 PADD 3 (Gulf Coast)",
+        "product": "jet",
+        "unit": "mmbbl",
+        "dec": 1,
+        "period": "2026-07-10",
+        "latest": 15.813,
+        "z": 1.17,
+        "surplus": 1.745,
+        "pct": 80,
+        "n": 15,
+        "mean": 14.068
+      },
+      "WKJSTP41": {
+        "label": "Jet stocks \u2014 PADD 4 (Rockies)",
+        "product": "jet",
+        "unit": "mmbbl",
+        "dec": 1,
+        "period": "2026-07-10",
+        "latest": 0.765,
+        "z": 0.73,
+        "surplus": 0.057,
+        "pct": 73,
+        "n": 15,
+        "mean": 0.708
+      },
+      "WKJSTP51": {
+        "label": "Jet stocks \u2014 PADD 5 (West Coast)",
+        "product": "jet",
+        "unit": "mmbbl",
+        "dec": 1,
+        "period": "2026-07-10",
+        "latest": 12.079,
+        "z": 1.5,
+        "surplus": 1.847,
+        "pct": 93,
+        "n": 15,
+        "mean": 10.232
+      },
+      "WKJEXUS2": {
+        "label": "Jet exports \u2014 U.S.",
+        "product": "jet",
+        "unit": "kbbl/d",
+        "dec": 0,
+        "period": "2026-07-10",
+        "latest": 412.0,
+        "z": 3.3,
+        "surplus": 223.0,
+        "pct": 100,
+        "n": 15,
+        "mean": 189.0
+      },
+      "WKJIMUS2": {
+        "label": "Jet imports \u2014 U.S.",
+        "product": "jet",
+        "unit": "kbbl/d",
+        "dec": 0,
+        "period": "2026-07-10",
+        "latest": 112.0,
+        "z": 0.01,
+        "surplus": 0.8,
+        "pct": 47,
+        "n": 15,
+        "mean": 111.2
+      },
+      "WKJUPUS2": {
+        "label": "Jet product supplied (demand) \u2014 U.S.",
+        "product": "jet",
+        "unit": "kbbl/d",
+        "dec": 0,
+        "period": "2026-07-10",
+        "latest": 1760.0,
+        "z": 0.74,
+        "surplus": 121.4,
+        "pct": 73,
+        "n": 15,
+        "mean": 1638.6
+      },
+      "WCRRIUS2": {
+        "label": "Crude runs \u2014 U.S. total",
+        "product": "refining",
+        "unit": "mmbbl/d",
+        "dec": 2,
+        "period": "2026-07-10",
+        "latest": 17.123,
+        "z": 1.49,
+        "surplus": 0.595,
+        "pct": 100,
+        "n": 15,
+        "mean": 16.528
+      },
+      "WCRRIP12": {
+        "label": "Crude runs \u2014 PADD 1 (East Coast)",
+        "product": "refining",
+        "unit": "mmbbl/d",
+        "dec": 2,
+        "period": "2026-07-10",
+        "latest": 0.78,
+        "z": 0.48,
+        "surplus": 0.042,
+        "pct": 47,
+        "n": 15,
+        "mean": 0.738
+      },
+      "WCRRIP22": {
+        "label": "Crude runs \u2014 PADD 2 (Midwest)",
+        "product": "refining",
+        "unit": "mmbbl/d",
+        "dec": 2,
+        "period": "2026-07-10",
+        "latest": 4.224,
+        "z": 1.33,
+        "surplus": 0.212,
+        "pct": 100,
+        "n": 15,
+        "mean": 4.012
+      },
+      "WCRRIP32": {
+        "label": "Crude runs \u2014 PADD 3 (Gulf Coast)",
+        "product": "refining",
+        "unit": "mmbbl/d",
+        "dec": 2,
+        "period": "2026-07-10",
+        "latest": 9.437,
+        "z": 1.8,
+        "surplus": 0.45,
+        "pct": 100,
+        "n": 15,
+        "mean": 8.987
+      },
+      "WCRRIP42": {
+        "label": "Crude runs \u2014 PADD 4 (Rockies)",
+        "product": "refining",
+        "unit": "mmbbl/d",
+        "dec": 2,
+        "period": "2026-07-10",
+        "latest": 0.663,
+        "z": 1.7,
+        "surplus": 0.05,
+        "pct": 100,
+        "n": 15,
+        "mean": 0.613
+      },
+      "WCRRIP52": {
+        "label": "Crude runs \u2014 PADD 5 (West Coast)",
+        "product": "refining",
+        "unit": "mmbbl/d",
+        "dec": 2,
+        "period": "2026-07-10",
+        "latest": 2.019,
+        "z": -1.85,
+        "surplus": -0.159,
+        "pct": 0,
+        "n": 15,
+        "mean": 2.178
+      },
+      "WPULEUS3": {
+        "label": "Refinery utilization \u2014 U.S. total",
+        "product": "refining",
+        "unit": "%",
+        "dec": 1,
+        "period": "2026-07-10",
+        "latest": 96.2,
+        "z": 1.89,
+        "surplus": 2.78,
+        "pct": 100,
+        "n": 15,
+        "mean": 93.42
+      },
+      "W_NA_YUP_R10_PER": {
+        "label": "Refinery utilization \u2014 PADD 1 (East Coast)",
+        "product": "refining",
+        "unit": "%",
+        "dec": 1,
+        "period": "2026-07-10",
+        "latest": 85.0,
+        "z": -0.34,
+        "surplus": -2.647,
+        "pct": 40,
+        "n": 15,
+        "mean": 87.647
+      },
+      "W_NA_YUP_R20_PER": {
+        "label": "Refinery utilization \u2014 PADD 2 (Midwest)",
+        "product": "refining",
+        "unit": "%",
+        "dec": 1,
+        "period": "2026-07-10",
+        "latest": 99.1,
+        "z": 1.07,
+        "surplus": 4.073,
+        "pct": 100,
+        "n": 15,
+        "mean": 95.027
+      },
+      "W_NA_YUP_R30_PER": {
+        "label": "Refinery utilization \u2014 PADD 3 (Gulf Coast)",
+        "product": "refining",
+        "unit": "%",
+        "dec": 1,
+        "period": "2026-07-10",
+        "latest": 96.8,
+        "z": 0.99,
+        "surplus": 2.233,
+        "pct": 73,
+        "n": 15,
+        "mean": 94.567
+      },
+      "W_NA_YUP_R40_PER": {
+        "label": "Refinery utilization \u2014 PADD 4 (Rockies)",
+        "product": "refining",
+        "unit": "%",
+        "dec": 1,
+        "period": "2026-07-10",
+        "latest": 101.4,
+        "z": 1.07,
+        "surplus": 6.767,
+        "pct": 93,
+        "n": 15,
+        "mean": 94.633
+      },
+      "W_NA_YUP_R50_PER": {
+        "label": "Refinery utilization \u2014 PADD 5 (West Coast)",
+        "product": "refining",
+        "unit": "%",
+        "dec": 1,
+        "period": "2026-07-10",
+        "latest": 91.0,
+        "z": 0.66,
+        "surplus": 2.76,
+        "pct": 80,
+        "n": 15,
+        "mean": 88.24
+      },
+      "WRPUPUS2": {
+        "label": "Total products supplied (demand)",
+        "product": "other",
+        "unit": "kbbl/d",
+        "dec": 0,
+        "period": "2026-07-10",
+        "latest": 19477.0,
+        "z": -0.83,
+        "surplus": -823.067,
+        "pct": 33,
+        "n": 15,
+        "mean": 20300.067
+      }
+    }
   }
 };
 /* ===== INV:END ===== */
@@ -11275,6 +12029,69 @@ function renderUpdates(){
     </section>`;
 }
 
+/* --------------------------- positioning tab ---------------------------- */
+const POS_HEADLINE = [
+  ["WCESTUS1","Commercial crude"],["W_EPC0_SAX_YCUOK_MBBL","Cushing"],["WCSSTUS1","SPR"],
+  ["WGTSTUS1","Gasoline"],["WDISTUS1","Distillate"],["WKJSTUS1","Jet"],
+  ["WCRRIUS2","Crude runs"],["WPULEUS3","Refinery util."],["WRPUPUS2","Total demand"]
+];
+const HEAT_ROWS = [
+  ["Crude","WCESTUS1","WCESTP11","WCESTP21","WCESTP31","WCESTP41","WCESTP51"],
+  ["Gasoline","WGTSTUS1","WGTSTP11","WGTSTP21","WGTSTP31","WGTSTP41","WGTSTP51"],
+  ["Distillate","WDISTUS1","WDISTP11","WDISTP21","WDISTP31","WDISTP41","WDISTP51"],
+  ["Jet","WKJSTUS1","WKJSTP11","WKJSTP21","WKJSTP31","WKJSTP41","WKJSTP51"]
+];
+const HEAT_COLS = ["U.S.","P1","P2","P3","P4","P5"];
+function zColor(z){
+  if(z==null) return {bg:'var(--surface-2)', fg:'var(--ink-3)'};
+  const t=Math.max(-1,Math.min(1,z/2.5));
+  const a=Math.min(0.82, Math.abs(t)*0.85+0.05);
+  const rgb = t>=0 ? '56,132,255' : '224,83,61';   // blue = ample (+σ), red = tight (−σ)
+  return {bg:`rgba(${rgb},${a})`, fg: Math.abs(t)>0.55?'#fff':'var(--ink)'};
+}
+function renderPositioning(){
+  const P = (typeof INV_DATA!=='undefined' && INV_DATA && INV_DATA.positioning) ? INV_DATA.positioning : null;
+  const box = $("#positioningView");
+  if(!P || !P.series){ box.innerHTML = '<section class="card"><p class="csub" style="padding:10px">No positioning data yet — run <code>python eia_inventory_charts.py --force</code>.</p></section>'; return; }
+  const S = P.series;
+  const y1 = P.asOf ? (+P.asOf.slice(0,4) - 1) : 2025;
+  const bars = POS_HEADLINE.filter(([c])=>S[c]).map(([c,lab])=>{
+    const r=S[c], z=r.z;
+    const w = z==null?0:Math.min(50, Math.abs(z)/3*50);
+    const left = z==null?50:(z<0? 50-w : 50);
+    const surp = r.surplus==null?'':((r.surplus>0?'+':'')+r.surplus.toFixed(r.dec)+' '+r.unit);
+    const zt = z==null?'n/a':((z>0?'+':'')+z.toFixed(2)+'σ');
+    const pct = r.pct==null?'':` · ${r.pct}%ile`;
+    return `<div class="zlab" title="${r.label}">${lab}</div>
+      <div class="ztrack"><div class="zmid"></div><div class="zfill" style="left:${left}%;width:${w}%;background:${zColor(z).bg}"></div></div>
+      <div class="zmeta"><b>${zt}</b> <span>${surp}${pct}</span></div>`;
+  }).join("");
+  const head = `<tr><th class="rowh"></th>${HEAT_COLS.map(h=>`<th>${h}</th>`).join("")}</tr>`;
+  const rows = HEAT_ROWS.map(row=>{
+    const cells = row.slice(1).map(c=>{
+      const r=S[c];
+      if(!r || r.z==null) return `<td class="na">—</td>`;
+      const {bg,fg}=zColor(r.z), sign=r.z>0?'+':'';
+      const surp = r.surplus==null?'':`${(r.surplus>0?'+':'')+r.surplus.toFixed(r.dec)} ${r.unit}`;
+      return `<td style="background:${bg};color:${fg};border-color:transparent" title="${r.label} — ${sign}${r.z}σ · ${surp} · ${r.pct}%ile">${sign}${r.z}</td>`;
+    }).join("");
+    return `<tr><th class="rowh">${row[0]}</th>${cells}</tr>`;
+  }).join("");
+  box.innerHTML = `
+    <section class="card">
+      <h2>Positioning vs seasonal norm</h2>
+      <p class="poscap">How far the latest weekly reading sits from its <b>same-week-of-year average</b> across 2021–${y1}, in standard deviations (σ). <b>+σ = above the seasonal norm</b> (ample); <b>−σ = below</b> (tight). Week ending <b>${P.asOf||'—'}</b>.</p>
+      <div class="zgrid">${bars}</div>
+      <div class="zscale"><span>−3σ tight</span><span>seasonal norm</span><span>+3σ ample</span></div>
+    </section>
+    <section class="card">
+      <h2>PADD tightness heatmap</h2>
+      <p class="poscap">Ending-stock z-score by product and region. Blue = stocks <b>above</b> the seasonal norm (ample); red = <b>below</b> (tight). Hover a cell for the surplus/deficit and percentile.</p>
+      <div style="overflow-x:auto"><table class="heat"><thead>${head}</thead><tbody>${rows}</tbody></table></div>
+      <div class="legrow"><span><span class="sw" style="background:rgba(224,83,61,.7)"></span>tight (−σ)</span><span><span class="sw" style="background:var(--surface-2)"></span>≈ norm</span><span><span class="sw" style="background:rgba(56,132,255,.7)"></span>ample (+σ)</span></div>
+    </section>`;
+}
+
 /* ------------------------------ view tabs ------------------------------- */
 const PRODUCT_TABS = ["crude","gasoline","distillate","jet","refining"];
 let activeTab = "crude";
@@ -11286,16 +12103,19 @@ function setTab(key){
   document.querySelectorAll('.seg [data-tab]').forEach(b=>b.setAttribute("aria-pressed", b.dataset.tab===key));
   $("#invView").classList.toggle("hidden", !isProd);
   $("#tableView").classList.toggle("hidden", key!=="table");
+  $("#positioningView").classList.toggle("hidden", key!=="positioning");
   $("#updatesView").classList.toggle("hidden", key!=="updates");
   $("#crudeBalance").classList.toggle("hidden", key!=="crude");
   $("#kpis").classList.toggle("hidden", isProd && key!=="crude");
   if(isProd){ if(key==="crude") renderCharts(); INV.show(key); }
   else if(key==="table") renderTable();
+  else if(key==="positioning") renderPositioning();
   else renderUpdates();
 }
 function redrawActive(){
   if(PRODUCT_TABS.includes(activeTab)){ if(activeTab==="crude") renderCharts(); INV.redraw(); }
   else if(activeTab==="table") renderTable();
+  else if(activeTab==="positioning") renderPositioning();
   else renderUpdates();
 }
 // theme override toggle
@@ -11324,7 +12144,19 @@ const INV = (function(){
   function PRD(){ const ps=DATA.products||[]; return ps.find(p=>p.key===state.product) || ps[0] || null; }
   const fmtLevel = (v,dec=1) => v==null? "—" : v.toFixed(dec);
   const fmtChange = (v,dec=1) => v==null? "—" : (v>0?"+":"")+v.toFixed(dec);
-  const fmtVal = (v,dec=1) => state.metric==="change"? fmtChange(v,dec) : fmtLevel(v,dec);
+  const fmtVal = (v,dec=1) => state.metric==="level"? fmtLevel(v,dec)
+    : state.metric==="yoy"? (v==null? "—" : (v>0?"+":"")+v.toFixed(dec)+"%")
+    : fmtChange(v,dec);
+  function yoyMatrix(lvl){
+    const out={};
+    Object.keys(lvl).forEach(ys=>{
+      const y=+ys, prev=lvl[y-1]; if(!prev) return;
+      const cur=lvl[y]; const arr=[];
+      for(let i=0;i<12;i++){ const a=cur[i], b=prev[i]; arr.push((a!=null&&b!=null&&b!==0)? (a/b-1)*100 : null); }
+      out[y]=arr;
+    });
+    return out;
+  }
   function niceTicks(lo,hi,count){
     if(hi<=lo){hi=lo+1;}
     const span=hi-lo, step0=span/count, mag=Math.pow(10,Math.floor(Math.log10(step0)));
@@ -11337,7 +12169,10 @@ const INV = (function(){
   function drawYearLines(svgId, tipId, code){
     const P=PRD(); if(!P) return;
     const svg=$(svgId), tip=$(tipId);
-    const metricData = (state.metric==="change"? P.change : P.level)[code] || {}; const dec = ((P.series.find(x=>x.code===code)||{}).unit)==="mmbbl/d" ? 3 : 1;
+    const baseUnit = (P.series.find(x=>x.code===code)||{}).unit;
+    const metricData = state.metric==="yoy" ? yoyMatrix((P.level||{})[code]||{})
+                     : (state.metric==="change"? P.change : P.level)[code] || {};
+    const dec = state.metric==="yoy" ? 1 : (baseUnit==="mmbbl/d" ? 3 : 1);
     const months = DATA.months, cur = CUR();
     const drawYears = (state.focusYear && state.mode==="solo") ? [state.focusYear] : DATA.years.slice();
     const W = svg.clientWidth || svg.parentElement.clientWidth || 520;
@@ -11359,7 +12194,7 @@ const INV = (function(){
     drawYears.forEach(y=>{const arr=metricData[y]; if(!arr) return; arr.forEach(v=>{ if(v!=null){ lo=Math.min(lo,v); hi=Math.max(hi,v);} });});
     if(bandMin){ for(let i=0;i<months.length;i++){ if(bandMin[i]!=null){ lo=Math.min(lo,bandMin[i]); hi=Math.max(hi,bandMax[i]); } } }
     if(!isFinite(lo)){ lo=0; hi=1; }
-    if(state.metric==="change"){ lo=Math.min(lo,0); hi=Math.max(hi,0); }
+    if(state.metric!=="level"){ lo=Math.min(lo,0); hi=Math.max(hi,0); }
     const pad=(hi-lo)*0.10||1; hi+=pad; lo-=pad;
     const x = i => m.l + iw*i/(months.length-1);
     const y = v => m.t + ih*(hi-v)/(hi-lo);
@@ -11368,8 +12203,8 @@ const INV = (function(){
     const add=(t,a)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);svg.appendChild(e);return e;};
     const ticks=niceTicks(lo,hi,4);
     ticks.forEach(t=>{
-      add("line",{x1:m.l,x2:W-m.r,y1:y(t),y2:y(t),stroke:t===0&&state.metric==="change"?css('--axis'):css('--grid'),"stroke-width":t===0&&state.metric==="change"?1.4:1});
-      add("text",{x:m.l-6,y:y(t)+3.3,"text-anchor":"end","font-size":9.5,fill:css('--ink-3')}).textContent = (state.metric==="change"&&t>0?"+":"")+(Math.abs(t)>=100? t.toFixed(0): (+t.toFixed(dec)).toString());
+      add("line",{x1:m.l,x2:W-m.r,y1:y(t),y2:y(t),stroke:t===0&&state.metric!=="level"?css('--axis'):css('--grid'),"stroke-width":t===0&&state.metric!=="level"?1.4:1});
+      add("text",{x:m.l-6,y:y(t)+3.3,"text-anchor":"end","font-size":9.5,fill:css('--ink-3')}).textContent = (state.metric!=="level"&&t>0?"+":"")+(Math.abs(t)>=100? t.toFixed(0): (+t.toFixed(dec)).toString());
     });
     months.forEach((mo,i)=>{ if(i%2!==0 && W<430) return;
       add("text",{x:x(i),y:H-9,"text-anchor":"middle","font-size":9.5,fill:css('--ink-3')}).textContent=mo[0];
@@ -11461,9 +12296,10 @@ const INV = (function(){
   }
   function renderCharts(){ const P=PRD(); if(!P) return; const leg=legendHTML(); P.series.forEach((s,idx)=>{ drawYearLines("#chart_"+idx, "#tip_"+idx, s.code); const L=$("#leg_"+idx); if(L) L.innerHTML=leg; }); }
   function setMetric(mid){
-    state.metric = mid==="iChange"?"change":"level";
+    state.metric = mid==="iChange"?"change": mid==="iYoY"?"yoy":"level";
     $("#iLevel").setAttribute("aria-pressed", state.metric==="level");
     $("#iChange").setAttribute("aria-pressed", state.metric==="change");
+    $("#iYoY").setAttribute("aria-pressed", state.metric==="yoy");
     renderCharts();
   }
   function syncModeButtons(){
@@ -11477,6 +12313,7 @@ const INV = (function(){
   function init(){
     $("#iLevel").addEventListener("click",()=>setMetric("iLevel"));
     $("#iChange").addEventListener("click",()=>setMetric("iChange"));
+    $("#iYoY").addEventListener("click",()=>setMetric("iYoY"));
     $("#iModeFocus").addEventListener("click",()=>setMode("focus"));
     $("#iModeSolo").addEventListener("click",()=>setMode("solo"));
     const b=$("#iBand"); if(b){ b.checked=state.band; b.addEventListener("change",e=>setBand(e.target.checked)); }
