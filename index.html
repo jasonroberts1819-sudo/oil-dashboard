@@ -144,44 +144,16 @@
 
   <div class="controls">
     <div class="grp">
-      <label class="t">Average basis</label>
-      <span class="switch" title="2020 was a COVID demand-shock outlier">
-        <input type="checkbox" id="ex2020" />
-        <span>Exclude 2020 (COVID)</span>
-      </span>
-    </div>
-    <div class="grp">
       <label class="t">View</label>
-      <span class="seg" role="group" aria-label="View mode">
-        <button id="vChart" aria-pressed="true">Charts</button>
-        <button id="vTable" aria-pressed="false">Table</button>
-        <button id="vInv" aria-pressed="false">Inventories</button>
-        <button id="vUpdates" aria-pressed="false">Updates</button>
+      <span class="seg" role="group" aria-label="View" style="flex-wrap:wrap">
+        <button id="tab_crude" data-tab="crude" aria-pressed="true">Crude</button>
+        <button id="tab_gasoline" data-tab="gasoline" aria-pressed="false">Gasoline</button>
+        <button id="tab_distillate" data-tab="distillate" aria-pressed="false">Distillate</button>
+        <button id="tab_jet" data-tab="jet" aria-pressed="false">Jet</button>
+        <button id="tab_table" data-tab="table" aria-pressed="false">Table</button>
+        <button id="tab_updates" data-tab="updates" aria-pressed="false">Updates</button>
       </span>
     </div>
-  </div>
-
-  <div id="chartsView">
-    <section class="card">
-      <h2>US Total Crude — builds / draws by month</h2>
-      <p class="csub">2026 actual vs 2018–2025 average · million barrels (mmbbl). Zero line = no change; bars above = build, below = draw.</p>
-      <div class="legend" id="legend1"></div>
-      <div class="chartbox"><div class="tip" id="tip1"></div><svg id="chart1"></svg></div>
-    </section>
-
-    <section class="card">
-      <h2>Cushing, OK hub — builds / draws by month</h2>
-      <p class="csub">2026 vs 2018–2025 average · mmbbl · commercial only (no SPR at Cushing). Weekly-derived — EIA publishes Cushing weekly, not monthly. Hub near its ~20 mmbbl operational floor.</p>
-      <div class="legend" id="legend2"></div>
-      <div class="chartbox"><div class="tip" id="tip2"></div><svg id="chart2"></svg></div>
-    </section>
-
-    <section class="card">
-      <h2>What's driving the 2026 draws — Commercial vs SPR</h2>
-      <p class="csub">2026 total-crude stock change split into commercial and Strategic Petroleum Reserve · mmbbl. Segments sum to the total change.</p>
-      <div class="legend" id="legend3"></div>
-      <div class="chartbox"><div class="tip" id="tip3"></div><svg id="chart3"></svg></div>
-    </section>
   </div>
 
   <div id="tableView" class="hidden"></div>
@@ -189,9 +161,36 @@
   <div id="updatesView" class="hidden"></div>
 
   <div id="invView" class="hidden">
-    <div class="controls" style="margin-bottom:12px">
-      <div class="grp"><label class="t">Product</label>
-        <span class="seg" id="iproducts" role="group" aria-label="Product"></span></div>
+    <div id="crudeBalance" class="hidden">
+      <div class="controls">
+        <div class="grp">
+          <label class="t">Average basis</label>
+          <span class="switch" title="2020 was a COVID demand-shock outlier">
+            <input type="checkbox" id="ex2020" />
+            <span>Exclude 2020 (COVID)</span>
+          </span>
+        </div>
+      </div>
+      <section class="card">
+        <h2>US Total Crude — builds / draws by month</h2>
+        <p class="csub">2026 actual vs 2018–2025 average · million barrels (mmbbl). Zero line = no change; bars above = build, below = draw.</p>
+        <div class="legend" id="legend1"></div>
+        <div class="chartbox"><div class="tip" id="tip1"></div><svg id="chart1"></svg></div>
+      </section>
+      <section class="card">
+        <h2>Cushing, OK hub — builds / draws by month</h2>
+        <p class="csub">2026 vs 2018–2025 average · mmbbl · commercial only (no SPR at Cushing). Weekly-derived — EIA publishes Cushing weekly, not monthly. Hub near its ~20 mmbbl operational floor.</p>
+        <div class="legend" id="legend2"></div>
+        <div class="chartbox"><div class="tip" id="tip2"></div><svg id="chart2"></svg></div>
+      </section>
+      <section class="card">
+        <h2>What's driving the 2026 draws — Commercial vs SPR</h2>
+        <p class="csub">2026 total-crude stock change split into commercial and Strategic Petroleum Reserve · mmbbl. Segments sum to the total change.</p>
+        <div class="legend" id="legend3"></div>
+        <div class="chartbox"><div class="tip" id="tip3"></div><svg id="chart3"></svg></div>
+      </section>
+      <hr style="border:0;border-top:1px solid var(--border);margin:24px 0 16px" />
+      <h2 style="font-size:16px;margin:0 0 4px;letter-spacing:-.01em">Crude — weekly ending stocks (year overlay)</h2>
     </div>
     <div class="controls">
       <div class="grp">
@@ -213,7 +212,7 @@
         </span>
       </div>
     </div>
-    <p class="csub" style="margin:0 0 14px">Weekly EIA ending stocks by product & region, back to Jan 2021 · one line per year (x = month) · mmbbl. Pick a product tab, toggle level vs month-over-month change, and isolate any single year.</p>
+    <p class="csub" style="margin:0 0 14px">Weekly EIA ending stocks, back to Jan 2021 · one line per year (x = month) · mmbbl. Toggle level vs month-over-month change, and isolate any single year.</p>
     <div id="igrid" class="chartgrid"></div>
   </div>
 
@@ -6025,28 +6024,28 @@ function renderUpdates(){
     </section>`;
 }
 
-function renderAll(){
-  renderKpis();
-  if(!$("#chartsView").classList.contains("hidden")) renderCharts();
-  else if(!$("#tableView").classList.contains("hidden")) renderTable();
-  else if(!$("#invView").classList.contains("hidden")) INV.render();
+/* ------------------------------ view tabs ------------------------------- */
+const PRODUCT_TABS = ["crude","gasoline","distillate","jet"];
+let activeTab = "crude";
+$("#ex2020").addEventListener("change",e=>{state.ex2020=e.target.checked; renderCharts();});
+document.querySelectorAll('.seg [data-tab]').forEach(b=>b.addEventListener("click",()=>setTab(b.dataset.tab)));
+function setTab(key){
+  activeTab = key;
+  const isProd = PRODUCT_TABS.includes(key);
+  document.querySelectorAll('.seg [data-tab]').forEach(b=>b.setAttribute("aria-pressed", b.dataset.tab===key));
+  $("#invView").classList.toggle("hidden", !isProd);
+  $("#tableView").classList.toggle("hidden", key!=="table");
+  $("#updatesView").classList.toggle("hidden", key!=="updates");
+  $("#crudeBalance").classList.toggle("hidden", key!=="crude");
+  $("#kpis").classList.toggle("hidden", isProd && key!=="crude");
+  if(isProd){ if(key==="crude") renderCharts(); INV.show(key); }
+  else if(key==="table") renderTable();
   else renderUpdates();
 }
-
-/* ------------------------------ controls -------------------------------- */
-$("#ex2020").addEventListener("change",e=>{state.ex2020=e.target.checked; renderAll();});
-const VIEWS = {vChart:"chartsView", vTable:"tableView", vInv:"invView", vUpdates:"updatesView"};
-$("#vChart").addEventListener("click",()=>setView("vChart"));
-$("#vTable").addEventListener("click",()=>setView("vTable"));
-$("#vInv").addEventListener("click",()=>setView("vInv"));
-$("#vUpdates").addEventListener("click",()=>setView("vUpdates"));
-function setView(active){
-  for(const btn in VIEWS){
-    const on = btn===active;
-    $("#"+btn).setAttribute("aria-pressed",on);
-    $("#"+VIEWS[btn]).classList.toggle("hidden",!on);
-  }
-  renderAll();
+function redrawActive(){
+  if(PRODUCT_TABS.includes(activeTab)){ if(activeTab==="crude") renderCharts(); INV.redraw(); }
+  else if(activeTab==="table") renderTable();
+  else renderUpdates();
 }
 // theme override toggle
 $("#themeBadge").addEventListener("click",toggleTheme);
@@ -6056,12 +6055,11 @@ function toggleTheme(){
   const dark=window.matchMedia("(prefers-color-scheme: dark)").matches;
   const next = cur? (cur==="dark"?"light":"dark") : (dark?"light":"dark");
   document.documentElement.setAttribute("data-theme",next);
-  renderAll();
+  redrawActive();
 }
-
-let rt; window.addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(()=>{ if(!$("#chartsView").classList.contains("hidden")) renderCharts(); else if(!$("#invView").classList.contains("hidden")) INV.render(); },120);});
+let rt; window.addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(redrawActive,120);});
 $("#asof").textContent=DATA.asOf;
-renderAll();
+renderKpis();
 
 /* =================== Inventory year-overlay tab (namespaced) =================== */
 const INV = (function(){
@@ -6154,12 +6152,6 @@ const INV = (function(){
       band.addEventListener("mouseleave",()=>{ tip.style.opacity=0; svg.querySelectorAll('line[stroke-dasharray]').forEach(l=>l.remove()); });
     });
   }
-  function renderSubtabs(){
-    const box=$("#iproducts"), cur=PRD();
-    box.innerHTML = (DATA.products||[]).map(p=>`<button data-prod="${p.key}" aria-pressed="${cur&&p.key===cur.key}">${p.label}</button>`).join("");
-    box.querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>setProduct(b.dataset.prod)));
-  }
-  function setProduct(key){ state.product=key; renderSubtabs(); renderGridShell(); renderCharts(); }
   function renderChips(){
     const box=$("#iychips");
     const all = `<span class="ychip all" data-year="all" role="button" tabindex="0" aria-pressed="${state.focusYear==null}"><span class="dot"></span>All</span>`;
@@ -6213,22 +6205,21 @@ const INV = (function(){
     $("#iChange").addEventListener("click",()=>setMetric("iChange"));
     $("#iModeFocus").addEventListener("click",()=>setMode("focus"));
     $("#iModeSolo").addEventListener("click",()=>setMode("solo"));
-    if(DATA.products && DATA.products.length){
-      if(!state.product) state.product = DATA.products[0].key;
-      renderSubtabs(); renderChips(); syncModeButtons(); renderGridShell();
-    }
   }
-  function render(){
+  function show(key){
+    if(key) state.product = key;
     if(!DATA.products || !DATA.products.length){
       $("#igrid").innerHTML = '<p class="csub" style="padding:10px">No inventory data yet — run <code>python eia_inventory_charts.py --force</code>.</p>';
       return;
     }
     if(!state.product) state.product = DATA.products[0].key;
-    renderSubtabs(); renderChips(); syncModeButtons(); renderGridShell(); renderCharts();
+    renderChips(); syncModeButtons(); renderGridShell(); renderCharts();
   }
-  return { init, render };
+  function redraw(){ if(PRD()) renderCharts(); }
+  return { init, show, redraw };
 })();
 INV.init();
+setTab("crude");
 </script>
 </body>
 </html>
