@@ -79,6 +79,7 @@
   .gtile .gd{font-size:11.5px;font-weight:600;margin-top:2px;font-variant-numeric:tabular-nums;white-space:nowrap}
   .gd.up{color:var(--pos)} .gd.dn{color:var(--neg)} .gd.flat{color:var(--ink-3)}
   .yl.band i{border-radius:2px;border:1px solid var(--axis)}
+  .yl.avg i{height:0;background:none;border-radius:0;border-top:2px dashed var(--ink-2);width:15px}
 
   /* positioning tab — z-score bars + PADD heatmap */
   .poscap{font-size:12.5px;color:var(--ink-2);margin:0 0 14px;max-width:80ch}
@@ -246,10 +247,12 @@
         </span>
       </div>
       <div class="grp">
-        <label class="t">Overlay</label>
-        <span class="switch" title="Shaded min–max range across the prior overlay years (2021+)">
-          <input type="checkbox" id="iBand" checked/>
-          <span>Range band</span>
+        <label class="t">5-yr benchmark</label>
+        <span class="switch" title="Shaded min–max range across the trailing 5 years">
+          <input type="checkbox" id="iBand" checked/><span>Range band</span>
+        </span>
+        <span class="switch" title="Dashed line: average across the trailing 5 years">
+          <input type="checkbox" id="iAvg" checked/><span>5-yr avg</span>
         </span>
       </div>
       <div class="grp">
@@ -12140,7 +12143,7 @@ const INV = (function(){
   const LONG={Jan:"January",Feb:"February",Mar:"March",Apr:"April",May:"May",Jun:"June",Jul:"July",Aug:"August",Sep:"September",Oct:"October",Nov:"November",Dec:"December"};
   function yearColor(year){ const ys=DATA.years, i=ys.indexOf(year); return YEAR_PALETTE[((i<0?year:i))%YEAR_PALETTE.length]; }
   const CUR = () => DATA.years.length? Math.max(...DATA.years) : null;
-  let state = {product:null, metric:"level", focusYear:null, mode:"focus", band:true};
+  let state = {product:null, metric:"level", focusYear:null, mode:"focus", band:true, avg:true};
   function PRD(){ const ps=DATA.products||[]; return ps.find(p=>p.key===state.product) || ps[0] || null; }
   const fmtLevel = (v,dec=1) => v==null? "—" : v.toFixed(dec);
   const fmtChange = (v,dec=1) => v==null? "—" : (v>0?"+":"")+v.toFixed(dec);
@@ -12178,21 +12181,25 @@ const INV = (function(){
     const W = svg.clientWidth || svg.parentElement.clientWidth || 520;
     const H = Math.round(Math.min(240, Math.max(190, W*0.62)));
     const m={t:12,r:10,b:26,l:40}, iw=W-m.l-m.r, ih=H-m.t-m.b;
-    // historical min/max envelope across the prior overlay years (all years except current)
-    let bandMin=null, bandMax=null;
-    if(state.band){
-      const hist = DATA.years.filter(y=>y!==cur);
-      bandMin=[]; bandMax=[];
+    // 5-yr benchmark (min/max range band + average line) across the trailing 5 prior years
+    let bandMin=null, bandMax=null, bandAvg=null;
+    if(state.band || state.avg){
+      const hist = DATA.years.filter(y=>y!==cur).slice(-5);
+      const mn=[], mx=[], av=[];
       for(let i=0;i<months.length;i++){
-        let mn=Infinity, mx=-Infinity;
-        hist.forEach(y=>{const v=(metricData[y]||[])[i]; if(v!=null){ if(v<mn)mn=v; if(v>mx)mx=v; }});
-        bandMin[i]=isFinite(mn)?mn:null; bandMax[i]=isFinite(mx)?mx:null;
+        let loV=Infinity, hiV=-Infinity, sum=0, n=0;
+        hist.forEach(y=>{const v=(metricData[y]||[])[i]; if(v!=null){ if(v<loV)loV=v; if(v>hiV)hiV=v; sum+=v; n++; }});
+        mn[i]=isFinite(loV)?loV:null; mx[i]=isFinite(hiV)?hiV:null; av[i]=n?sum/n:null;
       }
-      if(!bandMin.some(v=>v!=null)){ bandMin=bandMax=null; }
+      if(mn.some(v=>v!=null)){
+        if(state.band){ bandMin=mn; bandMax=mx; }
+        if(state.avg){ bandAvg=av; }
+      }
     }
     let lo=Infinity, hi=-Infinity;
     drawYears.forEach(y=>{const arr=metricData[y]; if(!arr) return; arr.forEach(v=>{ if(v!=null){ lo=Math.min(lo,v); hi=Math.max(hi,v);} });});
     if(bandMin){ for(let i=0;i<months.length;i++){ if(bandMin[i]!=null){ lo=Math.min(lo,bandMin[i]); hi=Math.max(hi,bandMax[i]); } } }
+    if(bandAvg){ for(let i=0;i<months.length;i++){ if(bandAvg[i]!=null){ lo=Math.min(lo,bandAvg[i]); hi=Math.max(hi,bandAvg[i]); } } }
     if(!isFinite(lo)){ lo=0; hi=1; }
     if(state.metric!=="level"){ lo=Math.min(lo,0); hi=Math.max(hi,0); }
     const pad=(hi-lo)*0.10||1; hi+=pad; lo-=pad;
@@ -12236,17 +12243,27 @@ const INV = (function(){
       add("path",{d,fill:"none",stroke:col,"stroke-width":sy.w,"stroke-linejoin":"round","stroke-linecap":"round",opacity:sy.op});
       if(sy.w>=2.4){ pts.forEach(p=>add("circle",{cx:p[0],cy:p[1],r:2.2,fill:col,opacity:sy.op})); }
     });
+    if(bandAvg){
+      let da="";
+      bandAvg.forEach((v,i)=>{ if(v==null) return; da += (da?" L":"M")+x(i)+" "+y(v); });
+      if(da) add("path",{d:da,fill:"none",stroke:css('--ink-2'),"stroke-width":2.1,"stroke-dasharray":"6 4","stroke-linejoin":"round","stroke-linecap":"round"});
+    }
     months.forEach((mo,i)=>{
       const bx = m.l + iw*(i-0.5)/(months.length-1), bw = iw/(months.length-1);
       const band=add("rect",{x:Math.max(m.l,bx),y:m.t,width:bw,height:ih,fill:"transparent"});
       band.style.cursor="crosshair";
       const enter=()=>{
         add("line",{x1:x(i),x2:x(i),y1:m.t,y2:m.t+ih,stroke:css('--axis'),"stroke-width":1,"stroke-dasharray":"3 3",opacity:.6,"pointer-events":"none"});
-        const rows = ordered.slice().reverse().map(year=>{
+        let rows = ordered.slice().reverse().map(year=>{
           const v=(metricData[year]||[])[i];
           const em = (year===state.focusYear || (state.focusYear==null&&year===cur));
           return `<div class="row"><span class="k"><i style="background:${yearColor(year)}"></i>${year}${em?' •':''}</span><b>${fmtVal(v,dec)}</b></div>`;
         }).join("");
+        if(bandAvg && bandAvg[i]!=null){
+          rows += `<div class="row"><span class="k"><i style="background:var(--ink-2)"></i>5-yr avg</span><b>${fmtVal(bandAvg[i],dec)}</b></div>`;
+          const cv=(metricData[cur]||[])[i];
+          if(cv!=null){ const dd=cv-bandAvg[i]; const dc=dd>0?css('--pos'):dd<0?css('--neg'):'inherit'; rows += `<div class="row"><span class="k" style="opacity:.85">${cur} vs avg</span><b style="color:${dc}">${(dd>0?"+":"")+dd.toFixed(dec)}</b></div>`; }
+        }
         tip.innerHTML=`<b>${LONG[mo]}</b>${rows}`;
         const box=svg.getBoundingClientRect(), pb=svg.parentElement.getBoundingClientRect();
         tip.style.left=(x(i)*(box.width/W)+(box.left-pb.left))+"px";
@@ -12291,8 +12308,9 @@ const INV = (function(){
       const em=(y===state.focusYear)||(state.focusYear==null&&y===cur);
       return `<span class="yl" style="opacity:${faded?0.4:1}"><i style="background:${yearColor(y)}"></i>${em?`<b>${y}</b>`:y}</span>`;
     }).join("");
-    const band = state.band ? `<span class="yl band"><i style="background:var(--band)"></i>prior-yr range</span>` : "";
-    return chips + band;
+    const band = state.band ? `<span class="yl band"><i style="background:var(--band)"></i>5-yr range</span>` : "";
+    const avg = state.avg ? `<span class="yl avg"><i></i>5-yr avg</span>` : "";
+    return chips + band + avg;
   }
   function renderCharts(){ const P=PRD(); if(!P) return; const leg=legendHTML(); P.series.forEach((s,idx)=>{ drawYearLines("#chart_"+idx, "#tip_"+idx, s.code); const L=$("#leg_"+idx); if(L) L.innerHTML=leg; }); }
   function setMetric(mid){
@@ -12310,6 +12328,7 @@ const INV = (function(){
   }
   function setMode(mode){ state.mode=mode; syncModeButtons(); renderCharts(); }
   function setBand(on){ state.band=on; renderCharts(); }
+  function setAvg(on){ state.avg=on; renderCharts(); }
   function init(){
     $("#iLevel").addEventListener("click",()=>setMetric("iLevel"));
     $("#iChange").addEventListener("click",()=>setMetric("iChange"));
@@ -12317,6 +12336,7 @@ const INV = (function(){
     $("#iModeFocus").addEventListener("click",()=>setMode("focus"));
     $("#iModeSolo").addEventListener("click",()=>setMode("solo"));
     const b=$("#iBand"); if(b){ b.checked=state.band; b.addEventListener("change",e=>setBand(e.target.checked)); }
+    const a=$("#iAvg"); if(a){ a.checked=state.avg; a.addEventListener("change",e=>setAvg(e.target.checked)); }
   }
   function show(key){
     if(key) state.product = key;
