@@ -121,6 +121,10 @@
   .seg button[disabled]{opacity:.4;cursor:not-allowed}
   .tip .row .k{display:inline-flex;align-items:center;gap:6px}
   .tip .row .k i{width:8px;height:8px;border-radius:50%;display:inline-block}
+  .ylegend{display:flex;flex-wrap:wrap;gap:3px 9px;margin:1px 0 7px;font-size:10.5px;color:var(--ink-2);font-variant-numeric:tabular-nums;line-height:1.5}
+  .ylegend .yl{display:inline-flex;align-items:center;gap:4px}
+  .ylegend .yl i{width:12px;height:3px;border-radius:2px;display:inline-block;flex:none}
+  .ylegend .yl b{color:var(--ink)}
 </style>
 </head>
 <body>
@@ -6177,11 +6181,20 @@ const INV = (function(){
     $("#igrid").innerHTML = P.series.map((s,idx)=>`
       <section class="card">
         <h2 title="EIA series ${s.code}">${s.label}</h2>
-        <p class="csub">million barrels (mmbbl)</p>
+        <p class="csub">million barrels (mmbbl)</p><div class="ylegend" id="leg_${idx}"></div>
         <div class="chartbox"><div class="tip" id="tip_${idx}"></div><svg id="chart_${idx}"></svg></div>
       </section>`).join("");
   }
-  function renderCharts(){ const P=PRD(); if(!P) return; P.series.forEach((s,idx)=> drawYearLines("#chart_"+idx, "#tip_"+idx, s.code)); }
+  function legendHTML(){
+    const cur=CUR();
+    const ys=(state.focusYear&&state.mode==="solo")?[state.focusYear]:DATA.years.slice();
+    return ys.map(y=>{
+      const faded=state.focusYear!=null&&state.mode==="focus"&&y!==state.focusYear;
+      const em=(y===state.focusYear)||(state.focusYear==null&&y===cur);
+      return `<span class="yl" style="opacity:${faded?0.4:1}"><i style="background:${yearColor(y)}"></i>${em?`<b>${y}</b>`:y}</span>`;
+    }).join("");
+  }
+  function renderCharts(){ const P=PRD(); if(!P) return; const leg=legendHTML(); P.series.forEach((s,idx)=>{ drawYearLines("#chart_"+idx, "#tip_"+idx, s.code); const L=$("#leg_"+idx); if(L) L.innerHTML=leg; }); }
   function setMetric(mid){
     state.metric = mid==="iChange"?"change":"level";
     $("#iLevel").setAttribute("aria-pressed", state.metric==="level");
