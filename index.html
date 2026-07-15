@@ -10,7 +10,7 @@
     --ink:#12151b; --ink-2:#4a5261; --ink-3:#828b9a;
     --c2026:#2563eb; --cavg:#f59e0b; --ccomm:#2563eb; --cspr:#f59e0b;
     --pos:#0f9d6b; --neg:#e0533d;
-    --grid:#eceef2; --axis:#c6ccd6;
+    --grid:#eceef2; --axis:#c6ccd6; --band:rgba(130,139,154,.15);
     --shadow:0 1px 2px rgba(16,20,28,.04),0 8px 24px rgba(16,20,28,.06);
     --radius:14px;
   }
@@ -20,7 +20,7 @@
       --ink:#eef1f6; --ink-2:#aeb7c4; --ink-3:#7c8697;
       --c2026:#60a5fa; --cavg:#fbbf24; --ccomm:#60a5fa; --cspr:#fbbf24;
       --pos:#34d399; --neg:#f87171;
-      --grid:#20262f; --axis:#39424f;
+      --grid:#20262f; --axis:#39424f; --band:rgba(124,134,151,.16);
       --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.35);
     }
   }
@@ -28,13 +28,13 @@
     --bg:#0d1017; --surface:#151a22; --surface-2:#1b212b; --border:#262e3a;
     --ink:#eef1f6; --ink-2:#aeb7c4; --ink-3:#7c8697;
     --c2026:#60a5fa; --cavg:#fbbf24; --ccomm:#60a5fa; --cspr:#fbbf24;
-    --pos:#34d399; --neg:#f87171; --grid:#20262f; --axis:#39424f;
+    --pos:#34d399; --neg:#f87171; --grid:#20262f; --axis:#39424f; --band:rgba(124,134,151,.16);
   }
   :root[data-theme="light"]{
     --bg:#f7f8fa; --surface:#ffffff; --surface-2:#f1f3f6; --border:#e3e7ec;
     --ink:#12151b; --ink-2:#4a5261; --ink-3:#828b9a;
     --c2026:#2563eb; --cavg:#f59e0b; --ccomm:#2563eb; --cspr:#f59e0b;
-    --pos:#0f9d6b; --neg:#e0533d; --grid:#eceef2; --axis:#c6ccd6;
+    --pos:#0f9d6b; --neg:#e0533d; --grid:#eceef2; --axis:#c6ccd6; --band:rgba(130,139,154,.15);
   }
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:var(--ink);
@@ -63,6 +63,22 @@
   .kpi .val small{font-size:13px;font-weight:500;color:var(--ink-3);margin-left:3px}
   .kpi .note{font-size:11.5px;color:var(--ink-2);margin-top:5px;line-height:1.35}
   .kpi .note.dn{color:var(--neg)} .kpi .note.up{color:var(--pos)}
+
+  /* this-week-at-a-glance strip */
+  .glance{background:var(--surface);border:1px solid var(--border);border-radius:12px;
+    box-shadow:var(--shadow);padding:12px 4px 10px;margin-bottom:22px}
+  .glance .ghead{font-size:11.5px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em;
+    padding:0 14px 10px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+  .glance .ghead b{color:var(--ink-2)}
+  .glance .grow{display:flex;overflow-x:auto}
+  .gtile{flex:1 0 auto;min-width:120px;padding:2px 16px;border-left:1px solid var(--border)}
+  .gtile:first-child{border-left:0}
+  .gtile .gl{font-size:11px;color:var(--ink-3);white-space:nowrap;margin-bottom:3px}
+  .gtile .gv{font-size:19px;font-weight:640;letter-spacing:-.02em;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .gtile .gv small{font-size:10.5px;font-weight:500;color:var(--ink-3);margin-left:3px}
+  .gtile .gd{font-size:11.5px;font-weight:600;margin-top:2px;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .gd.up{color:var(--pos)} .gd.dn{color:var(--neg)} .gd.flat{color:var(--ink-3)}
+  .yl.band i{border-radius:2px;border:1px solid var(--axis)}
 
   .controls{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;margin-bottom:18px;
     background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:11px 15px;box-shadow:var(--shadow)}
@@ -140,6 +156,8 @@
     </div>
   </header>
 
+  <section class="glance hidden" id="glance"></section>
+
   <section class="kpis" id="kpis"></section>
 
   <div class="controls">
@@ -199,6 +217,13 @@
         <span class="seg" role="group" aria-label="Metric">
           <button id="iLevel" aria-pressed="true">Level</button>
           <button id="iChange" aria-pressed="false">MoM change</button>
+        </span>
+      </div>
+      <div class="grp">
+        <label class="t">Overlay</label>
+        <span class="switch" title="Shaded min–max range across the prior overlay years (2021+)">
+          <input type="checkbox" id="iBand" checked/>
+          <span>Range band</span>
         </span>
       </div>
       <div class="grp">
@@ -430,7 +455,7 @@ const UPDATE_LOG = [
    stock (mmbbl); change = month-over-month. ===== */
 const INV_DATA = {
   "asOf": "2026-07-10",
-  "generated": "2026-07-15 14:38",
+  "generated": "2026-07-15 17:58",
   "source": "WPSR psw09/psw01",
   "years": [
     2021,
@@ -513,6 +538,16 @@ const INV_DATA = {
           "code": "WCRTPUS2",
           "label": "Transfers to crude oil supply \u2014 U.S.",
           "unit": "kbbl/d"
+        },
+        {
+          "code": "DERIV_CRUDE_TOTAL",
+          "label": "U.S. total crude incl. SPR",
+          "unit": "mmbbl"
+        },
+        {
+          "code": "DERIV_DOS_CRUDE",
+          "label": "Days of crude supply (cover)",
+          "unit": "days"
         }
       ],
       "level": {
@@ -1427,6 +1462,178 @@ const INV_DATA = {
             494.0,
             382.0,
             225.0,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        "DERIV_CRUDE_TOTAL": {
+          "2021": [
+            1113.745,
+            1122.378,
+            1139.608,
+            1118.544,
+            1107.103,
+            1074.829,
+            1060.529,
+            1046.697,
+            1037.231,
+            1046.643,
+            1035.667,
+            1011.533
+          ],
+          "2022": [
+            1004.055,
+            993.445,
+            978.272,
+            965.712,
+            941.325,
+            913.434,
+            896.408,
+            868.344,
+            845.592,
+            836.622,
+            808.2,
+            793.026
+          ],
+          "2023": [
+            824.267,
+            851.786,
+            841.127,
+            824.571,
+            815.093,
+            799.341,
+            786.53,
+            772.486,
+            765.343,
+            773.167,
+            801.251,
+            785.453
+          ],
+          "2024": [
+            779.314,
+            807.417,
+            815.058,
+            827.161,
+            826.109,
+            821.134,
+            808.146,
+            797.982,
+            799.484,
+            811.34,
+            815.182,
+            809.171
+          ],
+          "2025": [
+            818.854,
+            829.088,
+            836.226,
+            838.95,
+            837.881,
+            821.716,
+            829.432,
+            825.417,
+            823.246,
+            830.763,
+            839.177,
+            836.107
+          ],
+          "2026": [
+            835.512,
+            854.72,
+            876.7,
+            857.419,
+            790.831,
+            734.014,
+            726.169,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        "DERIV_DOS_CRUDE": {
+          "2021": [
+            32.488,
+            48.935,
+            33.588,
+            31.826,
+            30.728,
+            27.753,
+            27.59,
+            26.691,
+            27.152,
+            28.896,
+            27.708,
+            26.335
+          ],
+          "2022": [
+            27.226,
+            26.849,
+            25.762,
+            26.88,
+            25.867,
+            24.935,
+            26.907,
+            25.763,
+            26.891,
+            27.574,
+            25.188,
+            30.437
+          ],
+          "2023": [
+            30.258,
+            32.059,
+            30.096,
+            29.211,
+            28.435,
+            28.208,
+            26.625,
+            25.474,
+            26.539,
+            27.663,
+            28.065,
+            25.845
+          ],
+          "2024": [
+            28.415,
+            30.473,
+            28.396,
+            29.467,
+            26.594,
+            26.711,
+            26.814,
+            24.752,
+            26.571,
+            26.507,
+            25.037,
+            24.655
+          ],
+          "2025": [
+            27.61,
+            28.191,
+            28.268,
+            27.392,
+            25.654,
+            24.493,
+            25.232,
+            24.94,
+            25.764,
+            27.607,
+            25.332,
+            25.102
+          ],
+          "2026": [
+            26.221,
+            27.731,
+            28.185,
+            28.592,
+            25.692,
+            23.747,
+            23.925,
             null,
             null,
             null,
@@ -2353,6 +2560,178 @@ const INV_DATA = {
             null,
             null
           ]
+        },
+        "DERIV_CRUDE_TOTAL": {
+          "2021": [
+            -17.809,
+            8.633,
+            17.23,
+            -21.064,
+            -11.441,
+            -32.274,
+            -14.3,
+            -13.832,
+            -9.466,
+            9.412,
+            -10.976,
+            -24.134
+          ],
+          "2022": [
+            -7.478,
+            -10.61,
+            -15.173,
+            -12.56,
+            -24.387,
+            -27.891,
+            -17.026,
+            -28.064,
+            -22.752,
+            -8.97,
+            -28.422,
+            -15.174
+          ],
+          "2023": [
+            31.241,
+            27.519,
+            -10.659,
+            -16.556,
+            -9.478,
+            -15.752,
+            -12.811,
+            -14.044,
+            -7.143,
+            7.824,
+            28.084,
+            -15.798
+          ],
+          "2024": [
+            -6.139,
+            28.103,
+            7.641,
+            12.103,
+            -1.052,
+            -4.975,
+            -12.988,
+            -10.164,
+            1.502,
+            11.856,
+            3.842,
+            -6.011
+          ],
+          "2025": [
+            9.683,
+            10.234,
+            7.138,
+            2.724,
+            -1.069,
+            -16.165,
+            7.716,
+            -4.015,
+            -2.171,
+            7.517,
+            8.414,
+            -3.07
+          ],
+          "2026": [
+            -0.595,
+            19.208,
+            21.98,
+            -19.281,
+            -66.588,
+            -56.817,
+            -7.845,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        "DERIV_DOS_CRUDE": {
+          "2021": [
+            -2.052,
+            16.447,
+            -15.347,
+            -1.762,
+            -1.097,
+            -2.976,
+            -0.163,
+            -0.899,
+            0.461,
+            1.744,
+            -1.187,
+            -1.374
+          ],
+          "2022": [
+            0.891,
+            -0.377,
+            -1.087,
+            1.118,
+            -1.013,
+            -0.933,
+            1.972,
+            -1.143,
+            1.127,
+            0.683,
+            -2.386,
+            5.249
+          ],
+          "2023": [
+            -0.18,
+            1.801,
+            -1.962,
+            -0.885,
+            -0.776,
+            -0.227,
+            -1.583,
+            -1.151,
+            1.065,
+            1.124,
+            0.402,
+            -2.221
+          ],
+          "2024": [
+            2.571,
+            2.058,
+            -2.077,
+            1.07,
+            -2.873,
+            0.118,
+            0.103,
+            -2.062,
+            1.819,
+            -0.065,
+            -1.47,
+            -0.382
+          ],
+          "2025": [
+            2.956,
+            0.581,
+            0.077,
+            -0.876,
+            -1.738,
+            -1.161,
+            0.739,
+            -0.292,
+            0.824,
+            1.843,
+            -2.275,
+            -0.23
+          ],
+          "2026": [
+            1.119,
+            1.509,
+            0.454,
+            0.407,
+            -2.899,
+            -1.945,
+            0.178,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
         }
       }
     },
@@ -2424,6 +2803,11 @@ const INV_DATA = {
           "code": "WGFUPUS2",
           "label": "Gasoline product supplied (demand) \u2014 U.S.",
           "unit": "kbbl/d"
+        },
+        {
+          "code": "DERIV_DOS_GAS",
+          "label": "Days of gasoline supply",
+          "unit": "days"
         }
       ],
       "level": {
@@ -3538,6 +3922,92 @@ const INV_DATA = {
             8594.0,
             9131.0,
             8844.0,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        "DERIV_DOS_GAS": {
+          "2021": [
+            32.452,
+            29.881,
+            25.93,
+            26.603,
+            25.583,
+            26.335,
+            23.414,
+            23.722,
+            23.599,
+            22.544,
+            24.491,
+            28.486
+          ],
+          "2022": [
+            30.396,
+            28.138,
+            28.101,
+            25.81,
+            24.395,
+            24.838,
+            26.378,
+            24.965,
+            21.919,
+            23.861,
+            25.703,
+            29.633
+          ],
+          "2023": [
+            27.629,
+            26.25,
+            23.946,
+            25.862,
+            23.749,
+            22.862,
+            24.789,
+            23.976,
+            28.323,
+            25.701,
+            26.588,
+            29.791
+          ],
+          "2024": [
+            31.205,
+            28.842,
+            24.666,
+            26.35,
+            25.816,
+            24.583,
+            24.19,
+            24.529,
+            25.96,
+            23.023,
+            24.56,
+            28.328
+          ],
+          "2025": [
+            30.15,
+            27.806,
+            27.967,
+            24.79,
+            27.629,
+            26.866,
+            24.957,
+            23.97,
+            25.909,
+            23.215,
+            25.753,
+            27.366
+          ],
+          "2026": [
+            31.632,
+            30.527,
+            27.73,
+            24.418,
+            25.012,
+            23.433,
+            23.805,
             null,
             null,
             null,
@@ -4664,6 +5134,92 @@ const INV_DATA = {
             null,
             null
           ]
+        },
+        "DERIV_DOS_GAS": {
+          "2021": [
+            3.348,
+            -2.571,
+            -3.951,
+            0.673,
+            -1.02,
+            0.752,
+            -2.921,
+            0.309,
+            -0.123,
+            -1.055,
+            1.947,
+            3.995
+          ],
+          "2022": [
+            1.91,
+            -2.258,
+            -0.037,
+            -2.291,
+            -1.415,
+            0.443,
+            1.54,
+            -1.413,
+            -3.046,
+            1.942,
+            1.842,
+            3.93
+          ],
+          "2023": [
+            -2.004,
+            -1.379,
+            -2.305,
+            1.916,
+            -2.113,
+            -0.887,
+            1.926,
+            -0.813,
+            4.348,
+            -2.622,
+            0.887,
+            3.202
+          ],
+          "2024": [
+            1.415,
+            -2.363,
+            -4.176,
+            1.684,
+            -0.535,
+            -1.232,
+            -0.393,
+            0.339,
+            1.43,
+            -2.937,
+            1.537,
+            3.768
+          ],
+          "2025": [
+            1.822,
+            -2.343,
+            0.16,
+            -3.177,
+            2.839,
+            -0.763,
+            -1.91,
+            -0.986,
+            1.939,
+            -2.694,
+            2.538,
+            1.613
+          ],
+          "2026": [
+            4.266,
+            -1.105,
+            -2.797,
+            -3.312,
+            0.594,
+            -1.579,
+            0.372,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
         }
       }
     },
@@ -4715,6 +5271,11 @@ const INV_DATA = {
           "code": "WDIUPUS2",
           "label": "Distillate product supplied (demand) \u2014 U.S.",
           "unit": "kbbl/d"
+        },
+        {
+          "code": "DERIV_DOS_DIST",
+          "label": "Days of distillate supply",
+          "unit": "days"
         }
       ],
       "level": {
@@ -5485,6 +6046,92 @@ const INV_DATA = {
             3468.0,
             3614.0,
             3156.0,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        "DERIV_DOS_DIST": {
+          "2021": [
+            38.789,
+            37.75,
+            35.034,
+            33.007,
+            34.829,
+            32.872,
+            38.348,
+            31.145,
+            32.652,
+            34.488,
+            29.431,
+            33.925
+          ],
+          "2022": [
+            26.289,
+            26.765,
+            29.845,
+            26.527,
+            26.806,
+            31.503,
+            28.198,
+            31.325,
+            27.02,
+            25.084,
+            30.812,
+            42.438
+          ],
+          "2023": [
+            31.85,
+            31.842,
+            26.663,
+            28.493,
+            29.253,
+            29.747,
+            30.62,
+            31.854,
+            31.139,
+            30.227,
+            36.754,
+            47.35
+          ],
+          "2024": [
+            34.814,
+            34.259,
+            33.21,
+            31.498,
+            36.378,
+            32.228,
+            34.053,
+            30.702,
+            33.435,
+            29.081,
+            34.756,
+            38.016
+          ],
+          "2025": [
+            25.762,
+            29.856,
+            31.157,
+            30.37,
+            34.16,
+            25.63,
+            31.494,
+            30.765,
+            34.166,
+            30.066,
+            33.32,
+            36.602
+          ],
+          "2026": [
+            29.552,
+            32.661,
+            29.172,
+            25.198,
+            29.499,
+            30.05,
+            34.276,
             null,
             null,
             null,
@@ -6267,6 +6914,92 @@ const INV_DATA = {
             null,
             null
           ]
+        },
+        "DERIV_DOS_DIST": {
+          "2021": [
+            -3.511,
+            -1.04,
+            -2.716,
+            -2.027,
+            1.822,
+            -1.957,
+            5.476,
+            -7.203,
+            1.507,
+            1.836,
+            -5.056,
+            4.494
+          ],
+          "2022": [
+            -7.636,
+            0.476,
+            3.08,
+            -3.318,
+            0.278,
+            4.697,
+            -3.304,
+            3.127,
+            -4.306,
+            -1.935,
+            5.727,
+            11.627
+          ],
+          "2023": [
+            -10.588,
+            -0.008,
+            -5.179,
+            1.83,
+            0.761,
+            0.494,
+            0.873,
+            1.234,
+            -0.715,
+            -0.912,
+            6.528,
+            10.595
+          ],
+          "2024": [
+            -12.536,
+            -0.554,
+            -1.049,
+            -1.712,
+            4.88,
+            -4.15,
+            1.825,
+            -3.351,
+            2.733,
+            -4.354,
+            5.675,
+            3.26
+          ],
+          "2025": [
+            -12.254,
+            4.094,
+            1.301,
+            -0.786,
+            3.79,
+            -8.53,
+            5.864,
+            -0.729,
+            3.4,
+            -4.099,
+            3.253,
+            3.283
+          ],
+          "2026": [
+            -7.051,
+            3.109,
+            -3.489,
+            -3.974,
+            4.301,
+            0.551,
+            4.226,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
         }
       }
     },
@@ -6318,6 +7051,11 @@ const INV_DATA = {
           "code": "WKJUPUS2",
           "label": "Jet product supplied (demand) \u2014 U.S.",
           "unit": "kbbl/d"
+        },
+        {
+          "code": "DERIV_DOS_JET",
+          "label": "Days of jet supply",
+          "unit": "days"
         }
       ],
       "level": {
@@ -7094,6 +7832,92 @@ const INV_DATA = {
             null,
             null
           ]
+        },
+        "DERIV_DOS_JET": {
+          "2021": [
+            56.539,
+            30.114,
+            28.677,
+            36.711,
+            29.339,
+            31.154,
+            26.353,
+            23.615,
+            29.859,
+            23.568,
+            20.887,
+            23.813
+          ],
+          "2022": [
+            25.435,
+            25.978,
+            26.052,
+            25.124,
+            23.071,
+            27.984,
+            28.91,
+            21.144,
+            24.585,
+            27.824,
+            20.946,
+            23.719
+          ],
+          "2023": [
+            22.393,
+            24.819,
+            22.458,
+            27.034,
+            23.281,
+            24.458,
+            23.733,
+            22.726,
+            24.978,
+            23.639,
+            21.908,
+            27.683
+          ],
+          "2024": [
+            25.879,
+            24.957,
+            23.548,
+            23.573,
+            24.879,
+            23.61,
+            27.688,
+            26.524,
+            23.686,
+            26.49,
+            25.873,
+            25.77
+          ],
+          "2025": [
+            24.366,
+            28.643,
+            25.198,
+            26.581,
+            24.803,
+            26.039,
+            20.733,
+            25.113,
+            25.482,
+            24.805,
+            25.594,
+            24.792
+          ],
+          "2026": [
+            25.563,
+            24.514,
+            24.644,
+            24.812,
+            26.261,
+            28.577,
+            27.51,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
         }
       },
       "change": {
@@ -7864,6 +8688,92 @@ const INV_DATA = {
             -53.0,
             -47.0,
             80.0,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        "DERIV_DOS_JET": {
+          "2021": [
+            26.519,
+            -26.425,
+            -1.437,
+            8.035,
+            -7.373,
+            1.815,
+            -4.801,
+            -2.738,
+            6.244,
+            -6.291,
+            -2.681,
+            2.926
+          ],
+          "2022": [
+            1.623,
+            0.543,
+            0.074,
+            -0.928,
+            -2.053,
+            4.914,
+            0.926,
+            -7.766,
+            3.44,
+            3.24,
+            -6.878,
+            2.772
+          ],
+          "2023": [
+            -1.325,
+            2.426,
+            -2.361,
+            4.576,
+            -3.752,
+            1.176,
+            -0.725,
+            -1.007,
+            2.252,
+            -1.339,
+            -1.731,
+            5.775
+          ],
+          "2024": [
+            -1.804,
+            -0.922,
+            -1.409,
+            0.025,
+            1.306,
+            -1.269,
+            4.078,
+            -1.164,
+            -2.837,
+            2.804,
+            -0.617,
+            -0.103
+          ],
+          "2025": [
+            -1.404,
+            4.278,
+            -3.446,
+            1.384,
+            -1.778,
+            1.235,
+            -5.306,
+            4.38,
+            0.369,
+            -0.677,
+            0.789,
+            -0.802
+          ],
+          "2026": [
+            0.771,
+            -1.049,
+            0.131,
+            0.168,
+            1.449,
+            2.316,
+            -1.067,
             null,
             null,
             null,
@@ -10007,7 +10917,76 @@ const INV_DATA = {
         }
       }
     }
-  ]
+  ],
+  "weekly": {
+    "period": "2026-07-10",
+    "items": [
+      {
+        "code": "WCESTUS1",
+        "label": "Commercial crude",
+        "unit": "mmbbl",
+        "dec": 1,
+        "level": 409.665,
+        "wow": -1.692
+      },
+      {
+        "code": "W_EPC0_SAX_YCUOK_MBBL",
+        "label": "Cushing",
+        "unit": "mmbbl",
+        "dec": 1,
+        "level": 20.044,
+        "wow": 0.43
+      },
+      {
+        "code": "WCSSTUS1",
+        "label": "SPR crude",
+        "unit": "mmbbl",
+        "dec": 1,
+        "level": 316.504,
+        "wow": -2.985
+      },
+      {
+        "code": "WGTSTUS1",
+        "label": "Gasoline",
+        "unit": "mmbbl",
+        "dec": 1,
+        "level": 210.529,
+        "wow": -1.533
+      },
+      {
+        "code": "WDISTUS1",
+        "label": "Distillate",
+        "unit": "mmbbl",
+        "dec": 1,
+        "level": 108.175,
+        "wow": 4.556
+      },
+      {
+        "code": "WKJSTUS1",
+        "label": "Jet",
+        "unit": "mmbbl",
+        "dec": 1,
+        "level": 48.418,
+        "wow": 0.842
+      },
+      {
+        "code": "WCRRIUS2",
+        "label": "Crude runs",
+        "unit": "mmbbl/d",
+        "dec": 2,
+        "level": 17.123,
+        "wow": 0.099
+      },
+      {
+        "code": "WPULEUS3",
+        "label": "Refinery util.",
+        "unit": "%",
+        "dec": 1,
+        "level": 96.2,
+        "wow": 0.4
+      }
+    ]
+  }
 };
 /* ===== INV:END ===== */
 
@@ -10187,6 +11166,31 @@ function renderKpis(){
     </div>`).join("");
 }
 
+/* ------------------- this week at a glance (W/W) strip ------------------- */
+function renderWeeklyStrip(){
+  const w = (typeof INV_DATA!=='undefined' && INV_DATA && INV_DATA.weekly) ? INV_DATA.weekly : null;
+  const box = $("#glance");
+  if(!box) return;
+  if(!w || !Array.isArray(w.items) || !w.items.length){ box.classList.add("hidden"); return; }
+  const arrow = v => v>0?"▲":v<0?"▼":"■";
+  const cls   = v => v>0?"up":v<0?"dn":"flat";
+  const num   = (v,d) => v.toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d});
+  const tiles = w.items.map(it=>{
+    const lvl = it.level==null? "—" : num(it.level,it.dec);
+    let d;
+    if(it.wow==null){ d = `<div class="gd flat">— w/w</div>`; }
+    else{
+      const s = (it.wow>0?"+":"") + num(it.wow,it.dec);
+      d = `<div class="gd ${cls(it.wow)}">${arrow(it.wow)} ${s} <span style="color:var(--ink-3);font-weight:500">w/w</span></div>`;
+    }
+    return `<div class="gtile"><div class="gl">${it.label}</div>
+      <div class="gv">${lvl}<small>${it.unit}</small></div>${d}</div>`;
+  }).join("");
+  box.innerHTML = `<div class="ghead"><span>This week at a glance <b>· week-over-week change</b></span>`
+    + `<span>week ending <b>${w.period||'—'}</b></span></div><div class="grow">${tiles}</div>`;
+  box.classList.remove("hidden");
+}
+
 /* -------------------------------- table --------------------------------- */
 function renderTable(){
   const avg = state.ex2020? DATA.usAvgEx2020 : DATA.usAvgIncl;
@@ -10307,6 +11311,7 @@ function toggleTheme(){
 let rt; window.addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(redrawActive,120);});
 $("#asof").textContent=DATA.asOf;
 renderKpis();
+renderWeeklyStrip();
 
 /* =================== Inventory year-overlay tab (namespaced) =================== */
 const INV = (function(){
@@ -10315,7 +11320,7 @@ const INV = (function(){
   const LONG={Jan:"January",Feb:"February",Mar:"March",Apr:"April",May:"May",Jun:"June",Jul:"July",Aug:"August",Sep:"September",Oct:"October",Nov:"November",Dec:"December"};
   function yearColor(year){ const ys=DATA.years, i=ys.indexOf(year); return YEAR_PALETTE[((i<0?year:i))%YEAR_PALETTE.length]; }
   const CUR = () => DATA.years.length? Math.max(...DATA.years) : null;
-  let state = {product:null, metric:"level", focusYear:null, mode:"focus"};
+  let state = {product:null, metric:"level", focusYear:null, mode:"focus", band:true};
   function PRD(){ const ps=DATA.products||[]; return ps.find(p=>p.key===state.product) || ps[0] || null; }
   const fmtLevel = (v,dec=1) => v==null? "—" : v.toFixed(dec);
   const fmtChange = (v,dec=1) => v==null? "—" : (v>0?"+":"")+v.toFixed(dec);
@@ -10338,8 +11343,21 @@ const INV = (function(){
     const W = svg.clientWidth || svg.parentElement.clientWidth || 520;
     const H = Math.round(Math.min(240, Math.max(190, W*0.62)));
     const m={t:12,r:10,b:26,l:40}, iw=W-m.l-m.r, ih=H-m.t-m.b;
+    // historical min/max envelope across the prior overlay years (all years except current)
+    let bandMin=null, bandMax=null;
+    if(state.band){
+      const hist = DATA.years.filter(y=>y!==cur);
+      bandMin=[]; bandMax=[];
+      for(let i=0;i<months.length;i++){
+        let mn=Infinity, mx=-Infinity;
+        hist.forEach(y=>{const v=(metricData[y]||[])[i]; if(v!=null){ if(v<mn)mn=v; if(v>mx)mx=v; }});
+        bandMin[i]=isFinite(mn)?mn:null; bandMax[i]=isFinite(mx)?mx:null;
+      }
+      if(!bandMin.some(v=>v!=null)){ bandMin=bandMax=null; }
+    }
     let lo=Infinity, hi=-Infinity;
     drawYears.forEach(y=>{const arr=metricData[y]; if(!arr) return; arr.forEach(v=>{ if(v!=null){ lo=Math.min(lo,v); hi=Math.max(hi,v);} });});
+    if(bandMin){ for(let i=0;i<months.length;i++){ if(bandMin[i]!=null){ lo=Math.min(lo,bandMin[i]); hi=Math.max(hi,bandMax[i]); } } }
     if(!isFinite(lo)){ lo=0; hi=1; }
     if(state.metric==="change"){ lo=Math.min(lo,0); hi=Math.max(hi,0); }
     const pad=(hi-lo)*0.10||1; hi+=pad; lo-=pad;
@@ -10356,6 +11374,12 @@ const INV = (function(){
     months.forEach((mo,i)=>{ if(i%2!==0 && W<430) return;
       add("text",{x:x(i),y:H-9,"text-anchor":"middle","font-size":9.5,fill:css('--ink-3')}).textContent=mo[0];
     });
+    if(bandMin){
+      let top="", bot=[];
+      for(let i=0;i<months.length;i++){ if(bandMax[i]==null) continue; top += (top?" L":"M")+x(i)+" "+y(bandMax[i]); }
+      for(let i=months.length-1;i>=0;i--){ if(bandMin[i]==null) continue; bot.push("L"+x(i)+" "+y(bandMin[i])); }
+      if(top && bot.length) add("path",{d:top+" "+bot.join(" ")+" Z", fill:css('--band'), stroke:"none"});
+    }
     function styleFor(year){
       if(state.focusYear==null) return {op:1, w: year===cur?2.4:1.5};
       if(year===state.focusYear) return {op:1, w:2.9};
@@ -10427,11 +11451,13 @@ const INV = (function(){
   function legendHTML(){
     const cur=CUR();
     const ys=(state.focusYear&&state.mode==="solo")?[state.focusYear]:DATA.years.slice();
-    return ys.map(y=>{
+    const chips = ys.map(y=>{
       const faded=state.focusYear!=null&&state.mode==="focus"&&y!==state.focusYear;
       const em=(y===state.focusYear)||(state.focusYear==null&&y===cur);
       return `<span class="yl" style="opacity:${faded?0.4:1}"><i style="background:${yearColor(y)}"></i>${em?`<b>${y}</b>`:y}</span>`;
     }).join("");
+    const band = state.band ? `<span class="yl band"><i style="background:var(--band)"></i>prior-yr range</span>` : "";
+    return chips + band;
   }
   function renderCharts(){ const P=PRD(); if(!P) return; const leg=legendHTML(); P.series.forEach((s,idx)=>{ drawYearLines("#chart_"+idx, "#tip_"+idx, s.code); const L=$("#leg_"+idx); if(L) L.innerHTML=leg; }); }
   function setMetric(mid){
@@ -10447,11 +11473,13 @@ const INV = (function(){
     $("#iModeSolo").setAttribute("aria-pressed", state.mode==="solo");
   }
   function setMode(mode){ state.mode=mode; syncModeButtons(); renderCharts(); }
+  function setBand(on){ state.band=on; renderCharts(); }
   function init(){
     $("#iLevel").addEventListener("click",()=>setMetric("iLevel"));
     $("#iChange").addEventListener("click",()=>setMetric("iChange"));
     $("#iModeFocus").addEventListener("click",()=>setMode("focus"));
     $("#iModeSolo").addEventListener("click",()=>setMode("solo"));
+    const b=$("#iBand"); if(b){ b.checked=state.band; b.addEventListener("change",e=>setBand(e.target.checked)); }
   }
   function show(key){
     if(key) state.product = key;
