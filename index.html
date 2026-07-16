@@ -13437,22 +13437,29 @@ const MACRO_DERIVED={
 const COUPLE_EXCLUDE={BE10Y:1};
 let macroWin=63, macroMode='corr';   // 'corr' = correlation level, 'z' = vs its own history
 /* Alarm gates. Bars MUST vary by window because the noise floor does (0.43/0.25/0.12).
-   Calibrated by Monte-Carlo, not by feel. Re-verified against the live 24-instrument set
-   after credit spreads were added (adding instruments changes the null, so this is NOT a
-   set-and-forget constant — re-run it whenever INSTRUMENTS or REGIMES change):
-     - THE NULL MUST PRESERVE CROSS-INSTRUMENT CORRELATION. My first pass drew every
+   Calibrated by Monte-Carlo, not by feel. ***RE-RUN `python calibrate_alarms.py` WHENEVER
+   INSTRUMENTS OR REGIMES CHANGE*** — it parses this table + MACRO_DATA and prints the
+   numbers to paste back here. It exists because the calibration used to live in throwaway
+   scratch scripts, which is exactly how both bugs below survived:
+     - THE NULL MUST PRESERVE CROSS-INSTRUMENT CORRELATION. Early passes drew every
        instrument iid (rng.standard_normal) — but SPX/EEM/COPPER are 0.36-0.77 correlated
        with each other, so their spurious readings do NOT average out and alignment has
        much fatter tails than an independent null implies. Drawing the null from the
-       EMPIRICAL correlation matrix (WTI still independent of all) raises the measured
-       false-positive rate 3-10x: 0.25% / 0.25% / 0.07% at 21/63/252d, vs the ~0.00% the
-       independent null reported. Still low enough that the bars stand — but the honest
-       number is 1-in-400, not 1-in-4000.
-     - coherent planted rho=0.5 regime: named+alarmed 73%/74%/60% (21/63/252d). Silence is
-       therefore weak evidence — ~1 in 3 real regimes is missed. A fired alarm is strong.
-     - the 21d strength bar stays 0.35 rather than 0.50: both cost ~0 false positives, but
-       0.35 detects a genuine rho=0.4 regime 32% of the time vs 8.6% at 0.50 — at 0.50 the
-       badge would essentially never light.
+       EMPIRICAL correlation matrix (nearest-PSD + Cholesky; WTI still independent of all)
+       raises the false-positive rate several-fold: measured 0.15% / 0.28% / 0.28% at
+       21/63/252d. Still comfortably low, so the bars stand — but the honest number is
+       ~1-in-400, not the ~1-in-4000 the iid null claimed.
+     - THE POWER TEST MUST PLANT A *COHERENT* REGIME. The first version loaded rho onto
+       every instrument uniformly — including ones weighted -1, i.e. a regime the model
+       should REJECT — and reported a meaningless 84/100/98%. Planting each instrument with
+       the sign its weight implies, off-signature instruments keeping their real
+       cross-correlation: true power at rho=0.5 is 56% / 41% / 55%. So a fired alarm is
+       trustworthy but SILENCE IS WEAK EVIDENCE — nearly half of real regimes are missed.
+     - the 21d strength bar is 0.35, but note it is NOT the binding constraint: 0.30/0.35/
+       0.40 all measure identically (FP 0.24%, power 13.4% @rho=0.4 / 55.8% @rho=0.5) —
+       the 0.75 alignment bar does all the work there. Only 0.50 binds, and it destroys the
+       badge (power 0.4% / 8.9%). An earlier comment justified 0.35 with "32% vs 8.6%"
+       figures from the flawed iid null; that reasoning was fiction, the choice survives.
    KNOWN LIMITATION (measured, not fixed): the ±1 dot-product double-counts correlated
    instruments — each regime counts the same underlying axis 1.27x (War premium) to 2.29x
    (Goldilocks), so regimes are not on a level playing field. Redundancy-whitening the
@@ -13730,7 +13737,7 @@ function renderMacro(){
             <span style="color:var(--ink-3)">strongest macro links: ${links} · strongest is <b>${reg.cp.couplingX.toFixed(1)}×</b> the significance floor (${reg.cp.bonf.toFixed(2)}, Bonferroni-adjusted for ${reg.cp.n} assets) — ${reg.cp.couplingX>=1?'a genuine link exists':'nothing clears chance'}</span></div></div>
         <div class="regscores">${regRows}</div>
       </div>
-      <p class="cotnote" style="margin-top:10px"><b>Reading the bars:</b> each % is <b>alignment</b> — of the correlation that actually exists in that regime's signature, how much points the right way. <b>+100% = a perfect match even if every correlation is only 0.3</b> (real correlations never reach ±1, so this is scale-free and independent of how many instruments a regime uses). Hover a row for its signature and strength. <b>strength</b> = avg |corr| in the signature: alignment says <i>which</i> way, strength says <i>how much signal</i> — a regime is only named when it has both. Greyed rows (dir✗) need WTI moving the other way; <b>(noise)</b> = that signature sits below this window's noise floor and can't be named however neatly it lines up.<br><b>At ${macroWin}d a correlation must exceed |${reg.nf.toFixed(2)}| to be distinguishable from zero</b> (SE ≈ 1/√(n−3)) — which is why 21d rarely names a regime and 252d readily does.<br><b>Alarm gates</b> (bars vary by window because the noise floor does): 21d needs ≥75% &amp; ≥0.35 · 63d ≥65% &amp; ≥0.30 · 252d ≥55% &amp; ≥0.18. Monte-Carlo calibrated on the live 24-instrument set, with the null drawn from the <i>real</i> cross-instrument correlation matrix (an independent-noise null understates false positives 3–10×): <b>false-positive rate 0.25% / 0.25% / 0.07%</b> at 21/63/252d. On a <i>coherent</i> planted ρ=0.5 regime (each instrument loading with the sign its weight implies, everything else noise) it correctly names and alarms ~73% / ~74% / ~60%. So a fired alarm is trustworthy, but <b>silence is weak evidence</b> — roughly a third of real regimes are missed. A contested ("mixed") read never alarms.<br><b>Known limitation:</b> the ±1 signature double-counts correlated instruments (each regime counts the same underlying axis 1.3–2.3×), so regimes aren't on a perfectly level playing field.<br>Coverage: ${covNote}.</p>
+      <p class="cotnote" style="margin-top:10px"><b>Reading the bars:</b> each % is <b>alignment</b> — of the correlation that actually exists in that regime's signature, how much points the right way. <b>+100% = a perfect match even if every correlation is only 0.3</b> (real correlations never reach ±1, so this is scale-free and independent of how many instruments a regime uses). Hover a row for its signature and strength. <b>strength</b> = avg |corr| in the signature: alignment says <i>which</i> way, strength says <i>how much signal</i> — a regime is only named when it has both. Greyed rows (dir✗) need WTI moving the other way; <b>(noise)</b> = that signature sits below this window's noise floor and can't be named however neatly it lines up.<br><b>At ${macroWin}d a correlation must exceed |${reg.nf.toFixed(2)}| to be distinguishable from zero</b> (SE ≈ 1/√(n−3)) — which is why 21d rarely names a regime and 252d readily does.<br><b>Alarm gates</b> (bars vary by window because the noise floor does): 21d needs ≥75% &amp; ≥0.35 · 63d ≥65% &amp; ≥0.30 · 252d ≥55% &amp; ≥0.18. Monte-Carlo calibrated on the live 24-instrument set, with the null drawn from the <i>real</i> cross-instrument correlation matrix (an independent-noise null understates false positives several-fold): <b>false-positive rate 0.15% / 0.28% / 0.28%</b> at 21/63/252d. On a <i>coherent</i> planted ρ=0.5 regime (each instrument loading with the sign its weight implies) it correctly names and alarms <b>56% / 41% / 55%</b>. So a fired alarm is trustworthy, but <b>silence is weak evidence — nearly half of real regimes are missed</b>. A contested ("mixed") read never alarms.<br><b>Known limitation:</b> the ±1 signature double-counts correlated instruments (each regime counts the same underlying axis 1.3–2.3×), so regimes aren't on a perfectly level playing field.<br>Coverage: ${covNote}.</p>
     </section>
     ${inflCard}
     <section class="card">
