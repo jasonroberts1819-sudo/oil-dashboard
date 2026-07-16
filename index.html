@@ -13147,10 +13147,11 @@ const COT = (function(){
   const CATCOL = {mm:"#7c3aed", pm:"#0891b2", sw:"#d97706", or:"#16a34a"};
   // one chart per (metric, category). Net = all 4 categories; Longs/Shorts/Spreading = MM + Other only.
   const SECTIONS = [
-    {key:"net",    label:"Net",       cats:["mm","or","pm","sw"], zero:true},
-    {key:"long",   label:"Longs",     cats:["mm","or"],           zero:false},
-    {key:"short",  label:"Shorts",    cats:["mm","or"],           zero:false},
-    {key:"spread", label:"Spreading", cats:["mm","or"],           zero:false}
+    {key:"net",    label:"Net",           cats:["mm","or","pm","sw"], zero:true,  unit:"contracts"},
+    {key:"pctoi",  label:"Net % of OI",   cats:["mm","or","pm","sw"], zero:true,  unit:"% of open interest", pct:true},
+    {key:"long",   label:"Longs",         cats:["mm","or"],           zero:false, unit:"contracts"},
+    {key:"short",  label:"Shorts",        cats:["mm","or"],           zero:false, unit:"contracts"},
+    {key:"spread", label:"Spreading",     cats:["mm","or"],           zero:false, unit:"contracts"}
   ];
   let st = {product:null, venue:null};
   const D = () => (typeof COT_DATA!=="undefined" && COT_DATA && COT_DATA.products && COT_DATA.products.length) ? COT_DATA : null;
@@ -13172,7 +13173,9 @@ const COT = (function(){
     if(!out.includes(0)&&lo<0&&hi>0) out.push(0);
     return out.sort((a,b)=>a-b);
   }
-  function drawTS(svgId, tipId, dates, lines, zero){
+  function drawTS(svgId, tipId, dates, lines, zero, pct){
+    const fmtAx = pct? (t=> (+t.toFixed(1))+"%") : fmtK;
+    const fmtTip = pct? (v=> v==null?"—":v.toFixed(1)+"%") : fmtN;
     const svg=$(svgId), tip=$(tipId); if(!svg) return;
     const NS="http://www.w3.org/2000/svg";
     const W=svg.clientWidth||svg.parentElement.clientWidth||480;
@@ -13189,7 +13192,7 @@ const COT = (function(){
     ticks(lo,hi,4).forEach(t=>{
       const zerol=(t===0&&zero);
       add("line",{x1:m.l,x2:W-m.r,y1:y(t),y2:y(t),stroke:zerol?css('--axis'):css('--grid'),"stroke-width":zerol?1.3:1});
-      add("text",{x:m.l-6,y:y(t)+3.2,"text-anchor":"end","font-size":9,fill:css('--ink-3')}).textContent=fmtK(t);
+      add("text",{x:m.l-6,y:y(t)+3.2,"text-anchor":"end","font-size":9,fill:css('--ink-3')}).textContent=fmtAx(t);
     });
     // year labels
     let py=null;
@@ -13215,7 +13218,7 @@ const COT = (function(){
       let i=Math.round((mx-m.l)/iw*(n-1)); i=Math.max(0,Math.min(n-1,i));
       svg.querySelectorAll(".cx").forEach(e=>e.remove());
       const cl=add("line",{x1:x(i),x2:x(i),y1:m.t,y2:m.t+ih,stroke:css('--axis'),"stroke-width":1,"stroke-dasharray":"3 3",opacity:.6}); cl.classList.add("cx");
-      const rows=lines.map(L=>`<div class="row"><span class="k"><i style="background:${L.color}"></i>${L.label}</span><b>${fmtN(L.vals[i])}</b></div>`).join("");
+      const rows=lines.map(L=>`<div class="row"><span class="k"><i style="background:${L.color}"></i>${L.label}</span><b>${fmtTip(L.vals[i])}</b></div>`).join("");
       tip.innerHTML=`<b>${dates[i]}</b>${rows}`;
       const pb=svg.parentElement.getBoundingClientRect();
       tip.style.left=Math.min(iw-40, x(i)*(box.width/W)+(box.left-pb.left))+"px";
@@ -13241,9 +13244,12 @@ const COT = (function(){
     $("#cotbars").innerHTML = barsHTML(v);
     SECTIONS.forEach(S=>{
       S.cats.forEach(ck=>{
-        if(!v.series[ck]) return;
-        const line=[{key:ck,label:catLabel(ck),color:CATCOL[ck],vals:metricVals(v.series[ck],S.key)}];
-        drawTS("#cotchart_"+S.key+"_"+ck, "#cottip_"+S.key+"_"+ck, v.dates, line, S.zero);
+        const s=v.series[ck]; if(!s) return;
+        const vals = S.key==="pctoi"
+          ? s.long.map((l,i)=> v.oi[i]? (l-s.short[i])/v.oi[i]*100 : null)
+          : metricVals(s, S.key);
+        const line=[{key:ck,label:catLabel(ck),color:CATCOL[ck],vals}];
+        drawTS("#cotchart_"+S.key+"_"+ck, "#cottip_"+S.key+"_"+ck, v.dates, line, S.zero, S.pct);
       });
     });
   }
@@ -13268,7 +13274,7 @@ const COT = (function(){
     const chartSections=SECTIONS.map(S=>{
       const cards=S.cats.map(ck=>`
         <section class="card"><h2 style="font-size:13.5px">${catLabel(ck)}</h2>
-          <p class="csub">contracts · weekly</p>
+          <p class="csub">${S.unit||'contracts'} · weekly</p>
           <div class="chartbox"><div class="tip" id="cottip_${S.key}_${ck}"></div><svg id="cotchart_${S.key}_${ck}"></svg></div>
         </section>`).join("");
       return `<div class="cotsec"><h3>${S.label}</h3></div><div class="cotgrid">${cards}</div>`;
