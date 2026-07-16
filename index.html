@@ -13438,8 +13438,13 @@ function macroCoverage(assets){
                  It also required real correlations to approach +1, which never happens.)
      strength  = mean|r| across the signature -> is there any signal here at all?
    A regime is only named when it is BOTH well-aligned AND has real correlation behind it. */
-const STRENGTH_REF=0.30;   // signature avg |corr| at/above which strength stops discounting
-function regimeFit(R, f, sig, wtiRet){
+/* The strength bar must be the window's NOISE FLOOR, not a flat constant. A Pearson r on
+   n observations has SE ~ 1/sqrt(n-3), so |r| must clear ~1.96*SE to be distinguishable
+   from zero: 0.46 at 21d but only 0.12 at 252d. A fixed reference was wrong BOTH ways —
+   too lenient at 21d (it would name a regime built on sub-noise correlations) and too
+   strict at 252d (it suppressed genuine signal). */
+const noiseFloor = w => 1.96/Math.sqrt(Math.max(5,w)-3);
+function regimeFit(R, f, sig, wtiRet, nf){
   const g=k=>k[0]==='_' ? (sig[k]==null?0:sig[k]) : (f[k]==null?0:f[k]);
   const ks=Object.keys(R.w);
   let num=0, mag=0;
@@ -13447,21 +13452,25 @@ function regimeFit(R, f, sig, wtiRet){
   const alignment = mag>1e-9 ? num/mag : 0;
   const strength  = mag/(ks.length||1);
   const gated = (R.dir==='up'&&wtiRet<0)||(R.dir==='down'&&wtiRet>0);
-  let fit = alignment*Math.min(1, strength/STRENGTH_REF);
+  let fit = alignment*Math.min(1, strength/nf);
+  // a signature whose average |corr| sits below the window's noise floor is not evidence,
+  // however neatly it happens to line up — it must not be nameable
+  if(strength < nf) fit = Math.min(fit, 0.25);
   if(gated) fit-=0.5;                       // regime requires the opposite WTI direction
   contrib.sort((a,b)=>b.c-a.c);
-  return {name:R.name, alignment, strength, fit, gated, contrib};
+  return {name:R.name, alignment, strength, fit, gated, subNoise:strength<nf, contrib};
 }
-function macroRegime(f, wtiRet, assets, sig){
+function macroRegime(f, wtiRet, assets, sig, win){
   sig=sig||{};
+  const nf=noiseFloor(Number(win)||63);
   const cp=macroCoupling(f, assets);
-  const ranked=REGIMES.map(R=>regimeFit(R, f, sig, wtiRet));
+  const ranked=REGIMES.map(R=>regimeFit(R, f, sig, wtiRet, nf));
   const idioFit=Math.max(-1, Math.min(1, 0.93 - 2.75*cp.coupling));
   ranked.push({name:'Idiosyncratic / supply-driven', idio:true, alignment:idioFit, strength:cp.meanAbs,
                fit:idioFit, gated:false, contrib:cp.top.map(x=>({k:x.k,v:x.v,c:x.a}))});
   ranked.sort((a,b)=>b.fit-a.fit);
   const mixed = ranked[0].fit<0.30 || (ranked[0].fit-ranked[1].fit)<0.05;
-  return {name: mixed?'Mixed / transitional':ranked[0].name, top:ranked[0], mixed, ranked, cp,
+  return {name: mixed?'Mixed / transitional':ranked[0].name, top:ranked[0], mixed, ranked, cp, nf,
           cov:macroCoverage(assets)};
 }
 function renderMacro(){
@@ -13472,7 +13481,7 @@ function renderMacro(){
   const w=String(macroWin), focus=M.wtiFocus[w]||{}, wtiRet=(M.wtiReturn||{})[w]||0;
   const winBtns=M.windows.map(x=>`<button data-mwin="${x}" aria-pressed="${x===macroWin}">${x}d</button>`).join("");
   const sig=inflSignals(M, w);
-  const reg=macroRegime(focus, wtiRet, assets, sig);
+  const reg=macroRegime(focus, wtiRet, assets, sig, macroWin);
   const dir = (wtiRet>=0?'+':'')+(wtiRet*100).toFixed(1)+'%';
   const regRows=reg.ranked.map(R=>{
     const win=R.name===reg.top.name&&!reg.mixed;
@@ -13481,7 +13490,7 @@ function renderMacro(){
                      : Object.entries(REGIMES.find(x=>x.name===R.name).w).map(([k,v])=>`${v>0?'+':'−'}${MSHORT[k]||k}`).join(' '))
               + (R.gated? ' | needs WTI '+(REGIMES.find(x=>x.name===R.name).dir)+' — currently the opposite':'')
               + ` | strength ${R.strength.toFixed(2)}`;
-    return `<div class="regrow ${win?'win':''}" title="${tip}"><span>${R.name}${R.gated?' <span style="opacity:.5">(dir✗)</span>':''}</span>`
+    return `<div class="regrow ${win?'win':''}" title="${tip}"><span>${R.name}${R.gated?' <span style="opacity:.5">(dir✗)</span>':''}${R.subNoise&&!R.idio?' <span style="opacity:.5" title="signature avg |corr| is below this window\'s noise floor">(noise)</span>':''}</span>`
       + `<div class="rt"><div class="rf" style="left:${left}%;width:${wd}%;background:${a>=0?'var(--pos)':'var(--neg)'};opacity:${R.gated?0.35:1}"></div></div>`
       + `<span style="text-align:right">${a>=0?'+':''}${Math.round(a*100)}%</span></div>`;
   }).join("");
@@ -13558,7 +13567,7 @@ function renderMacro(){
             <span style="color:var(--ink-3)">strongest macro links: ${links} · coupling ${reg.cp.coupling.toFixed(2)}</span></div></div>
         <div class="regscores">${regRows}</div>
       </div>
-      <p class="cotnote" style="margin-top:10px"><b>Reading the bars:</b> each % is <b>alignment</b> — of the correlation that actually exists in that regime's signature, how much points the right way. <b>+100% = a perfect match even if every correlation is only 0.3</b> (real correlations never reach ±1, so this is scale-free and independent of how many instruments a regime uses). Hover a row for its signature and strength. <b>strength</b> = avg |corr| in the signature: alignment says <i>which</i> way, strength says <i>how much signal</i> — a regime is only named when it has both. Greyed rows (dir✗) need WTI moving the other way.<br>Coverage: ${covNote}.</p>
+      <p class="cotnote" style="margin-top:10px"><b>Reading the bars:</b> each % is <b>alignment</b> — of the correlation that actually exists in that regime's signature, how much points the right way. <b>+100% = a perfect match even if every correlation is only 0.3</b> (real correlations never reach ±1, so this is scale-free and independent of how many instruments a regime uses). Hover a row for its signature and strength. <b>strength</b> = avg |corr| in the signature: alignment says <i>which</i> way, strength says <i>how much signal</i> — a regime is only named when it has both. Greyed rows (dir✗) need WTI moving the other way; <b>(noise)</b> = that signature sits below this window's noise floor and can't be named however neatly it lines up.<br><b>At ${macroWin}d a correlation must exceed |${reg.nf.toFixed(2)}| to be distinguishable from zero</b> (SE ≈ 1/√(n−3)) — which is why 21d rarely names a regime and 252d readily does.<br>Coverage: ${covNote}.</p>
     </section>
     ${inflCard}
     <section class="card">
