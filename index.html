@@ -13349,10 +13349,21 @@ function corrColor(c){
   const t=Math.max(-1,Math.min(1,c)), a=Math.min(0.9,Math.abs(t)*0.82+0.06);
   return {bg:`rgba(${t>=0?'224,83,61':'56,132,255'},${a})`, fg:Math.abs(t)>0.5?'#fff':'var(--ink)'};
 }
+/* How coupled is WTI to macro *at all*? Spans every axis — equities, dollar, metals,
+   crypto, RATES and INFLATION (breakevens). Deliberately MAX-dominated: a strong link to
+   even one axis means WTI is not decoupled, so a plain mean must not wash it out.
+   USD/CAD is excluded — it's mechanically oil-linked, not an independent macro read. */
+const COUPLE_KEYS=['SPX','NDX','EEM','DXY','GOLD','SILVER','COPPER','BTC','US10Y','US02Y','BE10Y','INFL5Y5Y'];
+function macroCoupling(f){
+  const g=k=>(f[k]==null?0:f[k]);
+  const abs=COUPLE_KEYS.map(k=>({k,a:Math.abs(g(k)),v:g(k)})).sort((x,y)=>y.a-x.a);
+  const maxAbs=abs.length?abs[0].a:0;
+  const meanAbs=abs.reduce((s,x)=>s+x.a,0)/(abs.length||1);
+  return {maxAbs, meanAbs, coupling:0.6*maxAbs+0.4*meanAbs, top:abs.slice(0,3)};
+}
 function macroRegime(f, wtiRet){
   const g=k=>(f[k]==null?0:f[k]); const mean=a=>a.reduce((x,y)=>x+y,0)/a.length;
-  // how coupled is WTI to macro at all? (drives the idiosyncratic/oil-led read)
-  const meanAbs=mean(['SPX','NDX','EEM','DXY','GOLD','COPPER','BTC','US10Y','US02Y'].map(k=>Math.abs(g(k))));
+  const cp=macroCoupling(f);
   const scores={
     'Reflation / expansion':          mean([g('SPX'),g('COPPER'),g('US10Y'),-g('DXY')]),
     'Goldilocks / disinflation':      mean([g('SPX'),g('NDX'),g('COPPER'),g('EEM'),-g('BE10Y'),-g('GOLD')]),
@@ -13362,8 +13373,8 @@ function macroRegime(f, wtiRet){
     'Liquidity crunch (dollar up)':   mean([-g('DXY'),g('BTC'),g('SPX')]),
     'Liquidity melt-up (Fed easing)': mean([g('BTC'),g('NDX'),-g('DXY'),-g('US02Y'),-g('SOFR')]),
     'Demand destruction / recession': mean([g('SPX'),g('US10Y'),g('COPPER')]),
-    // decoupled = oil trading on its own fundamentals; fades as macro correlation rises
-    'Idiosyncratic / supply-driven':  Math.max(-1, Math.min(1, 0.55 - 1.6*meanAbs))
+    // decoupled = no strong link to ANY macro axis; a single strong coupling kills it
+    'Idiosyncratic / supply-driven':  Math.max(-1, Math.min(1, 0.93 - 2.75*cp.coupling))
   };
   // WTI's own direction gates the regimes that require it
   if(wtiRet<0){
@@ -13375,7 +13386,7 @@ function macroRegime(f, wtiRet){
   }
   const ranked=Object.entries(scores).sort((a,b)=>b[1]-a[1]);
   const mixed=ranked[0][1]<0.25 || (ranked[0][1]-ranked[1][1])<0.06;  // weak top, or no clear leader
-  return {name: mixed?'Mixed / transitional':ranked[0][0], top:ranked[0][0], mixed, ranked};
+  return {name: mixed?'Mixed / transitional':ranked[0][0], top:ranked[0][0], mixed, ranked, cp};
 }
 function renderMacro(){
   const M=(typeof MACRO_DATA!=='undefined'&&MACRO_DATA&&MACRO_DATA.assets&&MACRO_DATA.assets.length)?MACRO_DATA:null;
@@ -13390,7 +13401,10 @@ function renderMacro(){
     const win=nm===reg.top&&!reg.mixed, wd=Math.min(50,Math.abs(sc)*50), left=sc<0?50-wd:50;
     return `<div class="regrow ${win?'win':''}"><span>${nm}</span><div class="rt"><div class="rf" style="left:${left}%;width:${wd}%;background:${sc>=0?'var(--pos)':'var(--neg)'}"></div></div><span style="text-align:right">${sc>=0?'+':''}${sc.toFixed(2)}</span></div>`;
   }).join("");
-  const evidence=(REG_KEYS[reg.top]||[]).map(k=>`${MSHORT[k]||k} ${focus[k]==null?'—':(focus[k]>0?'+':'')+focus[k]}`).join(" · ");
+  const fmtc=k=>`${MSHORT[k]||k} ${focus[k]==null?'—':(focus[k]>0?'+':'')+focus[k]}`;
+  const evidence=(REG_KEYS[reg.top]||[]).map(fmtc).join(" · ");
+  // always show WTI's strongest macro links — this is what decides "decoupled" or not
+  const links=reg.cp.top.map(x=>fmtc(x.k)).join(" · ");
   let frows="", lastGrp=null;
   assets.filter(a=>a.key!=='WTI').forEach(a=>{
     if(a.group!==lastGrp){ lastGrp=a.group; frows+=`<tr><td class="mgrp" colspan="4">${a.group}</td></tr>`; }
@@ -13414,7 +13428,7 @@ function renderMacro(){
     <section class="card">
       <h2>Macro regime read <span style="font-weight:400;color:var(--ink-3);font-size:12px">· ${macroWin}-day window</span></h2>
       <div class="regcard">
-        <div style="min-width:200px"><div class="regbig">${reg.name}</div><div class="csub" style="margin:4px 0 0">WTI ${dir} over ${macroWin}d<br>signature: ${evidence}</div></div>
+        <div style="min-width:200px"><div class="regbig">${reg.name}</div><div class="csub" style="margin:4px 0 0">WTI ${dir} over ${macroWin}d<br>signature: ${evidence}<br><span style="color:var(--ink-3)">strongest macro links: ${links} · coupling ${reg.cp.coupling.toFixed(2)}</span></div></div>
         <div class="regscores">${regRows}</div>
       </div>
       <p class="cotnote" style="margin-top:10px">Heuristic: each regime scored from WTI's correlations to the assets in its signature; WTI's own direction breaks the reflation↔demand-destruction tie. A weak top score reads "mixed".</p>
