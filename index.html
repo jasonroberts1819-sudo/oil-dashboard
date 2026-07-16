@@ -13367,11 +13367,31 @@ const MSHORT={WTI:'WTI',SPX:'SPX',EEM:'EEM',NDX:'NDX',KRE:'KRE',DXY:'DXY',USDCAD
    Oil is a CPI component, so a raw WTI~breakeven correlation is mechanical and carries no
    regime info. These signals isolate the structural inflation pricing instead. */
 /* Credit weights (HYOAS = high-yield OAS, IGOAS = investment-grade OAS). Both are spreads:
-   a RISING value = credit getting WORSE. So w:-1 means "spreads tighten as WTI rises" (a
-   healthy, demand-led move) and w:+1 means "spreads WIDEN as WTI rises" (a supply shock —
-   oil is a cost, not a signal of demand). In the oil-DOWN regimes, oil falling while spreads
-   widen is also corr<0, hence -1 there too. This is the single axis that separates
-   "oil up because the world is fine" from "oil up because something broke". */
+   a RISING value = credit getting WORSE. Every credit weight here is -1, i.e. "spreads
+   tighten as WTI rises" / "spreads widen as WTI falls" — a negative correlation with oil.
+
+   I originally also set HYOAS:+1 on Stagflation and War premium, reasoning that oil is a
+   COST so a supply shock should widen credit. THAT WAS BACKWARDS and 19 years of data
+   refuted it (2026-07-16 audit, prompted by Jason asking whether the signs were actually
+   right). The HY index's energy weight is oil PRODUCERS — high oil is REVENUE to them, so
+   oil up => energy issuers healthier => HY TIGHTENS. Evidence:
+     - corr(WTI, HY spread) is NEGATIVE in 90% of 252d windows over 2007-2026 (mean -0.238),
+       and asymmetric: -0.182 on oil-down days vs -0.079 on oil-up days (defaults hurt more
+       than windfalls help) — the energy-issuer signature.
+     - 2011 Libya, the cleanest natural experiment (pure geopolitical supply shock): oil
+       +30.4% and HY spreads TIGHTENED (-1.23). The +1 predicts the opposite.
+     - 4 dated war-premium episodes: corr -0.049 / -0.387 / +0.066 / +0.030, mean -0.085 —
+       all indistinguishable from ZERO except Abqaiq, which is significantly NEGATIVE.
+       As a directional test (oil up AND credit wider) it held 1/4, and that one is 2022,
+       confounded by the fastest Fed tightening in 40 years.
+     - the -1 weights, by contrast, matched 5/5 dated episodes (2008 GFC -0.279, 2009-10
+       reflation -0.514, 2018Q4 -0.187, 2020 COVID -0.088, 2021 reflation -0.181).
+   So credit does NOT discriminate a geopolitical war premium; it is scored only where the
+   evidence supports it. NOTE the +1 was ALSO the sole reason the 252d War-premium read
+   cleared the 55% alarm bar (58.0% with it, 45.5% without) — a refuted weight was firing an
+   ACTIONABLE TRADE badge. LESSON: ±1 has no way to say "no signal", so a judgment call that
+   should have been recorded as "unknown — omit" got recorded as full-strength conviction.
+   Omit an instrument from a regime unless its sign is actually evidenced. */
 const REGIMES=[
   // USDCAD:-1 = CAD strengthens as oil rises (the commodity-currency channel)
   {name:'Reflation / expansion', dir:'up',
@@ -13380,9 +13400,9 @@ const REGIMES=[
    w:{SPX:1, NDX:1, EEM:1, COPPER:1, GOLD:-1, HYOAS:-1, _RESID:-1, _5Y5YDIR:-1}},
   // NDX carries the "commodity rotation" read: oil squeezing long-duration tech valuations
   {name:'Stagflationary shock', dir:null,
-   w:{GOLD:1, SPX:-1, NDX:-1, HYOAS:1, _RESID:1, _5Y5YDIR:1}},
+   w:{GOLD:1, SPX:-1, NDX:-1, _RESID:1, _5Y5YDIR:1}},
   {name:'Geopolitical war premium', dir:'up',
-   w:{GOLD:1, DXY:1, SPX:-1, TED:1, HYOAS:1}},
+   w:{GOLD:1, DXY:1, SPX:-1, TED:1}},
   {name:'Dollar debasement / real assets', dir:null,
    w:{DXY:-1, USDCAD:-1, GOLD:1, SILVER:1, COPPER:1, BTC:1, _RESID:1, _5Y5YDIR:1}},
   {name:'Liquidity crunch (dollar up)', dir:'down',
@@ -13420,12 +13440,25 @@ let macroWin=63, macroMode='corr';   // 'corr' = correlation level, 'z' = vs its
    Calibrated by Monte-Carlo, not by feel. Re-verified against the live 24-instrument set
    after credit spreads were added (adding instruments changes the null, so this is NOT a
    set-and-forget constant — re-run it whenever INSTRUMENTS or REGIMES change):
-     - pure noise, 4000 trials: 0 false positives at all three windows.
+     - THE NULL MUST PRESERVE CROSS-INSTRUMENT CORRELATION. My first pass drew every
+       instrument iid (rng.standard_normal) — but SPX/EEM/COPPER are 0.36-0.77 correlated
+       with each other, so their spurious readings do NOT average out and alignment has
+       much fatter tails than an independent null implies. Drawing the null from the
+       EMPIRICAL correlation matrix (WTI still independent of all) raises the measured
+       false-positive rate 3-10x: 0.25% / 0.25% / 0.07% at 21/63/252d, vs the ~0.00% the
+       independent null reported. Still low enough that the bars stand — but the honest
+       number is 1-in-400, not 1-in-4000.
      - coherent planted rho=0.5 regime: named+alarmed 73%/74%/60% (21/63/252d). Silence is
        therefore weak evidence — ~1 in 3 real regimes is missed. A fired alarm is strong.
-     - the 21d strength bar stays 0.35 rather than 0.50: both cost 0% false positives, but
+     - the 21d strength bar stays 0.35 rather than 0.50: both cost ~0 false positives, but
        0.35 detects a genuine rho=0.4 regime 32% of the time vs 8.6% at 0.50 — at 0.50 the
-       badge would essentially never light. */
+       badge would essentially never light.
+   KNOWN LIMITATION (measured, not fixed): the ±1 dot-product double-counts correlated
+   instruments — each regime counts the same underlying axis 1.27x (War premium) to 2.29x
+   (Goldilocks), so regimes are not on a level playing field. Redundancy-whitening the
+   score (Mahalanobis cosine w'P r / sqrt(w'Pw · r'Pr), shrunk P) roughly preserves the
+   rank order but compresses magnitudes. Deferred: it changes the score's scale, so the
+   bars would need re-calibrating against the correlated null above. */
 const ALARMS={
   21:  {align:0.75, strength:0.35, label:'Tactical Breakout Alert'},
   63:  {align:0.65, strength:0.30, label:'Macro Swing Alert'},
@@ -13697,7 +13730,7 @@ function renderMacro(){
             <span style="color:var(--ink-3)">strongest macro links: ${links} · strongest is <b>${reg.cp.couplingX.toFixed(1)}×</b> the significance floor (${reg.cp.bonf.toFixed(2)}, Bonferroni-adjusted for ${reg.cp.n} assets) — ${reg.cp.couplingX>=1?'a genuine link exists':'nothing clears chance'}</span></div></div>
         <div class="regscores">${regRows}</div>
       </div>
-      <p class="cotnote" style="margin-top:10px"><b>Reading the bars:</b> each % is <b>alignment</b> — of the correlation that actually exists in that regime's signature, how much points the right way. <b>+100% = a perfect match even if every correlation is only 0.3</b> (real correlations never reach ±1, so this is scale-free and independent of how many instruments a regime uses). Hover a row for its signature and strength. <b>strength</b> = avg |corr| in the signature: alignment says <i>which</i> way, strength says <i>how much signal</i> — a regime is only named when it has both. Greyed rows (dir✗) need WTI moving the other way; <b>(noise)</b> = that signature sits below this window's noise floor and can't be named however neatly it lines up.<br><b>At ${macroWin}d a correlation must exceed |${reg.nf.toFixed(2)}| to be distinguishable from zero</b> (SE ≈ 1/√(n−3)) — which is why 21d rarely names a regime and 252d readily does.<br><b>Alarm gates</b> (bars vary by window because the noise floor does): 21d needs ≥75% &amp; ≥0.35 · 63d ≥65% &amp; ≥0.30 · 252d ≥55% &amp; ≥0.18. Monte-Carlo calibrated on the live 24-instrument set: <b>0 false positives in 4,000 pure-noise trials</b> at every window; on a <i>coherent</i> planted ρ=0.5 regime (each instrument loading with the sign its weight implies, everything else noise) it correctly names and alarms ~73% (21d) / ~74% (63d) / ~60% (252d). So a fired alarm is trustworthy, but <b>silence is weak evidence</b> — roughly a third of real regimes are missed. A contested ("mixed") read never alarms.<br>Coverage: ${covNote}.</p>
+      <p class="cotnote" style="margin-top:10px"><b>Reading the bars:</b> each % is <b>alignment</b> — of the correlation that actually exists in that regime's signature, how much points the right way. <b>+100% = a perfect match even if every correlation is only 0.3</b> (real correlations never reach ±1, so this is scale-free and independent of how many instruments a regime uses). Hover a row for its signature and strength. <b>strength</b> = avg |corr| in the signature: alignment says <i>which</i> way, strength says <i>how much signal</i> — a regime is only named when it has both. Greyed rows (dir✗) need WTI moving the other way; <b>(noise)</b> = that signature sits below this window's noise floor and can't be named however neatly it lines up.<br><b>At ${macroWin}d a correlation must exceed |${reg.nf.toFixed(2)}| to be distinguishable from zero</b> (SE ≈ 1/√(n−3)) — which is why 21d rarely names a regime and 252d readily does.<br><b>Alarm gates</b> (bars vary by window because the noise floor does): 21d needs ≥75% &amp; ≥0.35 · 63d ≥65% &amp; ≥0.30 · 252d ≥55% &amp; ≥0.18. Monte-Carlo calibrated on the live 24-instrument set, with the null drawn from the <i>real</i> cross-instrument correlation matrix (an independent-noise null understates false positives 3–10×): <b>false-positive rate 0.25% / 0.25% / 0.07%</b> at 21/63/252d. On a <i>coherent</i> planted ρ=0.5 regime (each instrument loading with the sign its weight implies, everything else noise) it correctly names and alarms ~73% / ~74% / ~60%. So a fired alarm is trustworthy, but <b>silence is weak evidence</b> — roughly a third of real regimes are missed. A contested ("mixed") read never alarms.<br><b>Known limitation:</b> the ±1 signature double-counts correlated instruments (each regime counts the same underlying axis 1.3–2.3×), so regimes aren't on a perfectly level playing field.<br>Coverage: ${covNote}.</p>
     </section>
     ${inflCard}
     <section class="card">
