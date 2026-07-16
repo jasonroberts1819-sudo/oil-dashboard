@@ -13422,23 +13422,37 @@ function macroCoverage(assets){
           excluded:all.filter(k=>MACRO_EXCLUDE[k]),
           orphans:all.filter(k=>!covered(k) && !MACRO_EXCLUDE[k]), total:all.length};
 }
+/* Regime fit. Two separate ideas, deliberately NOT averaged into one diluted number:
+     alignment = Σ(w·r) / Σ|r|   -> "of the correlation that exists, how much points the
+                 right way?"  Range -1..+1, INDEPENDENT of how many instruments a regime
+                 has. (The old score divided by instrument count, so a regime with 11
+                 instruments was structurally penalised vs one with 4 — an artifact.
+                 It also required real correlations to approach +1, which never happens.)
+     strength  = mean|r| across the signature -> is there any signal here at all?
+   A regime is only named when it is BOTH well-aligned AND has real correlation behind it. */
+const STRENGTH_REF=0.30;   // signature avg |corr| at/above which strength stops discounting
+function regimeFit(R, f, sig, wtiRet){
+  const g=k=>k[0]==='_' ? (sig[k]==null?0:sig[k]) : (f[k]==null?0:f[k]);
+  const ks=Object.keys(R.w);
+  let num=0, mag=0;
+  const contrib=ks.map(k=>{ const v=g(k), c=R.w[k]*v; num+=c; mag+=Math.abs(v); return {k,v,c,w:R.w[k]}; });
+  const alignment = mag>1e-9 ? num/mag : 0;
+  const strength  = mag/(ks.length||1);
+  const gated = (R.dir==='up'&&wtiRet<0)||(R.dir==='down'&&wtiRet>0);
+  let fit = alignment*Math.min(1, strength/STRENGTH_REF);
+  if(gated) fit-=0.5;                       // regime requires the opposite WTI direction
+  contrib.sort((a,b)=>b.c-a.c);
+  return {name:R.name, alignment, strength, fit, gated, contrib};
+}
 function macroRegime(f, wtiRet, assets, sig){
   sig=sig||{};
-  // "_" keys are derived directional signals; everything else is a WTI correlation
-  const g=k=>k[0]==='_' ? (sig[k]==null?0:sig[k]) : (f[k]==null?0:f[k]);
   const cp=macroCoupling(f, assets);
-  const ranked=REGIMES.map(R=>{
-    const ks=Object.keys(R.w);
-    const contrib=ks.map(k=>({k, v:g(k), c:R.w[k]*g(k), w:R.w[k]})).sort((a,b)=>b.c-a.c);
-    let score=contrib.reduce((s,x)=>s+x.c,0)/(ks.length||1);
-    if(R.dir==='up'   && wtiRet<0) score-=0.30;   // regime requires WTI rising
-    if(R.dir==='down' && wtiRet>0) score-=0.30;   // regime requires WTI falling
-    return {name:R.name, score, contrib};
-  });
-  ranked.push({name:'Idiosyncratic / supply-driven', idio:true, contrib:cp.top.map(x=>({k:x.k,v:x.v,c:x.a})),
-               score:Math.max(-1, Math.min(1, 0.93 - 2.75*cp.coupling))});
-  ranked.sort((a,b)=>b.score-a.score);
-  const mixed=ranked[0].score<0.25 || (ranked[0].score-ranked[1].score)<0.06;
+  const ranked=REGIMES.map(R=>regimeFit(R, f, sig, wtiRet));
+  const idioFit=Math.max(-1, Math.min(1, 0.93 - 2.75*cp.coupling));
+  ranked.push({name:'Idiosyncratic / supply-driven', idio:true, alignment:idioFit, strength:cp.meanAbs,
+               fit:idioFit, gated:false, contrib:cp.top.map(x=>({k:x.k,v:x.v,c:x.a}))});
+  ranked.sort((a,b)=>b.fit-a.fit);
+  const mixed = ranked[0].fit<0.30 || (ranked[0].fit-ranked[1].fit)<0.05;
   return {name: mixed?'Mixed / transitional':ranked[0].name, top:ranked[0], mixed, ranked, cp,
           cov:macroCoverage(assets)};
 }
@@ -13453,10 +13467,15 @@ function renderMacro(){
   const reg=macroRegime(focus, wtiRet, assets, sig);
   const dir = (wtiRet>=0?'+':'')+(wtiRet*100).toFixed(1)+'%';
   const regRows=reg.ranked.map(R=>{
-    const win=R.name===reg.top.name&&!reg.mixed, sc=R.score, wd=Math.min(50,Math.abs(sc)*50), left=sc<0?50-wd:50;
-    const tip=R.idio? 'decoupling score — falls as WTI couples to any macro axis'
-                    : Object.entries(REGIMES.find(x=>x.name===R.name).w).map(([k,v])=>`${v>0?'+':'−'}${MSHORT[k]||k}`).join(' ');
-    return `<div class="regrow ${win?'win':''}" title="${tip}"><span>${R.name}</span><div class="rt"><div class="rf" style="left:${left}%;width:${wd}%;background:${sc>=0?'var(--pos)':'var(--neg)'}"></div></div><span style="text-align:right">${sc>=0?'+':''}${sc.toFixed(2)}</span></div>`;
+    const win=R.name===reg.top.name&&!reg.mixed;
+    const a=R.alignment, wd=Math.min(50,Math.abs(a)*50), left=a<0?50-wd:50;   // bar = alignment
+    const tip=(R.idio? 'decoupling — falls as WTI couples to any macro axis'
+                     : Object.entries(REGIMES.find(x=>x.name===R.name).w).map(([k,v])=>`${v>0?'+':'−'}${MSHORT[k]||k}`).join(' '))
+              + (R.gated? ' | needs WTI '+(REGIMES.find(x=>x.name===R.name).dir)+' — currently the opposite':'')
+              + ` | strength ${R.strength.toFixed(2)}`;
+    return `<div class="regrow ${win?'win':''}" title="${tip}"><span>${R.name}${R.gated?' <span style="opacity:.5">(dir✗)</span>':''}</span>`
+      + `<div class="rt"><div class="rf" style="left:${left}%;width:${wd}%;background:${a>=0?'var(--pos)':'var(--neg)'};opacity:${R.gated?0.35:1}"></div></div>`
+      + `<span style="text-align:right">${a>=0?'+':''}${Math.round(a*100)}%</span></div>`;
   }).join("");
   const SIGLAB={_RESID:'BE-resid', _5Y5YDIR:'5y5y'};
   const fmtc=k=>{
@@ -13523,10 +13542,15 @@ function renderMacro(){
     <section class="card">
       <h2>Macro regime read <span style="font-weight:400;color:var(--ink-3);font-size:12px">· ${macroWin}-day window</span></h2>
       <div class="regcard">
-        <div style="min-width:200px"><div class="regbig">${reg.name}</div><div class="csub" style="margin:4px 0 0">WTI ${dir} over ${macroWin}d<br>signature: ${evidence}<br><span style="color:var(--ink-3)">strongest macro links: ${links} · coupling ${reg.cp.coupling.toFixed(2)}</span></div></div>
+        <div style="min-width:200px"><div class="regbig">${reg.name}</div>
+          <div class="csub" style="margin:4px 0 0">
+            ${reg.mixed? `<b>closest fit:</b> ${reg.top.name} — ${Math.round(reg.top.alignment*100)}% aligned, but too weak/contested to call`
+                       : `<b>${Math.round(reg.top.alignment*100)}% aligned</b> · strength ${reg.top.strength.toFixed(2)}`}<br>
+            WTI ${dir} over ${macroWin}d<br>signature: ${evidence}<br>
+            <span style="color:var(--ink-3)">strongest macro links: ${links} · coupling ${reg.cp.coupling.toFixed(2)}</span></div></div>
         <div class="regscores">${regRows}</div>
       </div>
-      <p class="cotnote" style="margin-top:10px">Heuristic: each regime scored from WTI's correlations to the weighted instruments in its signature (hover a row to see it); WTI's own direction gates the regimes that require it. A weak top score reads "mixed". Coupling spans every instrument, so no axis can be missed.<br>Coverage: ${covNote}.</p>
+      <p class="cotnote" style="margin-top:10px"><b>Reading the bars:</b> each % is <b>alignment</b> — of the correlation that actually exists in that regime's signature, how much points the right way. <b>+100% = a perfect match even if every correlation is only 0.3</b> (real correlations never reach ±1, so this is scale-free and independent of how many instruments a regime uses). Hover a row for its signature and strength. <b>strength</b> = avg |corr| in the signature: alignment says <i>which</i> way, strength says <i>how much signal</i> — a regime is only named when it has both. Greyed rows (dir✗) need WTI moving the other way.<br>Coverage: ${covNote}.</p>
     </section>
     ${inflCard}
     <section class="card">
