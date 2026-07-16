@@ -12158,7 +12158,7 @@ const COT = (function(){
       const wow=p.netWow==null?"":`${p.netWow>0?"+":""}${fmtN(p.netWow)} w/w`;
       return `<div class="cb-lab"><i style="background:${CATCOL[ck]}"></i>${clab}</div>
         <div class="cb-track"><div class="cb-fill" style="width:${idx}%;background:${CATCOL[ck]}"></div></div>
-        <div class="cb-meta"><b>${fmtN(p.net)}</b> · ${idx}/100 ${zt?("· "+zt):""}<div class="cotnote">${wow}</div></div>`;
+        <div class="cb-meta"><b>${fmtN(p.net)}</b> · ${idx}% ${zt?("· "+zt):""}<div class="cotnote">${wow}</div></div>`;
     }).join("");
   }
   function draw(){
@@ -12201,7 +12201,7 @@ const COT = (function(){
     wrap.innerHTML = `
       <div class="cothead"><h2>Speculative positioning — CFTC / ICE Commitments of Traders</h2>
         <span class="cotnote">Futures + Options · week ending <b>${d.asOf||"—"}</b></span></div>
-      <p class="cotsub">Disaggregated COT by trader category. <b>Net = long − short</b> (contracts). The bar index is each category's net vs its own <b>3-yr range (0–100)</b>; σ is vs its 6-yr mean. Managed Money = hedge funds/CTAs (spec); Producer/Merchant = commercial hedgers.</p>
+      <p class="cotsub">Disaggregated COT by trader category. <b>Net = long − short</b> (contracts). The bar shows each category's net as a <b>% of its own 3-yr range</b> (0% = 3-yr low, 100% = 3-yr high); σ is vs its 6-yr mean. Managed Money = hedge funds/CTAs (spec); Producer/Merchant = commercial hedgers.</p>
       ${controls()}
       <section class="card" style="margin-bottom:16px">
         <h2 style="font-size:14px">Net positioning vs 3-yr range</h2>
