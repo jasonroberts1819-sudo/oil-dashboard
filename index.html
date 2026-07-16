@@ -118,6 +118,8 @@
   .cb-meta{font-size:11.5px;color:var(--ink-2);font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right}
   .cb-meta b{font-size:12.5px;color:var(--ink)}
   .cotnote{font-size:11px;color:var(--ink-3);margin-top:2px}
+  .cotsec{margin:22px 0 10px}
+  .cotsec h3{margin:0;font-size:15px;letter-spacing:-.01em;color:var(--ink);border-bottom:1px solid var(--border);padding-bottom:6px}
 
   .controls{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;margin-bottom:18px;
     background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:11px 15px;box-shadow:var(--shadow)}
@@ -12076,17 +12078,19 @@ function zColor(z){
 /* ---- COT (Commitments of Traders) speculative positioning ---- */
 const COT = (function(){
   const CATCOL = {mm:"#7c3aed", pm:"#0891b2", sw:"#d97706", or:"#16a34a"};
-  const METRICS = [
-    {key:"net",    label:"Net (long − short)", zero:true},
-    {key:"long",   label:"Longs",             zero:false},
-    {key:"short",  label:"Shorts",            zero:false},
-    {key:"spread", label:"Spreading",         zero:false}
+  // one chart per (metric, category). Net = all 4 categories; Longs/Shorts/Spreading = MM + Other only.
+  const SECTIONS = [
+    {key:"net",    label:"Net",       cats:["mm","or","pm","sw"], zero:true},
+    {key:"long",   label:"Longs",     cats:["mm","or"],           zero:false},
+    {key:"short",  label:"Shorts",    cats:["mm","or"],           zero:false},
+    {key:"spread", label:"Spreading", cats:["mm","or"],           zero:false}
   ];
   let st = {product:null, venue:null};
   const D = () => (typeof COT_DATA!=="undefined" && COT_DATA && COT_DATA.products && COT_DATA.products.length) ? COT_DATA : null;
   function P(){ const d=D(); if(!d) return null; return d.products.find(p=>p.key===st.product) || d.products[0]; }
   function V(){ const p=P(); if(!p) return null; return p.venues.find(v=>v.key===st.venue) || p.venues[0]; }
   const cats = () => (D().categories||[]);
+  const catLabel = ck => { const f=cats().find(c=>c[0]===ck); return f? f[1] : ck; };
   const fmtN = v => v==null? "—" : Math.round(v).toLocaleString();
   const fmtK = v => { const a=Math.abs(v); return (v<0?"-":"")+(a>=1000? (a/1000).toFixed(a>=10000?0:1)+"k" : a.toFixed(0)); };
   function metricVals(series, mkey){
@@ -12160,10 +12164,12 @@ const COT = (function(){
   function draw(){
     const v=V(); if(!v) return;
     $("#cotbars").innerHTML = barsHTML(v);
-    METRICS.forEach((M,mi)=>{
-      let lines=cats().map(([ck,clab])=>({key:ck,label:clab,color:CATCOL[ck],vals:metricVals(v.series[ck],M.key)}));
-      if(M.key==="spread") lines=lines.filter(L=>L.vals.some(x=>x>0));  // producers have no spreading
-      drawTS("#cotchart_"+mi,"#cottip_"+mi, v.dates, lines, M.zero);
+    SECTIONS.forEach(S=>{
+      S.cats.forEach(ck=>{
+        if(!v.series[ck]) return;
+        const line=[{key:ck,label:catLabel(ck),color:CATCOL[ck],vals:metricVals(v.series[ck],S.key)}];
+        drawTS("#cotchart_"+S.key+"_"+ck, "#cottip_"+S.key+"_"+ck, v.dates, line, S.zero);
+      });
     });
   }
   function controls(){
@@ -12184,11 +12190,14 @@ const COT = (function(){
     if(!d){ wrap.innerHTML='<section class="card"><p class="csub" style="padding:10px">No COT data yet — run <code>python cot_positioning.py</code>.</p></section>'; return; }
     if(!st.product){ st.product=d.products[0].key; }
     const p=P(); if(!st.venue || !p.venues.some(v=>v.key===st.venue)) st.venue=p.venues[0].key;
-    const chartCards=METRICS.map((M,mi)=>`
-      <section class="card"><h2 style="font-size:14px">${M.label}</h2>
-        <p class="csub">contracts · weekly</p>
-        <div class="chartbox"><div class="tip" id="cottip_${mi}"></div><svg id="cotchart_${mi}"></svg></div>
-      </section>`).join("");
+    const chartSections=SECTIONS.map(S=>{
+      const cards=S.cats.map(ck=>`
+        <section class="card"><h2 style="font-size:13.5px">${catLabel(ck)}</h2>
+          <p class="csub">contracts · weekly</p>
+          <div class="chartbox"><div class="tip" id="cottip_${S.key}_${ck}"></div><svg id="cotchart_${S.key}_${ck}"></svg></div>
+        </section>`).join("");
+      return `<div class="cotsec"><h3>${S.label}</h3></div><div class="cotgrid">${cards}</div>`;
+    }).join("");
     wrap.innerHTML = `
       <div class="cothead"><h2>Speculative positioning — CFTC / ICE Commitments of Traders</h2>
         <span class="cotnote">Futures + Options · week ending <b>${d.asOf||"—"}</b></span></div>
@@ -12198,7 +12207,7 @@ const COT = (function(){
         <h2 style="font-size:14px">Net positioning vs 3-yr range</h2>
         <div class="cotbars" id="cotbars"></div>
       </section>
-      <div class="cotgrid">${chartCards}</div>`;
+      ${chartSections}`;
     wrap.querySelectorAll("[data-cotp]").forEach(b=>b.addEventListener("click",()=>{ st.product=b.dataset.cotp; const np=P(); if(!np.venues.some(v=>v.key===st.venue)) st.venue=np.venues[0].key; mount(); }));
     wrap.querySelectorAll("[data-cotv]").forEach(b=>b.addEventListener("click",()=>{ st.venue=b.dataset.cotv; mount(); }));
     draw();
