@@ -13396,12 +13396,20 @@ function zColorCorr(z){
 function coupleKeys(assets){
   return assets.map(a=>a.key).filter(k=>k!=='WTI' && !COUPLE_EXCLUDE[k]);
 }
-/* Derived directional inflation signals, scaled to [-1,1] so they sit on the same
-   footing as a correlation term. +-25bp of unexplained breakeven move (or +-15bp of
-   5y5y move) over the window counts as a full-strength signal. */
+/* Derived inflation signals. These are NOT correlations, so they must be put on a
+   correlation-like footing or they mathematically bully the real data:
+     INFL_CAP 0.45 — real |corr| rarely exceeds ~0.45, so a saturated signal must not
+       exceed that either. (They used to clamp at ±1.0, i.e. ~2x any correlation, which
+       let them single-handedly decide any regime that included them.)
+     sqrt(t) threshold — a 25bp non-oil breakeven move is huge over 21d and ordinary over
+       252d. Moves scale with sqrt(time), so the threshold must too. (It was a flat 25bp
+       at EVERY window => the signal was systematically dead at 21d and pinned at 252d.)
+   Base thresholds are calibrated at the 63d window. */
+const INFL_CAP=0.45, INFL_BASE_W=63;
 function inflSignals(M, w){
   const I=(M.inflation||{})[w]||{};
-  const cl=(v,s)=>v==null?0:Math.max(-1,Math.min(1,v/s));
+  const k=Math.sqrt(Number(w)/INFL_BASE_W);
+  const cl=(v,s)=> v==null?0 : INFL_CAP*Math.max(-1,Math.min(1, v/(s*k)));
   return {_RESID:cl(I.residBp,25), _5Y5YDIR:cl(I.fy5yChgBp,15), raw:I};
 }
 function macroCoupling(f, assets){
