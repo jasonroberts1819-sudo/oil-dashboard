@@ -13332,61 +13332,78 @@ const COT = (function(){
 
 /* ----------------------------- macro heatmap --------------------------- */
 const MSHORT={WTI:'WTI',SPX:'SPX',EEM:'EEM',NDX:'NDX',KRE:'KRE',DXY:'DXY',USDCAD:'CAD',USDJPY:'JPY',USDCNY:'CNY',GOLD:'Gold',SILVER:'Slvr',COPPER:'Copr',BTC:'BTC',US10Y:'10Y',US02Y:'2Y',CURVE:'2s10s',SOFR:'SOFR',BILL3M:'Bill',TED:'TED',SWAP1Y:'1Y',INFL5Y5Y:'5y5y',BE10Y:'10YBE'};
-const REG_KEYS={
-  'Reflation / expansion':['SPX','COPPER','US10Y','DXY'],
-  'Goldilocks / disinflation':['SPX','NDX','COPPER','BE10Y'],
-  'Stagflationary shock':['GOLD','BE10Y','INFL5Y5Y','SPX'],
-  'Geopolitical war premium':['GOLD','DXY','SPX','BE10Y'],
-  'Dollar debasement / real assets':['DXY','GOLD','SILVER','BTC'],
-  'Liquidity crunch (dollar up)':['DXY','BTC','SPX'],
-  'Liquidity melt-up (Fed easing)':['BTC','NDX','DXY','US02Y'],
-  'Demand destruction / recession':['SPX','US10Y','COPPER'],
-  'Idiosyncratic / supply-driven':['SPX','COPPER','DXY','GOLD']
-};
+/* SINGLE SOURCE OF TRUTH for the regime read.
+   Each regime = weighted instrument signature; w:+1 means "should move WITH WTI",
+   w:-1 means "should move INVERSE to WTI". dir gates on WTI's own direction.
+   Score AND the displayed evidence are both derived from this table, so they can
+   never drift apart, and MACRO_EXCLUDE below makes any omission explicit. */
+const REGIMES=[
+  {name:'Reflation / expansion', dir:'up',
+   w:{SPX:1, EEM:1, COPPER:1, US10Y:1, CURVE:1, DXY:-1, USDCNY:-1}},
+  {name:'Goldilocks / disinflation', dir:'up',
+   w:{SPX:1, NDX:1, EEM:1, COPPER:1, BE10Y:-1, INFL5Y5Y:-1, GOLD:-1}},
+  {name:'Stagflationary shock', dir:null,
+   w:{GOLD:1, BE10Y:1, INFL5Y5Y:1, SPX:-1, NDX:-1}},
+  {name:'Geopolitical war premium', dir:'up',
+   w:{GOLD:1, DXY:1, BE10Y:1, SPX:-1}},
+  {name:'Dollar debasement / real assets', dir:null,
+   w:{DXY:-1, GOLD:1, SILVER:1, COPPER:1, BTC:1}},
+  {name:'Liquidity crunch (dollar up)', dir:'down',
+   w:{DXY:-1, SPX:1, BTC:1, KRE:1, TED:-1}},
+  {name:'Liquidity melt-up (Fed easing)', dir:'up',
+   w:{BTC:1, NDX:1, USDJPY:1, DXY:-1, US02Y:-1, SOFR:-1, SWAP1Y:-1, BILL3M:-1}},
+  {name:'Demand destruction / recession', dir:'down',
+   w:{SPX:1, EEM:1, KRE:1, COPPER:1, US10Y:1, CURVE:-1}}
+];
+/* Deliberately NOT scored, with the reason stated (vs. silently dropped):
+   USD/CAD is mechanically an oil derivative — CAD tracks crude by construction, so it
+   can't discriminate between macro regimes. It stays in the heatmap as a sanity check. */
+const MACRO_EXCLUDE={USDCAD:'mechanically oil-linked (CAD tracks crude) — not a regime discriminator'};
 let macroWin=63;
 function corrColor(c){
   if(c==null) return {bg:'var(--surface-2)',fg:'var(--ink-3)'};
   const t=Math.max(-1,Math.min(1,c)), a=Math.min(0.9,Math.abs(t)*0.82+0.06);
   return {bg:`rgba(${t>=0?'224,83,61':'56,132,255'},${a})`, fg:Math.abs(t)>0.5?'#fff':'var(--ink)'};
 }
-/* How coupled is WTI to macro *at all*? Spans every axis — equities, dollar, metals,
-   crypto, RATES and INFLATION (breakevens). Deliberately MAX-dominated: a strong link to
-   even one axis means WTI is not decoupled, so a plain mean must not wash it out.
-   USD/CAD is excluded — it's mechanically oil-linked, not an independent macro read. */
-const COUPLE_KEYS=['SPX','NDX','EEM','DXY','GOLD','SILVER','COPPER','BTC','US10Y','US02Y','BE10Y','INFL5Y5Y'];
-function macroCoupling(f){
+/* Coupling = is WTI linked to macro AT ALL? Spans EVERY pulled instrument (minus the
+   deliberate MACRO_EXCLUDE), so nothing can be silently missed. MAX-dominated on purpose:
+   a strong link to even one axis means WTI is not decoupled — a plain mean would wash it out. */
+function coupleKeys(assets){
+  return assets.map(a=>a.key).filter(k=>k!=='WTI' && !MACRO_EXCLUDE[k]);
+}
+function macroCoupling(f, assets){
   const g=k=>(f[k]==null?0:f[k]);
-  const abs=COUPLE_KEYS.map(k=>({k,a:Math.abs(g(k)),v:g(k)})).sort((x,y)=>y.a-x.a);
+  const abs=coupleKeys(assets).map(k=>({k,a:Math.abs(g(k)),v:g(k)})).sort((x,y)=>y.a-x.a);
   const maxAbs=abs.length?abs[0].a:0;
   const meanAbs=abs.reduce((s,x)=>s+x.a,0)/(abs.length||1);
-  return {maxAbs, meanAbs, coupling:0.6*maxAbs+0.4*meanAbs, top:abs.slice(0,3)};
+  return {maxAbs, meanAbs, coupling:0.6*maxAbs+0.4*meanAbs, top:abs.slice(0,3), n:abs.length};
 }
-function macroRegime(f, wtiRet){
-  const g=k=>(f[k]==null?0:f[k]); const mean=a=>a.reduce((x,y)=>x+y,0)/a.length;
-  const cp=macroCoupling(f);
-  const scores={
-    'Reflation / expansion':          mean([g('SPX'),g('COPPER'),g('US10Y'),-g('DXY')]),
-    'Goldilocks / disinflation':      mean([g('SPX'),g('NDX'),g('COPPER'),g('EEM'),-g('BE10Y'),-g('GOLD')]),
-    'Stagflationary shock':           mean([g('GOLD'),g('BE10Y'),g('INFL5Y5Y'),-g('SPX')]),
-    'Geopolitical war premium':       mean([g('GOLD'),g('DXY'),-g('SPX'),g('BE10Y')]),
-    'Dollar debasement / real assets':mean([-g('DXY'),g('GOLD'),g('SILVER'),g('COPPER'),g('BTC')]),
-    'Liquidity crunch (dollar up)':   mean([-g('DXY'),g('BTC'),g('SPX')]),
-    'Liquidity melt-up (Fed easing)': mean([g('BTC'),g('NDX'),-g('DXY'),-g('US02Y'),-g('SOFR')]),
-    'Demand destruction / recession': mean([g('SPX'),g('US10Y'),g('COPPER')]),
-    // decoupled = no strong link to ANY macro axis; a single strong coupling kills it
-    'Idiosyncratic / supply-driven':  Math.max(-1, Math.min(1, 0.93 - 2.75*cp.coupling))
-  };
-  // WTI's own direction gates the regimes that require it
-  if(wtiRet<0){
-    scores['Reflation / expansion']-=0.35;
-    scores['Liquidity melt-up (Fed easing)']-=0.25;
-    scores['Geopolitical war premium']-=0.30;
-  } else {
-    scores['Demand destruction / recession']-=0.35;
-  }
-  const ranked=Object.entries(scores).sort((a,b)=>b[1]-a[1]);
-  const mixed=ranked[0][1]<0.25 || (ranked[0][1]-ranked[1][1])<0.06;  // weak top, or no clear leader
-  return {name: mixed?'Mixed / transitional':ranked[0][0], top:ranked[0][0], mixed, ranked, cp};
+/* Coverage guard: any pulled instrument used by NO regime and not explicitly excluded.
+   Surfaced in the UI so an omission like the breakeven bug can't hide again. */
+function macroCoverage(assets){
+  const used=new Set(); REGIMES.forEach(R=>Object.keys(R.w).forEach(k=>used.add(k)));
+  const all=assets.map(a=>a.key).filter(k=>k!=='WTI');
+  return {used:[...used], scored:all.filter(k=>used.has(k)),
+          excluded:all.filter(k=>MACRO_EXCLUDE[k]),
+          orphans:all.filter(k=>!used.has(k) && !MACRO_EXCLUDE[k]), total:all.length};
+}
+function macroRegime(f, wtiRet, assets){
+  const g=k=>(f[k]==null?0:f[k]);
+  const cp=macroCoupling(f, assets);
+  const ranked=REGIMES.map(R=>{
+    const ks=Object.keys(R.w);
+    const contrib=ks.map(k=>({k, v:g(k), c:R.w[k]*g(k), w:R.w[k]})).sort((a,b)=>b.c-a.c);
+    let score=contrib.reduce((s,x)=>s+x.c,0)/(ks.length||1);
+    if(R.dir==='up'   && wtiRet<0) score-=0.30;   // regime requires WTI rising
+    if(R.dir==='down' && wtiRet>0) score-=0.30;   // regime requires WTI falling
+    return {name:R.name, score, contrib};
+  });
+  ranked.push({name:'Idiosyncratic / supply-driven', idio:true, contrib:cp.top.map(x=>({k:x.k,v:x.v,c:x.a})),
+               score:Math.max(-1, Math.min(1, 0.93 - 2.75*cp.coupling))});
+  ranked.sort((a,b)=>b.score-a.score);
+  const mixed=ranked[0].score<0.25 || (ranked[0].score-ranked[1].score)<0.06;
+  return {name: mixed?'Mixed / transitional':ranked[0].name, top:ranked[0], mixed, ranked, cp,
+          cov:macroCoverage(assets)};
 }
 function renderMacro(){
   const M=(typeof MACRO_DATA!=='undefined'&&MACRO_DATA&&MACRO_DATA.assets&&MACRO_DATA.assets.length)?MACRO_DATA:null;
@@ -13395,16 +13412,23 @@ function renderMacro(){
   const assets=M.assets, keys=assets.map(a=>a.key), labelOf=Object.fromEntries(assets.map(a=>[a.key,a.label]));
   const w=String(macroWin), focus=M.wtiFocus[w]||{}, wtiRet=(M.wtiReturn||{})[w]||0;
   const winBtns=M.windows.map(x=>`<button data-mwin="${x}" aria-pressed="${x===macroWin}">${x}d</button>`).join("");
-  const reg=macroRegime(focus, wtiRet);
+  const reg=macroRegime(focus, wtiRet, assets);
   const dir = (wtiRet>=0?'+':'')+(wtiRet*100).toFixed(1)+'%';
-  const regRows=reg.ranked.map(([nm,sc])=>{
-    const win=nm===reg.top&&!reg.mixed, wd=Math.min(50,Math.abs(sc)*50), left=sc<0?50-wd:50;
-    return `<div class="regrow ${win?'win':''}"><span>${nm}</span><div class="rt"><div class="rf" style="left:${left}%;width:${wd}%;background:${sc>=0?'var(--pos)':'var(--neg)'}"></div></div><span style="text-align:right">${sc>=0?'+':''}${sc.toFixed(2)}</span></div>`;
+  const regRows=reg.ranked.map(R=>{
+    const win=R.name===reg.top.name&&!reg.mixed, sc=R.score, wd=Math.min(50,Math.abs(sc)*50), left=sc<0?50-wd:50;
+    const tip=R.idio? 'decoupling score — falls as WTI couples to any macro axis'
+                    : Object.entries(REGIMES.find(x=>x.name===R.name).w).map(([k,v])=>`${v>0?'+':'−'}${MSHORT[k]||k}`).join(' ');
+    return `<div class="regrow ${win?'win':''}" title="${tip}"><span>${R.name}</span><div class="rt"><div class="rf" style="left:${left}%;width:${wd}%;background:${sc>=0?'var(--pos)':'var(--neg)'}"></div></div><span style="text-align:right">${sc>=0?'+':''}${sc.toFixed(2)}</span></div>`;
   }).join("");
   const fmtc=k=>`${MSHORT[k]||k} ${focus[k]==null?'—':(focus[k]>0?'+':'')+focus[k]}`;
-  const evidence=(REG_KEYS[reg.top]||[]).map(fmtc).join(" · ");
+  // evidence comes from the SAME table that scored it, so it can't drift
+  const evidence=reg.top.contrib.slice(0,4).map(x=>fmtc(x.k)).join(" · ");
   // always show WTI's strongest macro links — this is what decides "decoupled" or not
   const links=reg.cp.top.map(x=>fmtc(x.k)).join(" · ");
+  const cov=reg.cov;
+  const covNote=`scores ${cov.scored.length}/${cov.total} instruments`
+    + (cov.excluded.length? ` · excluded: ${cov.excluded.map(k=>MSHORT[k]||k).join(', ')} (${MACRO_EXCLUDE[cov.excluded[0]]})`:'')
+    + (cov.orphans.length? ` · <b style="color:var(--neg)">unused: ${cov.orphans.map(k=>MSHORT[k]||k).join(', ')}</b>`:'');
   let frows="", lastGrp=null;
   assets.filter(a=>a.key!=='WTI').forEach(a=>{
     if(a.group!==lastGrp){ lastGrp=a.group; frows+=`<tr><td class="mgrp" colspan="4">${a.group}</td></tr>`; }
@@ -13431,7 +13455,7 @@ function renderMacro(){
         <div style="min-width:200px"><div class="regbig">${reg.name}</div><div class="csub" style="margin:4px 0 0">WTI ${dir} over ${macroWin}d<br>signature: ${evidence}<br><span style="color:var(--ink-3)">strongest macro links: ${links} · coupling ${reg.cp.coupling.toFixed(2)}</span></div></div>
         <div class="regscores">${regRows}</div>
       </div>
-      <p class="cotnote" style="margin-top:10px">Heuristic: each regime scored from WTI's correlations to the assets in its signature; WTI's own direction breaks the reflation↔demand-destruction tie. A weak top score reads "mixed".</p>
+      <p class="cotnote" style="margin-top:10px">Heuristic: each regime scored from WTI's correlations to the weighted instruments in its signature (hover a row to see it); WTI's own direction gates the regimes that require it. A weak top score reads "mixed". Coupling spans every instrument, so no axis can be missed.<br>Coverage: ${covNote}.</p>
     </section>
     <section class="card">
       <h2>WTI correlation by asset &amp; horizon</h2>
