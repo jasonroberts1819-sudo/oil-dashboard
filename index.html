@@ -133,7 +133,7 @@
   .regcard{display:flex;flex-wrap:wrap;gap:16px 24px;align-items:center}
   .regbig{font-size:20px;font-weight:680;letter-spacing:-.01em}
   .regscores{display:flex;flex-direction:column;gap:5px;min-width:240px;flex:1}
-  .regrow{display:grid;grid-template-columns:160px 1fr 44px;gap:8px;align-items:center;font-size:11.5px;color:var(--ink-2)}
+  .regrow{display:grid;grid-template-columns:190px 1fr 42px;gap:8px;align-items:center;font-size:11px;color:var(--ink-2);line-height:1.25}
   .regrow .rt{position:relative;height:12px;background:var(--surface-2);border-radius:3px;overflow:hidden}
   .regrow .rf{position:absolute;top:0;bottom:0;left:50%;border-radius:3px}
   .regrow.win{color:var(--ink);font-weight:640}
@@ -13334,9 +13334,14 @@ const COT = (function(){
 const MSHORT={WTI:'WTI',SPX:'SPX',EEM:'EEM',NDX:'NDX',KRE:'KRE',DXY:'DXY',USDCAD:'CAD',USDJPY:'JPY',USDCNY:'CNY',GOLD:'Gold',SILVER:'Slvr',COPPER:'Copr',BTC:'BTC',US10Y:'10Y',US02Y:'2Y',CURVE:'2s10s',SOFR:'SOFR',BILL3M:'Bill',TED:'TED',SWAP1Y:'1Y',INFL5Y5Y:'5y5y',BE10Y:'10YBE'};
 const REG_KEYS={
   'Reflation / expansion':['SPX','COPPER','US10Y','DXY'],
+  'Goldilocks / disinflation':['SPX','NDX','COPPER','BE10Y'],
   'Stagflationary shock':['GOLD','BE10Y','INFL5Y5Y','SPX'],
+  'Geopolitical war premium':['GOLD','DXY','SPX','BE10Y'],
+  'Dollar debasement / real assets':['DXY','GOLD','SILVER','BTC'],
   'Liquidity crunch (dollar up)':['DXY','BTC','SPX'],
-  'Demand destruction / recession':['SPX','US10Y','COPPER']
+  'Liquidity melt-up (Fed easing)':['BTC','NDX','DXY','US02Y'],
+  'Demand destruction / recession':['SPX','US10Y','COPPER'],
+  'Idiosyncratic / supply-driven':['SPX','COPPER','DXY','GOLD']
 };
 let macroWin=63;
 function corrColor(c){
@@ -13346,15 +13351,30 @@ function corrColor(c){
 }
 function macroRegime(f, wtiRet){
   const g=k=>(f[k]==null?0:f[k]); const mean=a=>a.reduce((x,y)=>x+y,0)/a.length;
+  // how coupled is WTI to macro at all? (drives the idiosyncratic/oil-led read)
+  const meanAbs=mean(['SPX','NDX','EEM','DXY','GOLD','COPPER','BTC','US10Y','US02Y'].map(k=>Math.abs(g(k))));
   const scores={
     'Reflation / expansion':          mean([g('SPX'),g('COPPER'),g('US10Y'),-g('DXY')]),
+    'Goldilocks / disinflation':      mean([g('SPX'),g('NDX'),g('COPPER'),g('EEM'),-g('BE10Y'),-g('GOLD')]),
     'Stagflationary shock':           mean([g('GOLD'),g('BE10Y'),g('INFL5Y5Y'),-g('SPX')]),
+    'Geopolitical war premium':       mean([g('GOLD'),g('DXY'),-g('SPX'),g('BE10Y')]),
+    'Dollar debasement / real assets':mean([-g('DXY'),g('GOLD'),g('SILVER'),g('COPPER'),g('BTC')]),
     'Liquidity crunch (dollar up)':   mean([-g('DXY'),g('BTC'),g('SPX')]),
-    'Demand destruction / recession': mean([g('SPX'),g('US10Y'),g('COPPER')])
+    'Liquidity melt-up (Fed easing)': mean([g('BTC'),g('NDX'),-g('DXY'),-g('US02Y'),-g('SOFR')]),
+    'Demand destruction / recession': mean([g('SPX'),g('US10Y'),g('COPPER')]),
+    // decoupled = oil trading on its own fundamentals; fades as macro correlation rises
+    'Idiosyncratic / supply-driven':  Math.max(-1, Math.min(1, 0.55 - 1.6*meanAbs))
   };
-  if(wtiRet<0) scores['Reflation / expansion']-=0.35; else scores['Demand destruction / recession']-=0.35;
+  // WTI's own direction gates the regimes that require it
+  if(wtiRet<0){
+    scores['Reflation / expansion']-=0.35;
+    scores['Liquidity melt-up (Fed easing)']-=0.25;
+    scores['Geopolitical war premium']-=0.30;
+  } else {
+    scores['Demand destruction / recession']-=0.35;
+  }
   const ranked=Object.entries(scores).sort((a,b)=>b[1]-a[1]);
-  const mixed=ranked[0][1]<0.25 || (ranked[0][1]-ranked[1][1])<0.08;  // weak top, or no clear leader
+  const mixed=ranked[0][1]<0.25 || (ranked[0][1]-ranked[1][1])<0.06;  // weak top, or no clear leader
   return {name: mixed?'Mixed / transitional':ranked[0][0], top:ranked[0][0], mixed, ranked};
 }
 function renderMacro(){
