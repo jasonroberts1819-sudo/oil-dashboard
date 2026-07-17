@@ -13401,7 +13401,7 @@ const MSHORT={WTI:'WTI',SPX:'SPX',EEM:'EEM',NDX:'NDX',KRE:'KRE',DXY:'DXY',USDCAD
    WEIGHT IS THE LIFT ITSELF, so a strong fingerprint instrument counts more than a marginal
    one (the old ±1 form gave SPX +0.06 and HY −0.33 equal say).
 
-   NINE REGIMES -> SIX. With 35 dated episodes back to 1986 and measured ICC≈0.18, ~6 regimes
+   NINE REGIMES -> SIX. With 33 dated episodes back to 1986 and measured ICC≈0.18, ~6 regimes
    is the most the data supports (~4:1 obs/param). Changes, all evidence-driven:
      - DROPPED 'Policy squeeze': 0/6 across THREE tightening cycles (1994, 2018, 2022). Its
        premise (oil DOWN while rates UP) barely occurs — during hikes oil rises, and once a
@@ -13708,15 +13708,14 @@ function renderMacro(){
       + `<div class="rt"><div class="rf" style="left:${left}%;width:${wd}%;background:${a>=0?'var(--pos)':'var(--neg)'};opacity:${R.gated?0.35:1}"></div></div>`
       + `<span style="text-align:right">${a>=0?'+':''}${Math.round(a*100)}%</span></div>`;
   }).join("");
-  const SIGLAB={_RESID:'BE-resid', _5Y5YDIR:'5y5y'};
-  const fmtc=k=>{
-    if(k[0]==='_'){ const v=sig[k]||0; return `${SIGLAB[k]||k} ${v>0?'+':''}${v.toFixed(2)}`; }
-    return `${MSHORT[k]||k} ${focus[k]==null?'—':(focus[k]>0?'+':'')+focus[k]}`;
-  };
-  // evidence comes from the SAME table that scored it, so it can't drift
-  const evidence=reg.top.contrib.slice(0,4).map(x=>fmtc(x.k)).join(" · ");
-  // always show WTI's strongest macro links — this is what decides "decoupled" or not
-  const links=reg.cp.top.map(x=>fmtc(x.k)).join(" · ");
+  // SIGNATURE shows the LIFT (z-score) that actually drove the score — x.v in contrib IS
+  // the z that was scored, so it can't drift from the ranking. (Was showing raw focus
+  // correlations, which contradicted "scored on lift".)
+  const evidence=reg.top.contrib.slice(0,4)
+    .map(x=>`${MSHORT[x.k]||x.k} ${x.v==null?'—':(x.v>0?'+':'')+x.v.toFixed(1)+'σ'}`).join(" · ");
+  // COUPLING links stay on RAW correlations — "is WTI linked to macro at all?" is a question
+  // about the LEVEL of the relationship, not whether it is unusual. Deliberately different.
+  const links=reg.cp.top.map(x=>`${MSHORT[x.k]||x.k} ${x.v==null?'—':(x.v>0?'+':'')+x.v}`).join(" · ");
   // alarm state for EVERY window (not just the selected one) so nothing hides behind the toggle
   const alarms=M.windows.map(x=>checkAlarm(M,x));
   const firedSet=new Set(alarms.filter(a=>a.fired).map(a=>a.w));
@@ -13828,7 +13827,7 @@ function renderMacro(){
         Closest, this window: ${reg.ranked.slice(0,3).map(R=>`${R.name} (fit ${R.fit.toFixed(2)} vs bar ${R.bar.toFixed(2)})`).join(' · ')}.
         Each regime is judged against <b>its own</b> null — a 4-instrument signature reaches high alignment by chance far more easily than an 11-instrument one, so one shared bar would be set by the noisiest regime. Bars are each regime's p99.5 of fit under a pure-noise null (Bonferroni-corrected for testing ${reg.ranked.length} at once). This is diagnostic detail, <b>not</b> a call.
         ${reg.unnameable && reg.unnameable.length? `<br><b style="color:var(--neg)">Unnameable by construction:</b> ${reg.unnameable.join(', ')} — their null bar is 1.00 and fit can never exceed 1.0. Their signatures are too small: that few instruments line up perfectly by chance more often than a corrected bar permits. These regimes cannot be honestly called no matter what the data does.`:''}</div>`:''}
-      <p class="cotnote" style="margin-top:10px"><b>Scored on LIFT, not on levels.</b> Each % is <b>alignment</b> — of the <i>unusualness</i> that exists in that regime's signature, how much points the right way. The inputs are <b>z-scores</b>: how far each WTI correlation sits from <i>its own</i> historical norm. This matters because a raw correlation mostly measures an instrument's <b>permanent</b> tie to oil (SPX is +0.16 with WTI always, copper +0.28), so scoring levels handed every regime credit for the base rate rather than the regime — live, Reflation scored 78.5% on levels and 7.2% on lift at 21d. <b>Every weight is a MEASURED lift coefficient</b> (v2, 2026-07-17) — the instrument's correlation-lift in that regime's 35 dated episodes back to 1986, not a hand-set ±1. So a strong-fingerprint instrument outweighs a marginal one, and a weight exists only where lift cleared significance. <b>strength</b> = magnitude-weighted mean |z|: alignment says <i>which</i> way, strength says <i>how unusual</i> the instruments that matter are — a regime is named only with both.<br><b>Noise floor ${reg.nf.toFixed(2)} in z units</b>; <b>each regime has its OWN naming bar</b> (this window's top: ${reg.bar.toFixed(2)}) = that regime's p99.5 of fit under a null simulating the full rolling-correlation→Fisher→z pipeline (WTI independent of a basket carrying its real cross-correlation, direction-gated, Bonferroni-corrected for ${reg.ranked.length} regimes). <b>Alarm gates:</b> alignment ≥50% and strength ≥1.7/1.8/1.9 (21/63/252d), false-positive ~0.2%. A contested ("mixed") read never alarms. All from <code>calibrate_alarms.py</code>; none hand-picked.<br><b>9 regimes → 6</b>: dropped Policy squeeze (0/6 across three tightening cycles), merged Goldilocks + Dollar-debasement into Reflation (each 2/6 alone, 7/… pooled). <b>Known limitation:</b> HY/IG OAS have only ~2 independent 252d windows behind their z (FRED serves ~3y of the licensed ICE series), so their lift is weak by construction.<br>Coverage: ${covNote}.</p>
+      <p class="cotnote" style="margin-top:10px"><b>Scored on LIFT, not on levels.</b> Each % is <b>alignment</b> — of the <i>unusualness</i> that exists in that regime's signature, how much points the right way. The inputs are <b>z-scores</b>: how far each WTI correlation sits from <i>its own</i> historical norm. This matters because a raw correlation mostly measures an instrument's <b>permanent</b> tie to oil (SPX is +0.16 with WTI always, copper +0.28), so scoring levels handed every regime credit for the base rate rather than the regime — live, Reflation scored 78.5% on levels and 7.2% on lift at 21d. <b>Every weight is a MEASURED lift coefficient</b> (v2, 2026-07-17) — the instrument's correlation-lift in that regime's dated episodes (33 across the six regimes, back to 1986), not a hand-set ±1. So a strong-fingerprint instrument outweighs a marginal one, and a weight exists only where lift cleared significance. <b>strength</b> = magnitude-weighted mean |z|: alignment says <i>which</i> way, strength says <i>how unusual</i> the instruments that matter are — a regime is named only with both.<br><b>Noise floor ${reg.nf.toFixed(2)} in z units</b>; <b>each regime has its OWN naming bar</b> (this window's top: ${reg.bar.toFixed(2)}) = that regime's p99.5 of fit under a null simulating the full rolling-correlation→Fisher→z pipeline (WTI independent of a basket carrying its real cross-correlation, direction-gated, Bonferroni-corrected for ${reg.ranked.length} regimes). <b>Alarm gates:</b> alignment ≥50% and strength ≥1.7/1.8/1.9 (21/63/252d), false-positive ~0.2%. A contested ("mixed") read never alarms. All from <code>calibrate_alarms.py</code>; none hand-picked.<br><b>9 regimes → 6</b>: dropped Policy squeeze (0/6 across three tightening cycles), merged Goldilocks + Dollar-debasement into Reflation (each 2/6 alone, 7/… pooled). <b>Known limitation:</b> HY/IG OAS have only ~2 independent 252d windows behind their z (FRED serves ~3y of the licensed ICE series), so their lift is weak by construction.<br>Coverage: ${covNote}.</p>
     </section>
     ${inflCard}
     <section class="card">
