@@ -15584,12 +15584,6 @@ function renderForward(){
       <div class="chartbox"><svg id="fbSpread"></svg></div>
     </section>
     <section class="card">
-      <h2>Call on OPEC+ crude</h2>
-      <p class="csub">required DoC crude (a−b) vs realised OPEC+ production · mb/d. OPEC forecasts the call, not its own forward output.</p>
-      <div class="legend" id="fbCallLeg"></div>
-      <div class="chartbox"><svg id="fbCall"></svg></div>
-    </section>
-    <section class="card">
       <h2>US crude-only balance</h2>
       <p class="csub">commercial crude stock change · mb/d · + = build, − = draw. US crude draws even as the world shows surplus — different geographies.</p>
       <div class="chartbox"><svg id="fbUScrude"></svg></div>
@@ -15623,11 +15617,8 @@ function renderForward(){
   fbLines('fbSpread',{labels:sp.quarters, ymin:sr[0], ymax:sr[1], fcIndex:sp.quarters.indexOf('3Q26'), fmt:v=>v.toFixed(0),
     series:[{data:sp.opec,color:cAmber,width:2,dash:"4 3"},{data:sp.eia,color:cBlue,width:2},{data:sp.blend,color:cGreen,width:2}]});
   $("#fbSpreadLeg").innerHTML=fbYl(cBlue,"EIA")+fbYl(cAmber,"OPEC",true)+fbYl(cGreen,"Blend");
-  // 3) call on OPEC+
-  const cAll=[...call.required_doc_crude,...call.doc_production].filter(x=>x!=null); const cr=fbAutoRange(cAll,false);
-  fbLines('fbCall',{labels:call.quarters, ymin:cr[0], ymax:cr[1], fmt:v=>v.toFixed(0),
-    series:[{data:call.required_doc_crude,color:cBlue,width:2.2},{data:call.doc_production,color:cInk2,width:2,dash:"3 3"}]});
-  $("#fbCallLeg").innerHTML=fbYl(cBlue,"Required (call)")+fbYl(cInk2,"OPEC+ production",true);
+  // (Call on OPEC+ chart intentionally NOT rendered — kept out of the dashboard per
+  //  Jason's request; the call_on_opec data still ships in FB_DATA / the model.)
   // 4) US crude balance (monthly bars)
   const ucFc=uc.months.indexOf(uc.forecast_from);
   const ucr=fbAutoRange(uc.stock_change,true);
