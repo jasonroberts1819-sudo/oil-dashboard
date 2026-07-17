@@ -13636,6 +13636,11 @@ const REGBAR={
       'Liquidity melt-up (Fed easing)':0.45,'Demand destruction / recession':0.25,'Liquidity crunch (dollar up)':0.92}
 };
 const regBar=(w,name)=> (REGBAR[w]||{})[name] ?? 0.80;
+/* CALIB_SIG = hash of the REGIMES table + instrument set that the bars above were calibrated
+   under (calibrate_alarms.calib_signature()). check_model.py recomputes it from the live
+   REGIMES/assets and FAILS the build if it differs — i.e. if the regimes or instruments
+   changed but the bars were not re-derived. Refresh it (with the bars) after calibrate_alarms.py. */
+const CALIB_SIG="f6b5e7071d3f";
 function macroRegime(f, wtiRet, assets, win, S, zf){
   S=S||{}; zf=zf||{};
   const w=Number(win)||63;
