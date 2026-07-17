@@ -13605,7 +13605,34 @@ function regimeFit(R, zf, sig, wtiRet, nf){
    alarm badge beside it was calibrated to 0.15-0.28%. I calibrated the badge and left the
    headline uncalibrated for weeks. If this reads "Mixed" most days, that is not the model
    failing — that is what the data actually supports. */
-const MIXEDBAR={21:0.94, 63:0.76, 252:0.80};   // <- calibrate_alarms.py
+/* PER-REGIME bars, Bonferroni-corrected for testing 10 regimes at once = each regime's own
+   p99.5 of fit under the null. A SINGLE global bar was wrong twice over (Jason: "does it
+   make sense that no macro regime is chosen across any time frame?" — it did not):
+     (a) it was set by the MAX across all regimes, i.e. by whichever regime is NOISIEST.
+         Small signatures reach high alignment by chance easily, so the 4-instrument War
+         premium was setting the bar that the 11-instrument Reflation had to clear. Most
+         regimes' OWN null p95 is +0.25 while the global bar was 0.76-0.94 — unreachable.
+     (b) the global estimate was not even stable: 0.94 vs 0.78 at 21d across MC runs.
+   A bar of 1.00 means the regime is UNNAMEABLE BY CONSTRUCTION: fit <= 1, and a signature
+   that small reaches perfect alignment by chance more often than a corrected bar allows.
+   Debasement (8, two of them derived) and Policy squeeze (6) are in that state — they can
+   never be honestly named, whatever the data does. That is a fact about the SIGNATURE SIZE,
+   and it is surfaced rather than hidden. */
+const REGBAR={
+  21:{'Reflation / expansion':0.51,'Goldilocks / disinflation':0.77,'Stagflationary shock':0.80,
+      'Geopolitical war premium':0.73,'Dollar debasement / real assets':1.00,
+      'Liquidity crunch (dollar up)':0.53,'Liquidity melt-up (Fed easing)':0.70,
+      'Policy squeeze / hawkish tightening':1.00,'Demand destruction / recession':0.65},
+  63:{'Reflation / expansion':0.43,'Goldilocks / disinflation':0.69,'Stagflationary shock':0.73,
+      'Geopolitical war premium':0.45,'Dollar debasement / real assets':0.99,
+      'Liquidity crunch (dollar up)':0.58,'Liquidity melt-up (Fed easing)':0.89,
+      'Policy squeeze / hawkish tightening':1.00,'Demand destruction / recession':0.35},
+  252:{'Reflation / expansion':0.63,'Goldilocks / disinflation':0.84,'Stagflationary shock':0.87,
+      'Geopolitical war premium':0.68,'Dollar debasement / real assets':0.98,
+      'Liquidity crunch (dollar up)':0.90,'Liquidity melt-up (Fed easing)':0.90,
+      'Policy squeeze / hawkish tightening':1.00,'Demand destruction / recession':0.81}
+};
+const regBar=(w,name)=> (REGBAR[w]||{})[name] ?? 0.80;
 function macroRegime(f, wtiRet, assets, sig, win, S, zf){
   sig=sig||{}; S=S||{}; zf=zf||{};
   const w=Number(win)||63;
@@ -13626,13 +13653,20 @@ function macroRegime(f, wtiRet, assets, sig, win, S, zf){
   if(vacuous) idioFit=Math.min(idioFit, 0.25);
   ranked.push({name:'Idiosyncratic / supply-driven', idio:true, alignment:idioFit, strength:cp.meanAbs,
                fit:idioFit, gated:false, vacuous, contrib:cp.top.map(x=>({k:x.k,v:x.v,c:x.a}))});
+  // each regime is judged against ITS OWN null, not a shared one
+  ranked.forEach(R=>{ R.bar = R.idio ? 0.30 : regBar(w, R.name); R.clears = R.fit > R.bar; });
   ranked.sort((a,b)=>b.fit-a.fit);
-  const bar=MIXEDBAR[w]||0.80;
-  const belowNoise = ranked[0].fit<bar;                  // top read is inside the noise band
-  const contested  = (ranked[0].fit-ranked[1].fit)<0.05; // two regimes tie -> cannot pick
+  const clearing = ranked.filter(R=>R.clears);
+  const belowNoise = clearing.length===0;                       // nothing beats its own null
+  const contested  = clearing.length>1 &&                       // 2+ clear and are tied
+                     (clearing[0].fit-clearing[1].fit)<0.05;
   const mixed = belowNoise || contested;
-  return {name: mixed?'Mixed / transitional':ranked[0].name, top:ranked[0], mixed,
-          belowNoise, contested, bar, ranked, cp, nf, cov:macroCoverage(assets)};
+  const winner = clearing.length? clearing[0] : ranked[0];
+  // regimes whose null bar is 1.00 can never be named however the data behaves
+  const unnameable = ranked.filter(R=>!R.idio && R.bar>=1.0).map(R=>R.name);
+  return {name: mixed?'Mixed / transitional':winner.name, top:winner, mixed,
+          belowNoise, contested, bar:winner.bar, unnameable, ranked, cp, nf,
+          cov:macroCoverage(assets)};
 }
 function renderMacro(){
   const M=(typeof MACRO_DATA!=='undefined'&&MACRO_DATA&&MACRO_DATA.assets&&MACRO_DATA.assets.length)?MACRO_DATA:null;
@@ -13772,11 +13806,11 @@ function renderMacro(){
             <span style="color:var(--ink-3)">strongest macro links: ${links} · strongest is <b>${reg.cp.couplingX.toFixed(1)}×</b> the significance floor (${reg.cp.bonf.toFixed(2)}, Bonferroni-adjusted for ${reg.cp.n} assets) — ${reg.cp.couplingX>=1?'a genuine link exists':'nothing clears chance'}</span></div></div>
         <div class="regscores">${regRows}</div>
       </div>
-      ${reg.mixed? `<div class="dhealth" style="margin:10px 0 0"><b>No regime clears the noise bar — all ${reg.ranked.length} fits are shown above anyway.</b>
-        Ranked, this window: ${reg.ranked.slice(0,3).map(R=>`${R.name} (fit ${R.fit.toFixed(2)})`).join(' · ')}.
-        The bar is <b>${reg.bar.toFixed(2)}</b> = the 95th percentile of top-fit under a pure-noise null, so anything below it is a
-        pattern noise produces at least 5% of the time. This is diagnostic detail, <b>not</b> a call.</div>`:''}
-      <p class="cotnote" style="margin-top:10px"><b>Scored on LIFT, not on levels.</b> Each % is <b>alignment</b> — of the <i>unusualness</i> that exists in that regime's signature, how much points the right way. The inputs are <b>z-scores</b>: how far each WTI correlation sits from <i>its own</i> historical norm. This matters because a raw correlation mostly measures an instrument's <b>permanent</b> tie to oil (SPX is +0.16 with WTI always, copper +0.28), so scoring levels handed every regime credit for the base rate rather than the regime — live, Reflation scored 78.5% on levels and 7.2% on lift at 21d. <b>strength</b> = mean |z|: alignment says <i>which</i> way, strength says <i>how unusual</i> — a regime is named only with both.<br><b>The noise floor is ${reg.nf.toFixed(2)} in z units at every window</b> — that is the point of z: correlation noise depends on sample size (it needed 0.43/0.25/0.12 in correlation space), a z does not.<br><b>Naming bar ${reg.bar.toFixed(2)}</b> = p95 of top-fit under a null that simulates the full rolling-correlation→Fisher→z pipeline with WTI independent of a basket carrying its real cross-correlation. <b>Alarm gates:</b> alignment ≥50% and strength ≥1.9/1.9/1.7 (21/63/252d) — false-positive rate ~0.25%. A contested ("mixed") read never alarms. All of it from <code>calibrate_alarms.py</code>; none of it hand-picked.<br><b>Known limitations:</b> the ±1 signature double-counts correlated instruments (each regime counts the same underlying axis 1.3–2.3×); and HY/IG OAS have only ~2 independent 252d windows behind their z (FRED serves ~3y of the licensed ICE series), so their lift is weak by construction.<br>Coverage: ${covNote}.</p>
+      ${reg.mixed? `<div class="dhealth" style="margin:10px 0 0"><b>${reg.belowNoise?'No regime clears its own noise bar':'Two regimes tie — cannot separate them'} — all ${reg.ranked.length} fits are shown above anyway.</b>
+        Closest, this window: ${reg.ranked.slice(0,3).map(R=>`${R.name} (fit ${R.fit.toFixed(2)} vs bar ${R.bar.toFixed(2)})`).join(' · ')}.
+        Each regime is judged against <b>its own</b> null — a 4-instrument signature reaches high alignment by chance far more easily than an 11-instrument one, so one shared bar would be set by the noisiest regime. Bars are each regime's p99.5 of fit under a pure-noise null (Bonferroni-corrected for testing ${reg.ranked.length} at once). This is diagnostic detail, <b>not</b> a call.
+        ${reg.unnameable && reg.unnameable.length? `<br><b style="color:var(--neg)">Unnameable by construction:</b> ${reg.unnameable.join(', ')} — their null bar is 1.00 and fit can never exceed 1.0. Their signatures are too small: that few instruments line up perfectly by chance more often than a corrected bar permits. These regimes cannot be honestly called no matter what the data does.`:''}</div>`:''}
+      <p class="cotnote" style="margin-top:10px"><b>Scored on LIFT, not on levels.</b> Each % is <b>alignment</b> — of the <i>unusualness</i> that exists in that regime's signature, how much points the right way. The inputs are <b>z-scores</b>: how far each WTI correlation sits from <i>its own</i> historical norm. This matters because a raw correlation mostly measures an instrument's <b>permanent</b> tie to oil (SPX is +0.16 with WTI always, copper +0.28), so scoring levels handed every regime credit for the base rate rather than the regime — live, Reflation scored 78.5% on levels and 7.2% on lift at 21d. <b>strength</b> = mean |z|: alignment says <i>which</i> way, strength says <i>how unusual</i> — a regime is named only with both.<br><b>The noise floor is ${reg.nf.toFixed(2)} in z units at every window</b> — that is the point of z: correlation noise depends on sample size (it needed 0.43/0.25/0.12 in correlation space), a z does not.<br><b>Each regime has its OWN naming bar</b> (this window's top: ${reg.bar.toFixed(2)}) = that regime's p99.5 of fit under a null simulating the full rolling-correlation→Fisher→z pipeline, with WTI independent of a basket carrying its real cross-correlation, Bonferroni-corrected for testing ${reg.ranked.length} regimes at once. Per-regime because a 4-instrument signature reaches high alignment by chance far more easily than an 11-instrument one — a single shared bar gets set by the noisiest regime and is then unreachable for everyone else. <b>Alarm gates:</b> alignment ≥50% and strength ≥1.9/1.9/1.7 (21/63/252d) — false-positive rate ~0.25%. A contested ("mixed") read never alarms. All of it from <code>calibrate_alarms.py</code>; none of it hand-picked.<br><b>Known limitations:</b> the ±1 signature double-counts correlated instruments (each regime counts the same underlying axis 1.3–2.3×); and HY/IG OAS have only ~2 independent 252d windows behind their z (FRED serves ~3y of the licensed ICE series), so their lift is weak by construction.<br>Coverage: ${covNote}.</p>
     </section>
     ${inflCard}
     <section class="card">
