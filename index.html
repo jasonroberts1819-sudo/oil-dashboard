@@ -13479,8 +13479,7 @@ const ALARMS={
 };
 function checkAlarm(M, w){
   const key=String(w), A=ALARMS[w];
-  const sig=inflSignals(M, key);
-  const reg=macroRegime(M.wtiFocus[key], M.wtiReturn[key], M.assets, sig, w,
+  const reg=macroRegime(M.wtiFocus[key], M.wtiReturn[key], M.assets, null, w,
                         (M.stats||{})[key], (M.wtiFocusZ||{})[key]);
   // a contested read (mixed) never alarms, however high the top alignment
   const fired = !!A && !reg.mixed && reg.top.alignment>A.align && reg.top.strength>A.strength;
@@ -13503,15 +13502,13 @@ function zColorCorr(z){
 function coupleKeys(assets){
   return assets.map(a=>a.key).filter(k=>k!=='WTI' && !COUPLE_EXCLUDE[k]);
 }
-/* Derived inflation signals, now in the SAME UNITS as everything else (z).
-   The whole cap/Z90/clip apparatus below is GONE, and that is the point: the model used to
-   score raw correlations, so these non-correlation signals had to be squeezed onto a
-   correlation-like footing by hand (clamp at ±1.0 -> "mathematical bully"; then a flat 0.45
-   cap; then the window's p90 |corr|; a sqrt(t) threshold that the data refuted...). Every
-   one of those was a hand-fitted conversion between incompatible units.
-   Scoring on LIFT (z) makes the conversion disappear: `move / its own measured 1-sigma` IS
-   a z-score already. Same units as wtiFocusZ. No cap, no Z90, no clip, nothing to tune. */
-function inflSignals(M, w){
+/* inflSignals (the _RESID / _5Y5YDIR derived breakeven signals) was REMOVED in v2, 2026-07-17.
+   The beta-adjusted breakeven residual never validated in any regime's dated episodes (5y5y
+   lift in Stagflation was +0.040, ns; the breakeven residual is in no signature), so it was
+   dropped from scoring — and the "Inflation pricing — oil-adjusted" card that displayed it
+   went with it: showing a decomposition whose stated punchline (residual → stagflation) the
+   data refutes is exactly the unvalidated-assertion pattern the rebuild removed. */
+function _inflSignals_removed(M, w){
   const I=(M.inflation||{})[w]||{};
   const z=(v,sd)=> (v==null||!sd)?0 : v/sd;
   return {_RESID:z(I.residBp,I.residSdBp), _5Y5YDIR:z(I.fy5yChgBp,I.fy5ySdBp), raw:I};
@@ -13692,10 +13689,9 @@ function renderMacro(){
   const assets=M.assets, keys=assets.map(a=>a.key), labelOf=Object.fromEntries(assets.map(a=>[a.key,a.label]));
   const w=String(macroWin), focus=M.wtiFocus[w]||{}, wtiRet=(M.wtiReturn||{})[w]||0;
   const winBtns=M.windows.map(x=>`<button data-mwin="${x}" aria-pressed="${x===macroWin}">${x}d</button>`).join("");
-  const sig=inflSignals(M, w);
   const ST=(M.stats||{})[w]||{};
   const zfoc=(M.wtiFocusZ||{})[w]||{};
-  const reg=macroRegime(focus, wtiRet, assets, sig, macroWin, ST, zfoc);
+  const reg=macroRegime(focus, wtiRet, assets, null, macroWin, ST, zfoc);
   const dir = (wtiRet>=0?'+':'')+(wtiRet*100).toFixed(1)+'%';
   const regRows=reg.ranked.map(R=>{
     const win=R.name===reg.top.name&&!reg.mixed;
@@ -13749,20 +13745,10 @@ function renderMacro(){
     + (cov.ghosts && cov.ghosts.length? ` · <b style="color:var(--neg)">WEIGHTED BUT NOT IN THE DATA (contributing 0 silently): ${cov.ghosts.map(k=>MSHORT[k]||k).join(', ')}</b>`:'')
     + ((M.missing&&M.missing.length)? ` · <b style="color:var(--neg)">FAILED TO FETCH: ${M.missing.map(m=>m.label).join(', ')} — regime scored WITHOUT them</b>`:'');
   // inflation decomposition: total breakeven move = oil-explained + residual
-  const I=sig.raw||{};
-  const bp=v=>v==null?'—':((v>0?'+':'')+v.toFixed(1)+'bp');
-  const inflCard = I.be10yChgBp==null? '' : `
-    <section class="card" style="margin-bottom:16px">
-      <h2 style="font-size:14px">Inflation pricing — oil-adjusted <span style="font-weight:400;color:var(--ink-3);font-size:12px">· ${macroWin}d</span></h2>
-      <p class="csub">Oil is a CPI component, so a raw WTI↔breakeven correlation is mechanical. Regressing the 10Y breakeven on WTI (β=${I.beta}, i.e. a 1% WTI move ≈ ${(I.beta||0).toFixed(2)}bp) splits its move into the part oil explains and the <b>residual</b> — the structural signal.</p>
-      <div class="zgrid" style="grid-template-columns:200px 1fr minmax(90px,auto)">
-        <div class="zlab">10Y breakeven, total</div><div class="ztrack"><div class="zmid"></div><div class="zfill" style="left:${I.be10yChgBp<0?50-Math.min(50,Math.abs(I.be10yChgBp)/40*50):50}%;width:${Math.min(50,Math.abs(I.be10yChgBp)/40*50)}%;background:var(--ink-3)"></div></div><div class="zmeta"><b>${bp(I.be10yChgBp)}</b></div>
-        <div class="zlab" style="opacity:.8">— explained by oil (β·WTI)</div><div class="ztrack"><div class="zmid"></div><div class="zfill" style="left:${I.oilExplainedBp<0?50-Math.min(50,Math.abs(I.oilExplainedBp)/40*50):50}%;width:${Math.min(50,Math.abs(I.oilExplainedBp)/40*50)}%;background:var(--cavg)"></div></div><div class="zmeta">${bp(I.oilExplainedBp)}</div>
-        <div class="zlab"><b>= residual (non-oil)</b></div><div class="ztrack"><div class="zmid"></div><div class="zfill" style="left:${I.residBp<0?50-Math.min(50,Math.abs(I.residBp)/40*50):50}%;width:${Math.min(50,Math.abs(I.residBp)/40*50)}%;background:${I.residBp>=0?'var(--neg)':'var(--pos)'}"></div></div><div class="zmeta"><b>${bp(I.residBp)}</b></div>
-        <div class="zlab">5y5y forward (oil-free)</div><div class="ztrack"><div class="zmid"></div><div class="zfill" style="left:${(I.fy5yChgBp||0)<0?50-Math.min(50,Math.abs(I.fy5yChgBp||0)/40*50):50}%;width:${Math.min(50,Math.abs(I.fy5yChgBp||0)/40*50)}%;background:${(I.fy5yChgBp||0)>=0?'var(--neg)':'var(--pos)'}"></div></div><div class="zmeta"><b>${bp(I.fy5yChgBp)}</b></div>
-      </div>
-      <p class="cotnote" style="margin-top:9px">Residual <b>positive</b> = inflation pricing rising beyond what oil explains (unanchoring → stagflation/debasement). Residual <b>negative</b> with WTI up = the market reads the oil move as <b>transitory</b> (reflation, not stagflation).</p>
-    </section>`;
+  /* The "Inflation pricing — oil-adjusted" card was REMOVED in v2 (2026-07-17). It visualised
+     the beta-adjusted breakeven residual, which never validated in any regime and was dropped
+     from scoring; its footnote asserted "residual -> stagflation/debasement", a claim the data
+     refuted (5y5y lift in Stagflation +0.040, ns). */
   /* Correlations at an extreme vs their own history. MULTIPLE COMPARISONS MATTER: we test
      k~21 assets at once, so ~1 will hit |z|>=2 by chance every window (P(at least one) is
      ~62%). Reporting "at an extreme" without that context overstates the evidence. So we
@@ -13829,7 +13815,6 @@ function renderMacro(){
         ${reg.unnameable && reg.unnameable.length? `<br><b style="color:var(--neg)">Unnameable by construction:</b> ${reg.unnameable.join(', ')} — their null bar is 1.00 and fit can never exceed 1.0. Their signatures are too small: that few instruments line up perfectly by chance more often than a corrected bar permits. These regimes cannot be honestly called no matter what the data does.`:''}</div>`:''}
       <p class="cotnote" style="margin-top:10px"><b>Scored on LIFT, not on levels.</b> Each % is <b>alignment</b> — of the <i>unusualness</i> that exists in that regime's signature, how much points the right way. The inputs are <b>z-scores</b>: how far each WTI correlation sits from <i>its own</i> historical norm. This matters because a raw correlation mostly measures an instrument's <b>permanent</b> tie to oil (SPX is +0.16 with WTI always, copper +0.28), so scoring levels handed every regime credit for the base rate rather than the regime — live, Reflation scored 78.5% on levels and 7.2% on lift at 21d. <b>Every weight is a MEASURED lift coefficient</b> (v2, 2026-07-17) — the instrument's correlation-lift in that regime's dated episodes (33 across the six regimes, back to 1986), not a hand-set ±1. So a strong-fingerprint instrument outweighs a marginal one, and a weight exists only where lift cleared significance. <b>strength</b> = magnitude-weighted mean |z|: alignment says <i>which</i> way, strength says <i>how unusual</i> the instruments that matter are — a regime is named only with both.<br><b>Noise floor ${reg.nf.toFixed(2)} in z units</b>; <b>each regime has its OWN naming bar</b> (this window's top: ${reg.bar.toFixed(2)}) = that regime's p99.5 of fit under a null simulating the full rolling-correlation→Fisher→z pipeline (WTI independent of a basket carrying its real cross-correlation, direction-gated, Bonferroni-corrected for ${reg.ranked.length} regimes). <b>Alarm gates:</b> alignment ≥50% and strength ≥1.7/1.8/1.9 (21/63/252d), false-positive ~0.2%. A contested ("mixed") read never alarms. All from <code>calibrate_alarms.py</code>; none hand-picked.<br><b>9 regimes → 6</b>: dropped Policy squeeze (0/6 across three tightening cycles), merged Goldilocks + Dollar-debasement into Reflation (each 2/6 alone, 7/… pooled). <b>Known limitation:</b> HY/IG OAS have only ~2 independent 252d windows behind their z (FRED serves ~3y of the licensed ICE series), so their lift is weak by construction.<br>Coverage: ${covNote}.</p>
     </section>
-    ${inflCard}
     <section class="card">
       <h2>WTI correlation by asset &amp; horizon</h2>
       <p class="csub">${macroMode==='z'
