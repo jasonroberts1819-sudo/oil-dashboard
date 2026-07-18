@@ -15717,7 +15717,7 @@ function renderForward(){
     series:[{data:g.balance_eia,color:cBandEdge,width:1,name:"EIA"},{data:g.balance_opec,color:cBandEdge,width:1,name:"OPEC"},{data:g.balance_blend, color:cGreen, width:2.6, name:"Blend"},
             {data:g.observed_jodi||[], color:cAmber, width:1.8, dash:"2 3", name:"JODI observed"}]});
   $("#fbGlobalLeg").innerHTML=fbYl(cGreen,"Blend (headline)")+`<span class="yl band"><i style="display:inline-block;width:14px;height:11px;border-radius:2px;background:${cBandFill};border:1px solid ${cBandEdge};vertical-align:middle"></i>EIA↔OPEC range</span>`
-    +((g.observed_jodi||[]).some(v=>v!=null)? `<span class="yl" title="${g.jodi_note||''}">${fbYl(cAmber,"JODI observed",true)}<small style="color:var(--ink-3)"> (reporters — direction check)</small></span>`:"");
+    +((g.observed_jodi||[]).some(v=>v!=null)? `<span class="yl" title="${g.jodi_note||''}">${fbYl(cAmber,"JODI observed",true)}</span>`:"");
   // 2) demand spread
   const sAll=[...sp.eia,...sp.opec,...sp.blend].filter(x=>x!=null); const sr=fbAutoRange(sAll,false);
   fbLines('fbSpread',{labels:sp.quarters, tip:'fbSpreadTip', ymin:sr[0], ymax:sr[1], fcIndex:sp.quarters.indexOf('3Q26'), fmt:v=>v.toFixed(0), tipFmt:v=>v.toFixed(1)+" mb/d",
