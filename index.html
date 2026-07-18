@@ -15342,9 +15342,8 @@ function renderMacro(){
         <div class="regscores">${regRows}</div>
       </div>
       ${reg.mixed? `<div class="dhealth" style="margin:10px 0 0"><b>${reg.belowNoise?'No regime clears its own noise bar':'Two regimes tie — cannot separate them'} — all ${reg.ranked.length} fits are shown above anyway.</b>
-        Closest, this window: ${reg.ranked.slice(0,3).map(R=>`${R.name} (fit ${R.fit.toFixed(2)} vs bar ${R.bar.toFixed(2)})`).join(' · ')}.
-        Each regime is judged against <b>its own</b> null — a 4-instrument signature reaches high alignment by chance far more easily than an 11-instrument one, so one shared bar would be set by the noisiest regime. Bars are each regime's p99.5 of fit under a pure-noise null (Bonferroni-corrected for testing ${reg.ranked.length} at once). This is diagnostic detail, <b>not</b> a call.
-        ${reg.unnameable && reg.unnameable.length? `<br><b style="color:var(--neg)">Unnameable by construction:</b> ${reg.unnameable.join(', ')} — their null bar is 1.00 and fit can never exceed 1.0. Their signatures are too small: that few instruments line up perfectly by chance more often than a corrected bar permits. These regimes cannot be honestly called no matter what the data does.`:''}</div>`:''}
+        Closest, this window: ${reg.ranked.slice(0,3).map(R=>`${R.name} (fit ${R.fit.toFixed(2)} vs bar ${R.bar.toFixed(2)})`).join(' · ')}. This is diagnostic detail, <b>not</b> a call.
+        ${reg.unnameable && reg.unnameable.length? `<br><b style="color:var(--neg)">Unnameable by construction:</b> ${reg.unnameable.join(', ')} — their signatures are too small to ever clear a corrected bar, so they can never be named regardless of the data.`:''}</div>`:''}
       <p class="cotnote" style="margin-top:10px">Each bar scores how closely WTI's current cross-asset correlations match that regime's historical fingerprint — based on how <i>unusual</i> each correlation is versus its own norm, not its raw level. A regime is only named when it clears its own noise bar; otherwise the read stays <b>Mixed</b>.</p>
       ${covAlert? `<p class="cotnote" style="margin-top:6px">${covAlert}</p>`:``}
     </section>
