@@ -15325,8 +15325,7 @@ function renderMacro(){
     return `<tr><th class="rowh ${rk==='WTI'?'wti':''}" title="${labelOf[rk]}">${MSHORT[rk]||rk}</th>${cells}</tr>`;
   }).join("");
   box.innerHTML=`
-    <div class="controls"><div class="grp"><label class="t">Window</label><span class="seg" role="group">${winBtns}</span></div>
-      <div class="grp"><span class="cotnote">Rolling Pearson · log-returns (prices) / first-diffs (rates) · through <b>${M.asOf}</b></span></div></div>
+    <div class="controls"><div class="grp"><label class="t">Window</label><span class="seg" role="group">${winBtns}</span></div></div>
     ${healthBanner}
     ${alarmStrip}
     <section class="card" ${firedSet.has(macroWin)?'style="box-shadow:0 0 0 2px #c9a227,var(--shadow)"':''}>
