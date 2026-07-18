@@ -15270,14 +15270,13 @@ function renderMacro(){
     </div>`;
   }).join("") + `</div>`;
   const cov=reg.cov;
-  const covNote=`scores ${cov.scored.length}/${cov.total} instruments`
-    /* Each derived/excluded key carries its OWN reason — a shared parenthetical would be a lie
-       the moment two keys are derived for different reasons (SOFR is not an inflation series). */
-    + (cov.derived.length? ` · via derived signal: `+cov.derived.map(k=>`<span class="why" title="${MACRO_DERIVED[k]||''}">${MSHORT[k]||k}</span>`).join(', '):'')
-    + (cov.excluded.length? ` · excluded: `+cov.excluded.map(k=>`<span class="why" title="${MACRO_EXCLUDE[k]||''}">${MSHORT[k]||k}</span>`).join(', '):'')
-    + (cov.orphans.length? ` · <span style="color:var(--ink-3)">on the heatmap but in no regime signature (lift never validated): ${cov.orphans.map(k=>MSHORT[k]||k).join(', ')}</span>`:'')
-    + (cov.ghosts && cov.ghosts.length? ` · <b style="color:var(--neg)">WEIGHTED BUT NOT IN THE DATA (contributing 0 silently): ${cov.ghosts.map(k=>MSHORT[k]||k).join(', ')}</b>`:'')
-    + ((M.missing&&M.missing.length)? ` · <b style="color:var(--neg)">FAILED TO FETCH: ${M.missing.map(m=>m.label).join(', ')} — regime scored WITHOUT them</b>`:'');
+  /* The verbose coverage/methodology note was cut for readability. These two branches are
+     NOT prose — they are fail-loud data alarms (a weighted instrument absent from the data
+     scores 0 silently; a failed fetch scores the regime without it). They render only when
+     something is actually wrong, so the normal read stays clean. Do not delete for brevity. */
+  const covAlert=
+      (cov.ghosts && cov.ghosts.length? `<b style="color:var(--neg)">WEIGHTED BUT NOT IN THE DATA (contributing 0 silently): ${cov.ghosts.map(k=>MSHORT[k]||k).join(', ')}</b>`:'')
+    + ((M.missing&&M.missing.length)? `${(cov.ghosts&&cov.ghosts.length)?' · ':''}<b style="color:var(--neg)">FAILED TO FETCH: ${M.missing.map(m=>m.label).join(', ')} — regime scored WITHOUT them</b>`:'');
   // inflation decomposition: total breakeven move = oil-explained + residual
   /* The "Inflation pricing — oil-adjusted" card was REMOVED in v2 (2026-07-17). It visualised
      the beta-adjusted breakeven residual, which never validated in any regime and was dropped
@@ -15347,7 +15346,8 @@ function renderMacro(){
         Closest, this window: ${reg.ranked.slice(0,3).map(R=>`${R.name} (fit ${R.fit.toFixed(2)} vs bar ${R.bar.toFixed(2)})`).join(' · ')}.
         Each regime is judged against <b>its own</b> null — a 4-instrument signature reaches high alignment by chance far more easily than an 11-instrument one, so one shared bar would be set by the noisiest regime. Bars are each regime's p99.5 of fit under a pure-noise null (Bonferroni-corrected for testing ${reg.ranked.length} at once). This is diagnostic detail, <b>not</b> a call.
         ${reg.unnameable && reg.unnameable.length? `<br><b style="color:var(--neg)">Unnameable by construction:</b> ${reg.unnameable.join(', ')} — their null bar is 1.00 and fit can never exceed 1.0. Their signatures are too small: that few instruments line up perfectly by chance more often than a corrected bar permits. These regimes cannot be honestly called no matter what the data does.`:''}</div>`:''}
-      <p class="cotnote" style="margin-top:10px"><b>Scored on LIFT, not on levels.</b> Each % is <b>alignment</b> — of the <i>unusualness</i> that exists in that regime's signature, how much points the right way. The inputs are <b>z-scores</b>: how far each WTI correlation sits from <i>its own</i> historical norm. This matters because a raw correlation mostly measures an instrument's <b>permanent</b> tie to oil (SPX is +0.16 with WTI always, copper +0.28), so scoring levels handed every regime credit for the base rate rather than the regime — live, Reflation scored 78.5% on levels and 7.2% on lift at 21d. <b>Every weight is a MEASURED lift coefficient</b> (v2, 2026-07-17) — the instrument's correlation-lift in that regime's dated episodes (33 across the six regimes, back to 1986), not a hand-set ±1. So a strong-fingerprint instrument outweighs a marginal one, and a weight exists only where lift cleared significance. <b>strength</b> = magnitude-weighted mean |z|: alignment says <i>which</i> way, strength says <i>how unusual</i> the instruments that matter are — a regime is named only with both.<br><b>Noise floor ${reg.nf.toFixed(2)} in z units</b>; <b>each regime has its OWN naming bar</b> (this window's top: ${reg.bar.toFixed(2)}) = that regime's p99.5 of fit under a null simulating the full rolling-correlation→Fisher→z pipeline (WTI independent of a basket carrying its real cross-correlation, direction-gated, Bonferroni-corrected for ${reg.ranked.length} regimes). <b>Alarm gates:</b> alignment ≥50% and strength ≥1.7/1.8/1.9 (21/63/252d), false-positive ~0.2%. A contested ("mixed") read never alarms. All from <code>calibrate_alarms.py</code>; none hand-picked.<br><b>9 regimes → 6</b>: dropped Policy squeeze (0/6 across three tightening cycles), merged Goldilocks + Dollar-debasement into Reflation (each 2/6 alone, 7/… pooled). <b>Known limitation:</b> HY/IG OAS have only ~2 independent 252d windows behind their z (FRED serves ~3y of the licensed ICE series), so their lift is weak by construction.<br>Coverage: ${covNote}.</p>
+      <p class="cotnote" style="margin-top:10px">Each bar scores how closely WTI's current cross-asset correlations match that regime's historical fingerprint — based on how <i>unusual</i> each correlation is versus its own norm, not its raw level. A regime is only named when it clears its own noise bar; otherwise the read stays <b>Mixed</b>.</p>
+      ${covAlert? `<p class="cotnote" style="margin-top:6px">${covAlert}</p>`:``}
     </section>
     <section class="card">
       <h2>WTI correlation by asset &amp; horizon</h2>
