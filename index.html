@@ -15958,6 +15958,9 @@ const INV = (function(){
   return { init, show, redraw };
 })();
 INV.init();
+// The Table tab is kept in the file for local use but hidden on the PUBLIC GitHub
+// Pages site (per Jason's request). Detected by host so the local copy still shows it.
+if(/(^|\.)github\.io$/i.test(location.hostname)){ const _tb=document.getElementById('tab_table'); if(_tb) _tb.remove(); }
 setTab("crude");
 </script>
 </body>
