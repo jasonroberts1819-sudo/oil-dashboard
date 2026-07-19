@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>US Petroleum Inventories &amp; Crude Balance</title>
+<title>[B · Research note] US Petroleum Inventories &amp; Crude Balance</title>
 <style>
   :root{
     --bg:#f7f8fa; --surface:#ffffff; --surface-2:#f1f3f6; --border:#e3e7ec;
@@ -361,6 +361,39 @@
   .ylegend .yl i{width:12px;height:3px;border-radius:2px;display:inline-block;flex:none}
   .ylegend .yl b{color:var(--ink)}
 </style>
+<style>
+/* ===== VARIANT B — Research note ===== */
+:root, :root[data-theme="light"], :root[data-theme="dark"]{
+  --bg:#faf9f6; --surface:#ffffff; --surface-2:#f2f0e9; --border:#e0ddd4;
+  --ink:#1a1a18; --ink-2:#55534c; --ink-3:#8b8880;
+  --c2026:#1d3a5f; --cavg:#c2a878; --ccomm:#1d3a5f; --cspr:#c2a878;
+  --pos:#2f6b4f; --neg:#a8402f;
+  --grid:#ebe8df; --axis:#c3bfb2; --band:rgba(139,136,128,.13);
+  --shadow:none; --radius:2px;
+}
+body{font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif}
+h1{letter-spacing:-.015em;font-weight:600}
+.card, .kpi{box-shadow:none;border:1px solid var(--border);border-radius:2px}
+.card h2{font-weight:600;letter-spacing:-.015em}
+.csub, .calnote{font-family:-apple-system,"Segoe UI",Roboto,sans-serif}
+.kpi{border-left:0;border-right:0;border-top:0;border-radius:0;background:transparent;padding-left:0}
+.kpi .label{font-family:-apple-system,"Segoe UI",Roboto,sans-serif;font-weight:700;font-size:10px;
+  letter-spacing:.1em}
+.kpi .val{font-weight:600}
+/* nav: an editorial masthead rule, not a pill bar */
+.mainnav{background:var(--bg);border-bottom:2px solid var(--ink)}
+.mainnav.stuck{box-shadow:0 4px 14px rgba(26,26,24,.08)}
+.navlab{font-family:-apple-system,"Segoe UI",Roboto,sans-serif}
+.navtabs button{font-family:-apple-system,"Segoe UI",Roboto,sans-serif;border-radius:0;
+  border-bottom:2px solid transparent;margin-bottom:-1px;padding:7px 12px}
+.navtabs button:hover{background:transparent;color:var(--ink);border-bottom-color:var(--border)}
+.navtabs button[aria-pressed="true"]{background:transparent;color:var(--c2026);
+  border-bottom-color:var(--c2026);box-shadow:none}
+.seg{border-radius:2px}
+.seg button{border-radius:1px;font-family:-apple-system,"Segoe UI",Roboto,sans-serif}
+.tiidea, .tipxi{border-radius:2px}
+.tipxi{background:var(--surface-2)}
+</style>
 </head>
 <body>
 <div id="variant-switch" style="position:fixed;left:50%;transform:translateX(-50%);bottom:16px;
@@ -369,7 +402,7 @@
   box-shadow:0 4px 22px rgba(0,0,0,.3);font:600 12px/1 -apple-system,'Segoe UI',Roboto,sans-serif">
   <span style="color:#9aa4b4;padding:0 9px 0 7px;font-size:10px;letter-spacing:.09em;
     text-transform:uppercase">Style</span>
-  <a href="index.html" style="color:#0d1117;background:#ffffff;padding:6px 12px;border-radius:8px;text-decoration:none">Current</a><a href="style-b.html" style="color:#cfd6e0;background:transparent;padding:6px 12px;border-radius:8px;text-decoration:none">B · Research</a><a href="style-c.html" style="color:#cfd6e0;background:transparent;padding:6px 12px;border-radius:8px;text-decoration:none">C · Refined</a>
+  <a href="index.html" style="color:#cfd6e0;background:transparent;padding:6px 12px;border-radius:8px;text-decoration:none">Current</a><a href="style-b.html" style="color:#0d1117;background:#ffffff;padding:6px 12px;border-radius:8px;text-decoration:none">B · Research</a><a href="style-c.html" style="color:#cfd6e0;background:transparent;padding:6px 12px;border-radius:8px;text-decoration:none">C · Refined</a>
 </div>
 
 <div class="wrap">

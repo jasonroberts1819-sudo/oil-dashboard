@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>US Petroleum Inventories &amp; Crude Balance</title>
+<title>[C · Refined] US Petroleum Inventories &amp; Crude Balance</title>
 <style>
   :root{
     --bg:#f7f8fa; --surface:#ffffff; --surface-2:#f1f3f6; --border:#e3e7ec;
@@ -361,6 +361,47 @@
   .ylegend .yl i{width:12px;height:3px;border-radius:2px;display:inline-block;flex:none}
   .ylegend .yl b{color:var(--ink)}
 </style>
+<style>
+/* ===== VARIANT C — Refined ===== */
+:root, :root[data-theme="light"]{
+  --bg:#f5f6f9; --surface:#ffffff; --surface-2:#eef0f4; --border:#e4e7ed;
+  --ink:#0d1117; --ink-2:#525c6b; --ink-3:#8a94a3;
+  --c2026:#2f5fd8; --cavg:#c2c8d4; --ccomm:#2f5fd8; --cspr:#c2c8d4;
+  --pos:#0d9268; --neg:#d9482f;
+  --grid:#eef1f5; --axis:#c9ced8; --band:rgba(138,148,163,.13);
+  --shadow:0 1px 2px rgba(13,17,23,.05);
+  --radius:11px;
+}
+:root[data-theme="dark"]{
+  --bg:#0d1117; --surface:#161b23; --surface-2:#1c222c; --border:#252c37;
+  --ink:#e9edf3; --ink-2:#a3adbb; --ink-3:#737d8c;
+  --c2026:#5b8def; --cavg:#454f5e; --ccomm:#5b8def; --cspr:#454f5e;
+  --pos:#2bb98a; --neg:#f2604a;
+  --grid:#1e242e; --axis:#39424f; --band:rgba(115,125,140,.15);
+  --shadow:0 1px 2px rgba(0,0,0,.34);
+}
+.card{box-shadow:var(--shadow);border:1px solid var(--border)}
+.card h2{letter-spacing:-.015em;font-weight:700}
+/* KPIs: hairline + a severity rule keyed off the class the renderer emits */
+.kpi{box-shadow:var(--shadow);position:relative;overflow:hidden;padding-left:16px}
+.kpi::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--ink-3)}
+.kpi:has(.note.up)::before{background:var(--pos)}
+.kpi:has(.note.dn)::before{background:var(--neg)}
+.kpi .label{font-size:10.5px;font-weight:700;letter-spacing:.04em}
+.kpi .val{font-weight:750;letter-spacing:-.03em}
+.kpi .note{font-weight:600}
+/* active tab in ink, not accent — blue then only ever means 2026 data */
+.navtabs button[aria-pressed="true"]{background:var(--ink);color:var(--surface);
+  box-shadow:0 1px 2px rgba(13,17,23,.18)}
+:root[data-theme="dark"] .navtabs button[aria-pressed="true"]{background:var(--ink);color:#0d1117}
+.navtabs button{border-radius:8px}
+.mainnav{background:color-mix(in srgb,var(--bg) 84%,transparent)}
+.seg{border-radius:9px}
+.seg button{border-radius:7px}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--surface)}
+.tiidea{border-radius:12px}
+.tipxi{border-radius:7px;background:var(--surface-2)}
+</style>
 </head>
 <body>
 <div id="variant-switch" style="position:fixed;left:50%;transform:translateX(-50%);bottom:16px;
@@ -369,7 +410,7 @@
   box-shadow:0 4px 22px rgba(0,0,0,.3);font:600 12px/1 -apple-system,'Segoe UI',Roboto,sans-serif">
   <span style="color:#9aa4b4;padding:0 9px 0 7px;font-size:10px;letter-spacing:.09em;
     text-transform:uppercase">Style</span>
-  <a href="index.html" style="color:#0d1117;background:#ffffff;padding:6px 12px;border-radius:8px;text-decoration:none">Current</a><a href="style-b.html" style="color:#cfd6e0;background:transparent;padding:6px 12px;border-radius:8px;text-decoration:none">B · Research</a><a href="style-c.html" style="color:#cfd6e0;background:transparent;padding:6px 12px;border-radius:8px;text-decoration:none">C · Refined</a>
+  <a href="index.html" style="color:#cfd6e0;background:transparent;padding:6px 12px;border-radius:8px;text-decoration:none">Current</a><a href="style-b.html" style="color:#cfd6e0;background:transparent;padding:6px 12px;border-radius:8px;text-decoration:none">B · Research</a><a href="style-c.html" style="color:#0d1117;background:#ffffff;padding:6px 12px;border-radius:8px;text-decoration:none">C · Refined</a>
 </div>
 
 <div class="wrap">
