@@ -311,6 +311,49 @@
   .chartgrid .card{padding:14px 15px 10px}
   .chartgrid .card h2{font-size:14.5px}
   .seg button[disabled]{opacity:.4;cursor:not-allowed}
+
+  /* ---- primary navigation ------------------------------------------------
+     Sticky so it stays reachable on a long page, and grouped by kind so the
+     structure of the dashboard is legible before you've clicked anything. */
+  .mainnav{position:sticky;top:0;z-index:30;margin:0 0 18px;
+    background:color-mix(in srgb,var(--bg) 88%,transparent);
+    backdrop-filter:saturate(180%) blur(12px);
+    -webkit-backdrop-filter:saturate(180%) blur(12px);
+    border-bottom:1px solid transparent;transition:border-color .18s,box-shadow .18s}
+  .mainnav.stuck{border-bottom-color:var(--border);box-shadow:0 6px 20px rgba(16,20,28,.07)}
+  :root[data-theme="dark"] .mainnav.stuck{box-shadow:0 6px 20px rgba(0,0,0,.45)}
+  .mainnav-in{display:flex;flex-wrap:wrap;align-items:flex-end;gap:8px 22px;padding:10px 0 11px}
+  .navgrp{display:flex;flex-direction:column;gap:5px;position:relative}
+  .navgrp+.navgrp::before{content:"";position:absolute;left:-11px;top:16px;bottom:3px;
+    width:1px;background:var(--border)}
+  .navlab{font-size:9.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;
+    color:var(--ink-3);padding-left:2px;user-select:none}
+  .navtabs{display:flex;flex-wrap:wrap;gap:3px}
+  .navtabs button{border:0;background:transparent;color:var(--ink-2);font-size:13px;
+    font-weight:600;padding:7px 13px;border-radius:8px;cursor:pointer;white-space:nowrap;
+    transition:background .14s,color .14s,box-shadow .14s;position:relative}
+  .navtabs button:hover{background:var(--surface-2);color:var(--ink)}
+  .navtabs button:focus-visible{outline:2px solid var(--c2026);outline-offset:2px}
+  .navtabs button[aria-pressed="true"]{background:var(--c2026);color:#fff;
+    box-shadow:0 1px 2px rgba(37,99,235,.28),0 4px 12px rgba(37,99,235,.22)}
+  :root[data-theme="dark"] .navtabs button[aria-pressed="true"]{color:#0d1017;
+    box-shadow:0 1px 2px rgba(0,0,0,.4),0 4px 14px rgba(96,165,250,.28)}
+  /* Pinned: drop the group labels and go single-row. The labels earn their space
+     at rest, where they explain the layout; once you're scrolling you already
+     know it, and a 3-row nav would eat a quarter of a laptop viewport. */
+  .mainnav.stuck .navlab{display:none}
+  .mainnav.stuck .mainnav-in{align-items:center;gap:4px 14px;padding:7px 0;
+    flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+  .mainnav.stuck .mainnav-in::-webkit-scrollbar{display:none}
+  .mainnav.stuck .navgrp{flex-direction:row}
+  .mainnav.stuck .navgrp+.navgrp::before{top:6px;bottom:6px;left:-8px}
+  .mainnav.stuck .navtabs{flex-wrap:nowrap}
+  .mainnav.stuck .navtabs button{padding:6px 11px;font-size:12.5px}
+  @media (max-width:640px){
+    .mainnav-in{gap:6px 14px}
+    .navgrp+.navgrp::before{display:none}
+    .navtabs button{font-size:12.5px;padding:6px 11px}
+  }
   .tip .row .k{display:inline-flex;align-items:center;gap:6px}
   .tip .row .k i{width:8px;height:8px;border-radius:50%;display:inline-block}
   .ylegend{display:flex;flex-wrap:wrap;gap:3px 9px;margin:1px 0 7px;font-size:10.5px;color:var(--ink-2);font-variant-numeric:tabular-nums;line-height:1.5}
@@ -332,29 +375,49 @@
     </div>
   </header>
 
+  <!-- Primary navigation. Grouped by kind — products / analysis / reference —
+       because a flat row of 13 identical chips gives a first-time reader no map
+       of what the dashboard actually contains. Scoped class (not .seg) so the
+       smaller segmented controls elsewhere keep their compact styling. -->
+  <nav class="mainnav" id="mainnav" role="navigation" aria-label="Dashboard sections">
+    <div class="mainnav-in">
+      <div class="navgrp">
+        <span class="navlab">Products</span>
+        <div class="navtabs" role="group" aria-label="Products">
+          <button id="tab_crude" data-tab="crude" aria-pressed="true">Crude</button>
+          <button id="tab_gasoline" data-tab="gasoline" aria-pressed="false">Gasoline</button>
+          <button id="tab_distillate" data-tab="distillate" aria-pressed="false">Distillate</button>
+          <button id="tab_jet" data-tab="jet" aria-pressed="false">Jet</button>
+          <button id="tab_refining" data-tab="refining" aria-pressed="false">Refining</button>
+        </div>
+      </div>
+      <div class="navgrp">
+        <span class="navlab">Analysis</span>
+        <div class="navtabs" role="group" aria-label="Analysis">
+          <button id="tab_weekly" data-tab="weekly" aria-pressed="false">Weekly Report</button>
+          <button id="tab_positioning" data-tab="positioning" aria-pressed="false">Positioning</button>
+          <button id="tab_macro" data-tab="macro" aria-pressed="false">Macro Heatmap</button>
+          <button id="tab_forward" data-tab="forward" aria-pressed="false">Forward Balances</button>
+          <button id="tab_trade" data-tab="trade" aria-pressed="false">Trade Ideas</button>
+          <button id="tab_calendar" data-tab="calendar" aria-pressed="false">Calendar</button>
+        </div>
+      </div>
+      <div class="navgrp">
+        <span class="navlab">Reference</span>
+        <div class="navtabs" role="group" aria-label="Reference">
+          <button id="tab_table" data-tab="table" aria-pressed="false">Table</button>
+          <button id="tab_updates" data-tab="updates" aria-pressed="false">Updates</button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
   <section class="glance hidden" id="glance"></section>
 
   <section class="kpis" id="kpis"></section>
 
+
   <div class="controls">
-    <div class="grp">
-      <label class="t">View</label>
-      <span class="seg" role="group" aria-label="View" style="flex-wrap:wrap">
-        <button id="tab_crude" data-tab="crude" aria-pressed="true">Crude</button>
-        <button id="tab_gasoline" data-tab="gasoline" aria-pressed="false">Gasoline</button>
-        <button id="tab_distillate" data-tab="distillate" aria-pressed="false">Distillate</button>
-        <button id="tab_jet" data-tab="jet" aria-pressed="false">Jet</button>
-        <button id="tab_refining" data-tab="refining" aria-pressed="false">Refining</button>
-        <button id="tab_weekly" data-tab="weekly" aria-pressed="false">Weekly Report</button>
-        <button id="tab_positioning" data-tab="positioning" aria-pressed="false">Positioning</button>
-        <button id="tab_macro" data-tab="macro" aria-pressed="false">Macro Heatmap</button>
-        <button id="tab_forward" data-tab="forward" aria-pressed="false">Forward Balances</button>
-        <button id="tab_trade" data-tab="trade" aria-pressed="false">Trade Ideas</button>
-        <button id="tab_calendar" data-tab="calendar" aria-pressed="false">Calendar</button>
-        <button id="tab_table" data-tab="table" aria-pressed="false">Table</button>
-        <button id="tab_updates" data-tab="updates" aria-pressed="false">Updates</button>
-      </span>
-    </div>
   </div>
 
   <div id="tableView" class="hidden"></div>
@@ -15925,11 +15988,18 @@ function renderPositioning(){
 const PRODUCT_TABS = ["crude","gasoline","distillate","jet","refining"];
 let activeTab = "crude";
 $("#ex2020").addEventListener("change",e=>{state.ex2020=e.target.checked; renderCharts();});
-document.querySelectorAll('.seg [data-tab]').forEach(b=>b.addEventListener("click",()=>setTab(b.dataset.tab)));
+document.querySelectorAll('#mainnav [data-tab]').forEach(b=>b.addEventListener("click",()=>setTab(b.dataset.tab)));
+/* shadow the nav only once it's actually pinned, so it reads flat at rest */
+(function(){
+  const nav=document.getElementById("mainnav");
+  if(!nav) return;
+  const mark=()=>nav.classList.toggle("stuck", nav.getBoundingClientRect().top<=0);
+  addEventListener("scroll",mark,{passive:true}); mark();
+})();
 function setTab(key){
   activeTab = key;
   const isProd = PRODUCT_TABS.includes(key);
-  document.querySelectorAll('.seg [data-tab]').forEach(b=>b.setAttribute("aria-pressed", b.dataset.tab===key));
+  document.querySelectorAll('#mainnav [data-tab]').forEach(b=>b.setAttribute("aria-pressed", b.dataset.tab===key));
   $("#invView").classList.toggle("hidden", !isProd);
   $("#tableView").classList.toggle("hidden", key!=="table");
   $("#weeklyView").classList.toggle("hidden", key!=="weekly");
