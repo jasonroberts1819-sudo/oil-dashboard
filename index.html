@@ -92,9 +92,10 @@
   .glance .ghead{font-size:11.5px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em;
     padding:0 14px 10px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
   .glance .ghead b{color:var(--ink-2)}
-  .glance .grow{display:flex;overflow-x:auto}
-  .gtile{flex:1 0 auto;min-width:120px;padding:2px 16px;border-left:1px solid var(--border)}
-  .gtile:first-child{border-left:0}
+  /* margin/overflow pair clips each wrapped row's leading divider at the card edge */
+  .glance .grow{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
+    row-gap:14px;margin-left:-1px;overflow:hidden}
+  .gtile{min-width:0;padding:2px 11px;border-left:1px solid var(--border)}
   .gtile .gl{font-size:11px;color:var(--ink-3);white-space:nowrap;margin-bottom:3px}
   .gtile .gv{font-size:19px;font-weight:640;letter-spacing:-.02em;font-variant-numeric:tabular-nums;white-space:nowrap}
   .gtile .gv small{font-size:10.5px;font-weight:500;color:var(--ink-3);margin-left:3px}
@@ -270,6 +271,13 @@
   .tihist{margin:4px 0 2px;padding:5px 9px;border-radius:7px;font-size:11.5px;line-height:1.45;
     color:var(--ink-2);background:color-mix(in srgb,var(--ink-3) 9%,transparent)}
   .tihist b{color:var(--ink)}
+  /* headlines folded under the note they update — deliberately quieter than the note text,
+     since the judgement lives in the note and these only evidence it */
+  .tinews{margin:4px 0 2px;font-size:11.5px;line-height:1.5;color:var(--ink-3)}
+  .tinews b{color:var(--ink-2);font-weight:600}
+  .tinews a, .tifac a{color:var(--c2026);text-decoration:none;border-bottom:1px solid transparent}
+  .tinews a:hover, .tifac a:hover{border-bottom-color:currentColor}
+  .tinews .sep{color:var(--axis);margin:0 5px}
   /* Side badge. An idea must never appear without saying which way to trade it, so this
      sits inside the <h2> — it cannot be scrolled past or truncated away from the title. */
   .tiside{display:inline-block;margin-right:8px;padding:1px 8px;border-radius:9px;
@@ -16169,22 +16177,75 @@ function renderTradeIdeas(){
   // open / closed ledger — what is actually on, and what rolled off and why
   html += ledgerBlock(D.ledger);
 
-  /* Automated news layer. Headline + link + attribution only — the intended use of a
-     syndicated feed — plus a derived coverage-tone reading. Sits BELOW the hand-written
-     market context, which carries the interpretation this cannot. */
-  const N = D.news;
-  if(N && (N.items||[]).length){
-    const pr = N.items.filter(i=>i.kind==='primary'), tr = N.items.filter(i=>i.kind!=='primary');
-    const li = a => a.map(i=>`<li><a href="${i.link}" target="_blank" rel="noopener">${i.title}</a>
-      <span class="apx">(${i.source}${i.when?` · ${i.when.slice(5,10)}`:""})</span></li>`).join("");
-    html += `<section class="card"><h2>News</h2>
-      <p class="csub">Refreshed with every run, as of ${N.asOf||"—"}.${
+  /* Hand-verified market context, with the automated headline feed folded in. The two were
+     saying the same thing in two places, so each note now carries the freshest headlines on
+     its own subject: the note holds the judgement, the headlines evidence it and show when
+     it is going stale. Headline + link + attribution only — the intended use of a syndicated
+     feed; no article text is republished. Structural caveats (RVP, expiry) stay hidden —
+     modelling hygiene, not reader-facing. */
+  if((D.notes||[]).length){
+    const N = D.news||{};
+    /* tag -> title keywords. Matching is deliberately narrow: an unmatched headline is
+       dropped rather than parked under a note it is not about, because a headline sitting
+       under the wrong note reads as corroboration the note has not actually got. The hub
+       notes match on hub NAME alone — "stocks"/"inventories" would swallow the whole feed. */
+    const NEWSKEY = [
+      [/geopolit|hormuz|iran/i, ["hormuz","iran","strait","tanker","strike","sanction","israel",
+        "mideast","middle east","war","attack","conflict","ceasefire"]],
+      [/supply|opec|product/i, ["production","output","supply","drilling","rig","shale","export",
+        "opec","barrels","field","spare capacity"]],
+      [/refin|crack|margin/i, ["refin","crack","margin","diesel","jet","distillate","gasoline",
+        "utilizat","run cut","throughput"]],
+      [/position|spec/i, ["position","speculat","managed money","hedge fund","net long",
+        "net short","cftc","short-covering"]],
+      [/demand|consum/i, ["demand","consumption","emission","vehicle","mobility"]],
+      [/ara|amsterdam|rotterdam|antwerp/i, ["ara","amsterdam","rotterdam","antwerp"]],
+      [/singapore/i, ["singapore"]],
+      [/fujairah/i, ["fujairah"]],
+      // no "forecast" here: it is generic enough to pull any EIA release under a note that
+      // is about the war premium unwinding, which reads as corroboration it has not got
+      [/caution|synthes|risk/i, ["glut","surplus","oversupply","de-escalat","peace deal"]],
+    ];
+    // freshest first — a headline only counts as an update if it is actually new
+    const feed = (N.items||[]).slice()
+      .sort((a,b)=>String(b.when||"").localeCompare(String(a.when||"")));
+    const used = new Set();
+    /* Section-wide cap. Without it a busy news week turns the context read back into the
+       headline list this fold was meant to retire. */
+    let budget = 6;
+    const hl = i=>`<a href="${i.link}" target="_blank" rel="noopener">${i.title}</a>
+      <span class="apx">(${i.source}${i.when?` · ${String(i.when).slice(5,10)}`:""})</span>`;
+    const headlinesFor = tag=>{
+      if(budget<=0) return "";
+      const row = NEWSKEY.find(([re])=>re.test(tag||""));
+      const keys = row ? row[1] : [String(tag||"").toLowerCase().split(" ")[0]].filter(Boolean);
+      if(!keys.length) return "";
+      const hit = feed.filter(i=>!used.has(i.link) &&
+        keys.some(k=>String(i.title||"").toLowerCase().includes(k))).slice(0, Math.min(2,budget));
+      hit.forEach(i=>used.add(i.link));
+      budget -= hit.length;
+      return hit.length ? `<div class="tinews"><b>Latest:</b> ${
+        hit.map(hl).join(`<span class="sep">·</span>`)}</div>` : "";
+    };
+
+    html+=`<section class="card"><h2>Market context</h2>
+      <p class="csub">As of ${M.notes_asof||"—"}${N.asOf?`, headlines through ${N.asOf}`:""}.${
         N.pulse ? ` Coverage tone <b>${N.pulse.tone>0?"+":""}${N.pulse.tone}</b> vs its 7-day
-        median ${N.pulse.median7d>0?"+":""}${N.pulse.median7d}${N.pulse.cached?" (last available reading)":""}.` : ""}</p>
-      ${N.reviewNeeded?`<div class="dhealth bad"><b>⚠ Coverage has moved unusually</b> — ${N.reviewWhy}.</div>`:""}
-      ${pr.length?`<p class="tifac" style="margin-top:8px"><b>Primary releases</b></p><ul class="tidrv">${li(pr)}</ul>`:""}
-      ${tr.length?`<p class="tifac" style="margin-top:10px"><b>Trade press</b></p><ul class="tidrv">${li(tr)}</ul>`:""}
-    </section>`;
+        median ${N.pulse.median7d>0?"+":""}${N.pulse.median7d}${
+        N.pulse.cached?" (last available reading)":""}.` : ""}</p>
+      ${N.reviewNeeded?`<div class="dhealth bad"><b>⚠ Coverage has moved unusually</b> —
+        ${N.reviewWhy}. The notes below may be behind the news.</div>`:""}
+      <ul class="tidrv">`
+      +D.notes.map(n=>`<li class="${n.lean==='bear'?'tineg':'tipos'}"><b>${n.tag}</b> — ${n.text||n.level||""}`
+        +(n.vs_history?`<div class="tihist"><b>vs history:</b> ${n.vs_history}</div>`:"")
+        +`<span class="apx"> (${n.source})</span>`
+        +headlinesFor(n.tag)+`</li>`).join("")+`</ul>`;
+    /* Primary releases are the one class of headline worth surfacing unmatched — an EIA
+       release nothing is written about yet is precisely the note that has not been made. */
+    const orphans = feed.filter(i=>i.kind==='primary' && !used.has(i.link)).slice(0,2);
+    if(orphans.length) html+=`<p class="tifac" style="margin-top:10px"><b>Also new</b> — ${
+      orphans.map(hl).join(`<span class="sep"> · </span>`)}</p>`;
+    html+=`</section>`;
   }
 
   /* Input freshness. The scores rest on these; if one is past its release cadence the
@@ -16205,17 +16266,6 @@ function renderTradeIdeas(){
           <td><span class="tiexit ${i.stale?"x-stop":"x-target"}">${i.stale?"stale":"current"}</span></td>
         </tr>`).join("")}</tbody></table></div>
     </section>`;
-  }
-
-  // hand-verified market context. Structural caveats (RVP, expiry) are deliberately
-  // not shown — they are modelling hygiene, not reader-facing.
-  if((D.notes||[]).length){
-    html+=`<section class="card"><h2>Market context</h2>
-      <p class="csub">As of ${M.notes_asof||"—"}.</p><ul class="tidrv">`
-      +D.notes.map(n=>`<li class="${n.lean==='bear'?'tineg':'tipos'}"><b>${n.tag}</b> — ${n.text||n.level||""}`
-        +(n.vs_history?`<div class="tihist"><b>vs history:</b> ${n.vs_history}</div>`:"")
-        +`<span class="apx"> (${n.source})</span></li>`).join("")+`</ul>`;
-    html+=`</section>`;
   }
 
   html+=`<p class="calnote">Curve statistics as of ${M.curve_asof||"—"} ·
