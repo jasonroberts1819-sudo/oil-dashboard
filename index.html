@@ -15533,6 +15533,12 @@ const CALIB_SIG="b8c2c7903703";
    calibrate_alarms.py parses this constant and mirrors the rule — do not hand-copy it. */
 const STAG_VETO={28:0.5};
 const STAG_VETO_KEYS=['SPX','KRE','EEM'];
+/* Windows allowed to NAME a regime. Everything not listed still computes and displays in
+   full (heatmap, z-scores, ranked fits) but its headline is permanently "Mixed".
+   Rationale in macroRegime() below; measurements in the MEASURED CEILING block above
+   REGIMES. If a window is added here, re-run the LOEO replay first — a naming window has
+   to be shown to add correct calls faster than wrong ones, and 52d/84d did not. */
+const NAMING_WINDOWS=[28];
 function macroRegime(f, wtiRet, assets, win, S, zf){
   S=S||{}; zf=zf||{};
   const w=Number(win)||28;
@@ -15569,12 +15575,28 @@ function macroRegime(f, wtiRet, assets, win, S, zf){
   const belowNoise = clearing.length===0;                       // nothing beats its own null
   const contested  = clearing.length>1 &&                       // 2+ clear and are tied
                      (clearing[0].fit-clearing[1].fit)<0.05;
-  const mixed = belowNoise || contested;
+  /* NAMING IS 28d-ONLY (2026-07-20). The long window still computes and DISPLAYS everything
+     — correlations, z-scores, the ranked fits — but it may not put a NAME on the card.
+     Two independent reasons, the first structural rather than statistical:
+       1. ITS WINDOW IS LONGER THAN THE EPISODES IT WOULD DETECT. Every Liquidity crunch in
+          the label set ran 12-46 days, so ZERO of them reach 84d; War premium has 1 of 6.
+          An 84d correlation spanning a 3-week crunch is measuring the crunch blended with
+          six weeks of whatever surrounded it. That is a category error, not a tuning gap.
+       2. A SECOND NAMING WINDOW WAS MEASURED AND DID NOT EARN ITS PLACE. Tested at 52d
+          (which is strictly better than 84d — more regimes reach it) over 3 seeds: on days
+          28d is silent, 52d named 348-509 times and was right 25-41%, i.e. it adds errors
+          faster than coverage; overall precision FELL 34.6% -> 33.7% when either window
+          could name. The episodes it "uniquely caught" differed every seed (noise, not
+          capability), and the two windows agreed 71-82% of the time anyway.
+     Kept for DISPLAY because a second horizon genuinely answers "is this correlation a blip
+     or sustained?" — a factual question that needs no regime label. */
+  const naming = NAMING_WINDOWS.indexOf(w) >= 0;
+  const mixed = belowNoise || contested || !naming;
   const winner = clearing.length? clearing[0] : ranked[0];
   // regimes whose null bar is 1.00 can never be named however the data behaves
   const unnameable = ranked.filter(R=>!R.idio && R.bar>=1.0).map(R=>R.name);
   return {name: mixed?'Mixed / transitional':winner.name, top:winner, mixed,
-          belowNoise, contested, bar:winner.bar, unnameable, ranked, cp, nf,
+          belowNoise, contested, naming, bar:winner.bar, unnameable, ranked, cp, nf,
           cov:macroCoverage(assets)};
 }
 function renderMacro(){
@@ -15626,7 +15648,7 @@ function renderMacro(){
     const got=`${Math.round(t.alignment*100)}% · str ${t.strength.toFixed(2)}`;
     return `<div class="atile ${a.fired?'fired':''}">
       <div class="aw">${a.w}d${a.fired?`<span class="abadge">ACTIONABLE TRADE</span>`:''}</div>
-      <div class="an">${a.fired? A.label : (a.reg.mixed?'No signal — mixed':a.reg.name)}</div>
+      <div class="an">${a.fired? A.label : (!a.reg.naming?'Context lens — does not name':(a.reg.mixed?'No signal — mixed':a.reg.name))}</div>
       <div class="am">${a.fired? a.reg.name+' · '+got : got+' · '+need}</div>
     </div>`;
   }).join("") + `</div>`;
@@ -15690,7 +15712,7 @@ function renderMacro(){
     ${healthBanner}
     ${alarmStrip}
     <section class="card" ${firedSet.has(macroWin)?'style="box-shadow:0 0 0 2px #c9a227,var(--shadow)"':''}>
-      <h2>Macro regime read <span style="font-weight:400;color:var(--ink-3);font-size:12px">· ${macroWin}-day window · weak evidence, see note</span>${firedSet.has(macroWin)?`<span class="abadge">${ALARMS[macroWin].label}</span>`:''}</h2>
+      <h2>Macro regime read <span style="font-weight:400;color:var(--ink-3);font-size:12px">· ${macroWin}-day window · ${reg.naming?'weak evidence, see note':'context lens, does not name'}</span>${firedSet.has(macroWin)?`<span class="abadge">${ALARMS[macroWin].label}</span>`:''}</h2>
       <div class="regcard">
         <div style="min-width:200px"><div class="regbig">${reg.name}</div>
           <div class="csub" style="margin:4px 0 0">
@@ -15702,7 +15724,10 @@ function renderMacro(){
             <span style="color:var(--ink-3)">strongest macro links: ${links} · strongest is <b>${reg.cp.couplingX.toFixed(1)}×</b> the significance floor (${reg.cp.bonf.toFixed(2)}, Bonferroni-adjusted for ${reg.cp.n} assets) — ${reg.cp.couplingX>=1?'a genuine link exists':'nothing clears chance'}</span></div></div>
         <div class="regscores">${regRows}</div>
       </div>
-      ${reg.mixed? `<div class="dhealth" style="margin:10px 0 0"><b>${reg.belowNoise?'No regime clears its own noise bar':'Two regimes tie — cannot separate them'} — all ${reg.ranked.length} fits are shown above anyway.</b>
+      ${!reg.naming? `<div class="dhealth" style="margin:10px 0 0"><b>This window does not name regimes — it is a context lens.</b>
+        Every crude Liquidity crunch on record ran 12–46 days and War premium 34–91, so an ${macroWin}-day correlation window is longer than the episodes it would be detecting: it measures them blended with whatever surrounded them. A second naming window was also tested directly and added wrong calls faster than right ones. Use it to see whether a correlation is a blip or sustained; use the ${NAMING_WINDOWS[0]}d window for the regime read.
+        <br>Fits are still shown: ${reg.ranked.slice(0,3).map(R=>`${R.name} (fit ${R.fit.toFixed(2)} vs bar ${R.bar.toFixed(2)})`).join(' · ')}.</div>`:''}
+      ${reg.mixed&&reg.naming? `<div class="dhealth" style="margin:10px 0 0"><b>${reg.belowNoise?'No regime clears its own noise bar':'Two regimes tie — cannot separate them'} — all ${reg.ranked.length} fits are shown above anyway.</b>
         Closest, this window: ${reg.ranked.slice(0,3).map(R=>`${R.name} (fit ${R.fit.toFixed(2)} vs bar ${R.bar.toFixed(2)})`).join(' · ')}. This is diagnostic detail, <b>not</b> a call.
         ${reg.unnameable && reg.unnameable.length? `<br><b style="color:var(--neg)">Unnameable by construction:</b> ${reg.unnameable.join(', ')} — their signatures are too small to ever clear a corrected bar, so they can never be named regardless of the data.`:''}</div>`:''}
       <p class="cotnote" style="margin-top:10px">Each bar scores how closely WTI's current cross-asset correlations match that regime's historical fingerprint — based on how <i>unusual</i> each correlation is versus its own norm, not its raw level. A regime is only named when it clears its own noise bar; otherwise the read stays <b>Mixed</b>.</p>
