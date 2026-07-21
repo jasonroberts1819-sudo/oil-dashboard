@@ -15728,7 +15728,7 @@ function renderMacro(){
                          + (reg.belowNoise? ` — <b>below a bar noise clears under 1% of the time, so it is not a call</b>`:``)
                          + (reg.contested&&!reg.belowNoise? ` — <b>two regimes tie; cannot separate them</b>`:``)
                        : `<b>${Math.round(reg.top.alignment*100)}% aligned</b> · strength ${reg.top.strength.toFixed(2)} · fit ${reg.top.fit.toFixed(2)} > ${reg.bar.toFixed(2)} noise bar`}<br>
-            WTI ${dir} over ${macroWin}d<br>signature: ${evidence}<br>
+            WTI ${dir} over ${RW}d<br>signature: ${evidence}<br>
             <span style="color:var(--ink-3)">strongest macro links: ${links} · strongest is <b>${reg.cp.couplingX.toFixed(1)}×</b> the significance floor (${reg.cp.bonf.toFixed(2)}, Bonferroni-adjusted for ${reg.cp.n} assets) — ${reg.cp.couplingX>=1?'a genuine link exists':'nothing clears chance'}</span></div></div>
         <div class="regscores">${regRows}</div>
       </div>
