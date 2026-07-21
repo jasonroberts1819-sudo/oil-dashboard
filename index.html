@@ -16314,8 +16314,7 @@ function ledgerBlock(L){
     <p class="cotnote" style="margin-top:10px;border-top:1px solid var(--border);padding-top:8px">
       Exits: stop · target · time stop · signal decay · and a <b>hard close 4 business days
       before front expiry</b>, ahead of spot-month position limits. Ideas never open inside
-      that window — near expiry the next structure out is evaluated instead (Aug/Sep becomes
-      Sep/Oct), as its own trade at its own level.</p>
+      that window.</p>
   </section>
   ${closed?`<section class="card"><h2>Recently closed</h2>
     <p class="csub">${Object.entries(by).filter(([,v])=>v).map(([k,v])=>`${v} ${k}`).join(" · ")||"—"}</p>
