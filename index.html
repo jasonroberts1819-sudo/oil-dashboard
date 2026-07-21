@@ -15191,6 +15191,67 @@ const MSHORT={WTI:'WTI',SPX:'SPX',EEM:'EEM',NDX:'NDX',KRE:'KRE',DXY:'DXY',USDCAD
    Stagflation was NOT made provisional (Jason's call) and did not need to be: it validates
    6 instruments. But 5y5y does NOT define it (lift +0.040, ns) — its real fingerprint is
    real-assets-up / banks-&-EM-down. I built what validates, not the inflation story I expected. */
+/* ===================== MEASURED CEILING — READ BEFORE "IMPROVING" THIS ==================
+   2026-07-20. A long session of adversarial testing established what this model can and
+   cannot do. The headline: OUT-OF-SAMPLE, WHEN THIS PANEL NAMES A REGIME IT IS RIGHT ~35%
+   OF THE TIME. Every number previously quoted in these comments was IN-SAMPLE and
+   overstated precision by 15-25 points. The UI now says so; do not un-say it.
+
+   HOW THAT WAS MEASURED (scripts are throwaway; the METHOD is the durable part):
+     - replay all ~4,600 labelled episode days through the live scoring pipeline, with
+       POINT-IN-TIME z baselines (a full-sample baseline replayed at a 2008 date contains
+       2009-2026 and is lookahead);
+     - LEAVE-ONE-EPISODE-OUT weights: the regime being scored has its weights re-fitted
+       from its OTHER episodes. In-sample weights score their own episodes and flatter
+       badly. LOEO is the honest number and should be the default for any future claim.
+     - BLOCK BOOTSTRAP over EPISODES for intervals. Days inside an episode are ~perfectly
+       autocorrelated, so the episode is the unit; day-level intervals are fiction.
+
+   *** SEED NOISE IS +-11 POINTS. *** The identical configuration (28d, lift, no
+   restriction) scored 45% on one MC seed and 34% on another. ANY COMPARISON SMALLER THAN
+   ~15 POINTS IS NOISE. This single fact invalidates most fine-grained tuning.
+
+   FOUR CHANGES WERE PROPOSED, TESTED, AND ALL FOUR FAILED CONFIRMATION — do not re-propose
+   without new evidence:
+     1. blend_max (score correlation LEVELS alongside lift). Looked like +10-18pts on the
+        first run; the ordering REVERSED on a fresh seed with a clean null. Dead.
+     2. Empirical-Bayes SHRINKAGE of weights by episode-reliability. Measured WORSE at
+        every threshold and window. (alignment/strength are scale-invariant, so shrinkage
+        acts only through relative re-weighting, and it removed signal with the noise.)
+     3. NAMEABILITY rule (name a regime only with >=N episodes at least as long as the
+        window). Precision rises monotonically with N — but only because the model goes
+        MUTE: at the "best" N it named 1.5% of days. No interior optimum. Nested CV (pick N
+        without the episode you score) gave CI 7-88% at 28d and was WORSE THAN DOING
+        NOTHING at 52d. Dead.
+     4. Lowering the strength floor NFZ. Flat across the whole range: moving a threshold
+        cannot create information. Dead.
+
+   A SECOND NAMING WINDOW WAS ALSO TESTED AND REJECTED (3 seeds): on days 28d is silent,
+   52d names 348-509 times and is right 25-41% — it adds errors faster than coverage, the
+   episodes it "uniquely catches" differ every seed (noise, not capability), and the two
+   agree 71-82% of the time anyway. 28d is also far more stable (33-35% vs 27-40%).
+   A longer window is kept for DISPLAY only (is a correlation a blip or sustained?).
+
+   WHY THE CEILING IS WHERE IT IS — three measured, structural reasons:
+     a. SIGNAL < NOISE. On a PERFECT regime day the shift per instrument z is 0.26-1.16
+        sigma (Reflation 0.26), while pure noise already gives mean|z| ~0.8 and the floor
+        demands 1.40. The regime's own signature is smaller than the measurement error.
+     b. REGIMES DO NOT REPEAT. Within one regime, an instrument's correlation varies by
+        sd 0.199 BETWEEN episodes, and 26% of weights flip sign episode to episode
+        (Stagflation KRE: -0.24 in 2007, +0.43 in 2021). The pooled weight describes a
+        typical episode that often never occurred.
+     c. THE SAMPLE IS 31 EPISODES, NOT 4,600 DAYS. ~47 weights are fitted on 31 events;
+        four of six regimes fit more parameters than they have episodes. Daily WTI starts
+        1986 (NYMEX launch) so the episode count cannot grow.
+   Nothing methodological fixes (a)-(c). More instruments would not help either: the
+   Bonferroni discovery sweep over all 150 instrument x regime cells found ZERO missing
+   instruments in the panel.
+
+   WHAT THE PANEL IS ACTUALLY FOR: the measured layer (correlations, z-scores — facts, not
+   inferences) and the SILENCE. It reads Mixed ~90% of days, which is an honest statement
+   that cross-asset evidence supports no clean story; a strongly NEGATIVE bar is firmer
+   evidence against a regime than a positive bar is for one. Treat a name as a hypothesis.
+   ======================================================================================= */
 const REGIMES=[
   {name:'Reflation / expansion', dir:'up',
    // US10Y DROPPED 2026-07-20: the audit's one failing weight (lift −0.037, z=−1.96 — dead
@@ -15629,7 +15690,7 @@ function renderMacro(){
     ${healthBanner}
     ${alarmStrip}
     <section class="card" ${firedSet.has(macroWin)?'style="box-shadow:0 0 0 2px #c9a227,var(--shadow)"':''}>
-      <h2>Macro regime read <span style="font-weight:400;color:var(--ink-3);font-size:12px">· ${macroWin}-day window</span>${firedSet.has(macroWin)?`<span class="abadge">${ALARMS[macroWin].label}</span>`:''}</h2>
+      <h2>Macro regime read <span style="font-weight:400;color:var(--ink-3);font-size:12px">· ${macroWin}-day window · weak evidence, see note</span>${firedSet.has(macroWin)?`<span class="abadge">${ALARMS[macroWin].label}</span>`:''}</h2>
       <div class="regcard">
         <div style="min-width:200px"><div class="regbig">${reg.name}</div>
           <div class="csub" style="margin:4px 0 0">
@@ -15645,6 +15706,7 @@ function renderMacro(){
         Closest, this window: ${reg.ranked.slice(0,3).map(R=>`${R.name} (fit ${R.fit.toFixed(2)} vs bar ${R.bar.toFixed(2)})`).join(' · ')}. This is diagnostic detail, <b>not</b> a call.
         ${reg.unnameable && reg.unnameable.length? `<br><b style="color:var(--neg)">Unnameable by construction:</b> ${reg.unnameable.join(', ')} — their signatures are too small to ever clear a corrected bar, so they can never be named regardless of the data.`:''}</div>`:''}
       <p class="cotnote" style="margin-top:10px">Each bar scores how closely WTI's current cross-asset correlations match that regime's historical fingerprint — based on how <i>unusual</i> each correlation is versus its own norm, not its raw level. A regime is only named when it clears its own noise bar; otherwise the read stays <b>Mixed</b>.</p>
+      <p class="cotnote" style="margin-top:6px;border-top:1px solid var(--border);padding-top:8px"><b>How much to trust a name.</b> Backtested on 31 dated episodes since 1986, out-of-sample: when this panel names a regime it matches the historical label about <b>35%</b> of the time — so a name is a <b>hypothesis to check, never a conclusion</b>, and it is not sizeable on its own. What the panel is good for is the measured layer (the correlations and σ-scores below, which are facts) and its <b>silence</b>: it reads Mixed ~90% of days, and a strongly negative bar is firmer evidence <i>against</i> that story than a positive bar is for it. The ceiling is the evidence base — 31 episodes, and daily WTI does not exist before 1986.</p>
       ${covAlert? `<p class="cotnote" style="margin-top:6px">${covAlert}</p>`:``}
     </section>
     <section class="card">
