@@ -15606,10 +15606,18 @@ function renderMacro(){
   const assets=M.assets, keys=assets.map(a=>a.key), labelOf=Object.fromEntries(assets.map(a=>[a.key,a.label]));
   const w=String(macroWin), focus=M.wtiFocus[w]||{}, wtiRet=(M.wtiReturn||{})[w]||0;
   const winBtns=M.windows.map(x=>`<button data-mwin="${x}" aria-pressed="${x===macroWin}">${x}d</button>`).join("");
+  /* THE REGIME READ IS FIXED AT ITS NAMING WINDOW — it does NOT follow the window toggle.
+     The toggle drives the correlation displays below (a genuine question: is this link a
+     blip or sustained?). Regime naming is a 28d product and nothing else, so offering it at
+     other horizons could only ever render a card explaining why it cannot answer — an
+     apology, not information. Rendering nothing beats rendering an excuse. */
+  const RW=NAMING_WINDOWS[0], rw=String(RW);
+  const reg=macroRegime(M.wtiFocus[rw]||{}, (M.wtiReturn||{})[rw]||0, assets, RW,
+                        (M.stats||{})[rw]||{}, (M.wtiFocusZ||{})[rw]||{});
+  const regRet=(M.wtiReturn||{})[rw]||0;
   const ST=(M.stats||{})[w]||{};
   const zfoc=(M.wtiFocusZ||{})[w]||{};
-  const reg=macroRegime(focus, wtiRet, assets, macroWin, ST, zfoc);
-  const dir = (wtiRet>=0?'+':'')+(wtiRet*100).toFixed(1)+'%';
+  const dir = (regRet>=0?'+':'')+(regRet*100).toFixed(1)+'%';   // regime card = its own window
   const regRows=reg.ranked.map(R=>{
     const win=R.name===reg.top.name&&!reg.mixed;
     const a=R.alignment, wd=Math.min(50,Math.abs(a)*50), left=a<0?50-wd:50;   // bar = alignment
@@ -15630,7 +15638,8 @@ function renderMacro(){
   // about the LEVEL of the relationship, not whether it is unusual. Deliberately different.
   const links=reg.cp.top.map(x=>`${MSHORT[x.k]||x.k} ${x.v==null?'—':(x.v>0?'+':'')+x.v}`).join(" · ");
   // alarm state for EVERY window (not just the selected one) so nothing hides behind the toggle
-  const alarms=M.windows.map(x=>checkAlarm(M,x));
+  // alarms only exist where naming does — a non-naming window has nothing to alarm ON
+  const alarms=M.windows.filter(x=>NAMING_WINDOWS.indexOf(x)>=0).map(x=>checkAlarm(M,x));
   const firedSet=new Set(alarms.filter(a=>a.fired).map(a=>a.w));
   /* Data-health banner. `missing` = hard fetch failure; `warnings` = silent degradation
      (stale / short / flat) that still returns a valid-looking series. Both must be loud —
@@ -15708,11 +15717,10 @@ function renderMacro(){
     return `<tr><th class="rowh ${rk==='WTI'?'wti':''}" title="${labelOf[rk]}">${MSHORT[rk]||rk}</th>${cells}</tr>`;
   }).join("");
   box.innerHTML=`
-    <div class="controls"><div class="grp"><label class="t">Window</label><span class="seg" role="group">${winBtns}</span></div></div>
     ${healthBanner}
     ${alarmStrip}
-    <section class="card" ${firedSet.has(macroWin)?'style="box-shadow:0 0 0 2px #c9a227,var(--shadow)"':''}>
-      <h2>Macro regime read <span style="font-weight:400;color:var(--ink-3);font-size:12px">· ${macroWin}-day window · ${reg.naming?'weak evidence, see note':'context lens, does not name'}</span>${firedSet.has(macroWin)?`<span class="abadge">${ALARMS[macroWin].label}</span>`:''}</h2>
+    <section class="card" ${firedSet.has(RW)?'style="box-shadow:0 0 0 2px #c9a227,var(--shadow)"':''}>
+      <h2>Macro regime read <span style="font-weight:400;color:var(--ink-3);font-size:12px">· ${RW}-day window · weak evidence, see note</span>${firedSet.has(RW)?`<span class="abadge">${ALARMS[RW].label}</span>`:''}</h2>
       <div class="regcard">
         <div style="min-width:200px"><div class="regbig">${reg.name}</div>
           <div class="csub" style="margin:4px 0 0">
@@ -15724,16 +15732,14 @@ function renderMacro(){
             <span style="color:var(--ink-3)">strongest macro links: ${links} · strongest is <b>${reg.cp.couplingX.toFixed(1)}×</b> the significance floor (${reg.cp.bonf.toFixed(2)}, Bonferroni-adjusted for ${reg.cp.n} assets) — ${reg.cp.couplingX>=1?'a genuine link exists':'nothing clears chance'}</span></div></div>
         <div class="regscores">${regRows}</div>
       </div>
-      ${!reg.naming? `<div class="dhealth" style="margin:10px 0 0"><b>This window does not name regimes — it is a context lens.</b>
-        Every crude Liquidity crunch on record ran 12–46 days and War premium 34–91, so an ${macroWin}-day correlation window is longer than the episodes it would be detecting: it measures them blended with whatever surrounded them. A second naming window was also tested directly and added wrong calls faster than right ones. Use it to see whether a correlation is a blip or sustained; use the ${NAMING_WINDOWS[0]}d window for the regime read.
-        <br>Fits are still shown: ${reg.ranked.slice(0,3).map(R=>`${R.name} (fit ${R.fit.toFixed(2)} vs bar ${R.bar.toFixed(2)})`).join(' · ')}.</div>`:''}
-      ${reg.mixed&&reg.naming? `<div class="dhealth" style="margin:10px 0 0"><b>${reg.belowNoise?'No regime clears its own noise bar':'Two regimes tie — cannot separate them'} — all ${reg.ranked.length} fits are shown above anyway.</b>
+      ${reg.mixed? `<div class="dhealth" style="margin:10px 0 0"><b>${reg.belowNoise?'No regime clears its own noise bar':'Two regimes tie — cannot separate them'} — all ${reg.ranked.length} fits are shown above anyway.</b>
         Closest, this window: ${reg.ranked.slice(0,3).map(R=>`${R.name} (fit ${R.fit.toFixed(2)} vs bar ${R.bar.toFixed(2)})`).join(' · ')}. This is diagnostic detail, <b>not</b> a call.
         ${reg.unnameable && reg.unnameable.length? `<br><b style="color:var(--neg)">Unnameable by construction:</b> ${reg.unnameable.join(', ')} — their signatures are too small to ever clear a corrected bar, so they can never be named regardless of the data.`:''}</div>`:''}
       <p class="cotnote" style="margin-top:10px">Each bar scores how closely WTI's current cross-asset correlations match that regime's historical fingerprint — based on how <i>unusual</i> each correlation is versus its own norm, not its raw level. A regime is only named when it clears its own noise bar; otherwise the read stays <b>Mixed</b>.</p>
       <p class="cotnote" style="margin-top:6px;border-top:1px solid var(--border);padding-top:8px"><b>How much to trust a name.</b> Backtested on 31 dated episodes since 1986, out-of-sample: when this panel names a regime it matches the historical label about <b>35%</b> of the time — so a name is a <b>hypothesis to check, never a conclusion</b>, and it is not sizeable on its own. What the panel is good for is the measured layer (the correlations and σ-scores below, which are facts) and its <b>silence</b>: it reads Mixed ~90% of days, and a strongly negative bar is firmer evidence <i>against</i> that story than a positive bar is for it. The ceiling is the evidence base — 31 episodes, and daily WTI does not exist before 1986.</p>
       ${covAlert? `<p class="cotnote" style="margin-top:6px">${covAlert}</p>`:``}
     </section>
+    <div class="controls"><div class="grp"><label class="t">Window (tables below)</label><span class="seg" role="group">${winBtns}</span></div></div>
     <section class="card">
       <h2>WTI correlation by asset &amp; horizon</h2>
       <p class="csub">${macroMode==='z'
