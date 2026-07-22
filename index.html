@@ -16771,7 +16771,7 @@ function renderMarketContext(){
     };
 
     html+=`<section class="card"><h2>Market context</h2>
-      <p class="csub">As of ${M.notes_asof||"—"}${N.asOf?`, headlines through ${N.asOf}`:""}.${
+      <p class="csub">As of ${M.notes_asof||"—"}.${
         N.pulse ? ` Coverage tone <b>${N.pulse.tone>0?"+":""}${N.pulse.tone}</b> vs its 7-day
         median ${N.pulse.median7d>0?"+":""}${N.pulse.median7d}${
         N.pulse.cached?" (last available reading)":""}.` : ""}</p>
