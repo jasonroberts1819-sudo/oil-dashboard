@@ -16431,21 +16431,20 @@ function renderTradeIdeas(){
      forward balances, EIA inventories, CFTC positioning, macro z-scores. The hand-written
      market notes are NOT an input to that (build_signals takes no notes argument), and that
      separation is deliberate: scores stay measured, judgement stays labelled as judgement.
-     But the reader cannot see the separation, and when the notes turn two-sided while every
-     idea is long, that gap matters. So state the tension instead of resolving it — no score
-     is touched. Only rendered when bearish notes actually exist. */
-  const NB=D.noteBalance;
-  if(NB && NB.bear>0){
-    const tot=(NB.bull||0)+(NB.bear||0)+(NB.neutral||0);
-    html+=`<div class="dhealth" style="margin:10px 0 0;border-left:3px solid #c9a227">
-      <b>Context check — the ideas below do not read the market notes.</b>
-      They are scored on measured signals only (curve, balances, inventories, positioning, macro).
-      Of ${tot} hand-verified notes, <b>${NB.bear} lean bearish</b>${NB.bearTags&&NB.bearTags.length?`: ${NB.bearTags.join(" · ")}`:""}
-      ${NB.bull?` · ${NB.bull} bullish`:""}${NB.neutral?` · ${NB.neutral} neutral`:""}.
-      Read the notes below against these ideas yourself — a bearish demand or positioning note is
-      most directly at odds with anything carrying outright <b>crude flat price</b> exposure,
-      and least relevant to relative-value structures.</div>`;
-  }
+
+     A summary banner used to sit here restating the whole bull/bear/neutral tally and telling
+     the reader to weigh the notes against the ideas themselves. REMOVED at Jason's request
+     2026-07-22 — do not re-add it. It was a lean COUNT, and a count is not a signal: the tally
+     moves when a note's lean tag is edited, which is judgement, so it read as a measurement
+     while carrying none. It also restated a tally the reader can see in the notes directly
+     below, and its closing advice ("read them yourself", "least relevant to relative-value
+     structures") was generic enough to be true on any day, which is the definition of a caveat
+     that belongs in source rather than on the tab.
+
+     `noteBalance` is still published and still used — but only by the PER-IDEA chip further
+     down, which fires on a specific card that carries outright crude flat-price exposure while
+     bearish notes exist. That one names a concrete conflict on the idea it applies to, so it is
+     actionable where the banner was ambient. Keep the payload. */
   html+=`</section>`;
 
   // ideas
