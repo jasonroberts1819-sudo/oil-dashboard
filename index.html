@@ -391,31 +391,42 @@
     width:1px;background:var(--border)}
   .navlab{font-size:9.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;
     color:var(--ink-3);padding-left:2px;user-select:none}
-  .navtabs{display:flex;flex-wrap:wrap;gap:3px}
-  .navtabs button{border:0;background:transparent;color:var(--ink-2);font-size:13px;
-    font-weight:600;padding:7px 13px;border-radius:8px;cursor:pointer;white-space:nowrap;
-    transition:background .14s,color .14s,box-shadow .14s;position:relative}
-  .navtabs button:hover{background:var(--surface-2);color:var(--ink)}
+  /* Tabs are tiles: bordered, filled, icon over label. A first-time reader has
+     to see twelve buttons before touching anything, and twelve short phrases in
+     a row all look alike — the glyph is what makes them scannable. Icons are
+     inline SVG rather than a webfont so the page stays a single self-contained
+     file (same reason the serif is embedded above). */
+  .navtabs{display:flex;flex-wrap:wrap;gap:6px}
+  .navtabs button{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;
+    gap:3px;min-width:62px;padding:8px 10px;line-height:1.25;
+    border:1px solid var(--border);background:var(--surface);color:var(--ink-2);
+    font-size:11px;font-weight:600;border-radius:8px;cursor:pointer;white-space:nowrap;
+    transition:background .14s,color .14s,border-color .14s}
+  .navtabs .nvi{width:17px;height:17px;flex:none;display:block;
+    fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+  .navtabs button:hover{background:var(--surface-2);color:var(--ink);border-color:var(--ink-3)}
   .navtabs button:focus-visible{outline:2px solid var(--c2026);outline-offset:2px}
-  .navtabs button[aria-pressed="true"]{background:var(--c2026);color:#fff;
-    box-shadow:0 1px 2px rgba(37,99,235,.28),0 4px 12px rgba(37,99,235,.22)}
-  :root[data-theme="dark"] .navtabs button[aria-pressed="true"]{color:#0d1017;
-    box-shadow:0 1px 2px rgba(0,0,0,.4),0 4px 14px rgba(96,165,250,.28)}
-  /* Pinned: drop the group labels and go single-row. The labels earn their space
-     at rest, where they explain the layout; once you're scrolling you already
-     know it, and a 3-row nav would eat a quarter of a laptop viewport. */
+  .navtabs button[aria-pressed="true"]{background:var(--c2026);border-color:var(--c2026);
+    color:var(--bg)}
+  /* Pinned: drop the group labels and lay each tile out sideways, so the bar goes
+     single-row. The labels earn their space at rest, where they explain the
+     layout; once you're scrolling you already know it, and a 3-row nav would eat
+     a quarter of a laptop viewport. */
   .mainnav.stuck .navlab{display:none}
   .mainnav.stuck .mainnav-in{align-items:center;gap:4px 14px;padding:7px 0;
     flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
   .mainnav.stuck .mainnav-in::-webkit-scrollbar{display:none}
   .mainnav.stuck .navgrp{flex-direction:row}
   .mainnav.stuck .navgrp+.navgrp::before{top:6px;bottom:6px;left:-8px}
-  .mainnav.stuck .navtabs{flex-wrap:nowrap}
-  .mainnav.stuck .navtabs button{padding:6px 11px;font-size:12.5px}
+  .mainnav.stuck .navtabs{flex-wrap:nowrap;gap:5px}
+  .mainnav.stuck .navtabs button{flex-direction:row;gap:6px;min-width:0;
+    padding:6px 10px;font-size:12px}
+  .mainnav.stuck .navtabs .nvi{width:15px;height:15px}
   @media (max-width:640px){
     .mainnav-in{gap:6px 14px}
     .navgrp+.navgrp::before{display:none}
-    .navtabs button{font-size:12.5px;padding:6px 11px}
+    .navtabs{gap:5px}
+    .navtabs button{min-width:56px;padding:7px 8px}
   }
   .tip .row .k{display:inline-flex;align-items:center;gap:6px}
   .tip .row .k i{width:8px;height:8px;border-radius:50%;display:inline-block}
@@ -444,16 +455,12 @@
     padding:12px 16px 12px 0}
   .kpi .label{font-size:10px;font-weight:700;letter-spacing:.1em}
   .kpi .val{font-weight:600}
-  /* nav as a masthead: underline the active section, rule beneath the bar */
+  /* Masthead rule under the bar. The tabs themselves keep their tile treatment
+     rather than flattening to text like the rest of the furniture — the nav is
+     the one place on the page that has to advertise itself. */
   .mainnav{background:var(--bg);border-bottom:2px solid var(--ink)}
   .mainnav.stuck{box-shadow:0 4px 14px rgba(26,26,24,.09)}
   :root[data-theme="dark"] .mainnav.stuck{box-shadow:0 4px 16px rgba(0,0,0,.5)}
-  .navtabs button{border-radius:0;border-bottom:2px solid transparent;margin-bottom:-1px;
-    padding:7px 12px}
-  .navtabs button:hover{background:transparent;color:var(--ink);border-bottom-color:var(--border)}
-  .navtabs button[aria-pressed="true"]{background:transparent;color:var(--c2026);
-    border-bottom-color:var(--c2026);box-shadow:none}
-  :root[data-theme="dark"] .navtabs button[aria-pressed="true"]{color:var(--c2026)}
   .seg{border-radius:2px}
   .seg button{border-radius:1px}
   .tipxi{background:var(--surface-2);border-radius:2px}
@@ -475,35 +482,37 @@
   <!-- Primary navigation. Grouped by kind — products / analysis / reference —
        because a flat row of 13 identical chips gives a first-time reader no map
        of what the dashboard actually contains. Scoped class (not .seg) so the
-       smaller segmented controls elsewhere keep their compact styling. -->
+       smaller segmented controls elsewhere keep their compact styling. Each tab
+       carries an inline SVG glyph (aria-hidden — the label is the accessible
+       name) so the row scans as buttons rather than as a paragraph of nouns. -->
   <nav class="mainnav" id="mainnav" role="navigation" aria-label="Dashboard sections">
     <div class="mainnav-in">
       <div class="navgrp">
         <span class="navlab">Crude/Products</span>
         <div class="navtabs" role="group" aria-label="Products">
-          <button id="tab_crude" data-tab="crude" aria-pressed="true">Crude</button>
-          <button id="tab_gasoline" data-tab="gasoline" aria-pressed="false">Gasoline</button>
-          <button id="tab_distillate" data-tab="distillate" aria-pressed="false">Distillate</button>
-          <button id="tab_jet" data-tab="jet" aria-pressed="false">Jet</button>
-          <button id="tab_refining" data-tab="refining" aria-pressed="false">Refining</button>
+          <button id="tab_crude" data-tab="crude" aria-pressed="true"><svg class="nvi" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3c0 0-6.5 7-6.5 11.5a6.5 6.5 0 0 0 13 0C18.5 10 12 3 12 3z"/></svg>Crude</button>
+          <button id="tab_gasoline" data-tab="gasoline" aria-pressed="false"><svg class="nvi" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="10" height="16" rx="1.5"/><path d="M3 10h10M13 9h3.5a1.5 1.5 0 0 1 1.5 1.5V16a1.5 1.5 0 0 0 3 0v-4l-2-2"/></svg>Gasoline</button>
+          <button id="tab_distillate" data-tab="distillate" aria-pressed="false"><svg class="nvi" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 6h11v10H2zM13 9h4l4 3.5V16h-8"/><circle cx="6" cy="18" r="1.8"/><circle cx="17" cy="18" r="1.8"/></svg>Distillate</button>
+          <button id="tab_jet" data-tab="jet" aria-pressed="false"><svg class="nvi" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2 8.5 7 3.5v2l-9-2.2-9 2.2v-2l7-3.5z"/><path d="M10 17.5h4l-2 4z"/></svg>Jet</button>
+          <button id="tab_refining" data-tab="refining" aria-pressed="false"><svg class="nvi" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21V9l6 3.5V9l6 3.5V4h6v17z"/><path d="M3 21h18"/></svg>Refining</button>
         </div>
       </div>
       <div class="navgrp">
         <span class="navlab">Analysis</span>
         <div class="navtabs" role="group" aria-label="Analysis">
-          <button id="tab_weekly" data-tab="weekly" aria-pressed="false">Weekly Report</button>
-          <button id="tab_positioning" data-tab="positioning" aria-pressed="false">Positioning</button>
-          <button id="tab_macro" data-tab="macro" aria-pressed="false">Macro Heatmap</button>
-          <button id="tab_forward" data-tab="forward" aria-pressed="false">Forward Balances</button>
-          <button id="tab_trade" data-tab="trade" aria-pressed="false">Trade Ideas</button>
-          <button id="tab_calendar" data-tab="calendar" aria-pressed="false">Calendar</button>
+          <button id="tab_weekly" data-tab="weekly" aria-pressed="false"><svg class="nvi" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg>Weekly Report</button>
+          <button id="tab_positioning" data-tab="positioning" aria-pressed="false"><svg class="nvi" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v16M7 20h10M4 8h16M4 8l-2 6h4zM20 8l2 6h-4z"/></svg>Positioning</button>
+          <button id="tab_macro" data-tab="macro" aria-pressed="false"><svg class="nvi" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7.5" height="7.5" rx="1"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="1"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="1"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1"/></svg>Macro Heatmap</button>
+          <button id="tab_forward" data-tab="forward" aria-pressed="false"><svg class="nvi" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3v18h18"/><path d="M6.5 15.5l4-5 3 3 5-7"/></svg>Forward Balances</button>
+          <button id="tab_trade" data-tab="trade" aria-pressed="false"><svg class="nvi" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a6 6 0 0 1 3.5 10.9V16h-7v-2.1A6 6 0 0 1 12 3z"/><path d="M9.5 19h5M10.5 21.5h3"/></svg>Trade Ideas</button>
+          <button id="tab_calendar" data-tab="calendar" aria-pressed="false"><svg class="nvi" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Calendar</button>
         </div>
       </div>
       <div class="navgrp">
         <span class="navlab">Reference</span>
         <div class="navtabs" role="group" aria-label="Reference">
-          <button id="tab_table" data-tab="table" aria-pressed="false">Table</button>
-          <button id="tab_updates" data-tab="updates" aria-pressed="false">Updates</button>
+          <button id="tab_table" data-tab="table" aria-pressed="false"><svg class="nvi" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9.5h18M3 15h18M9.5 9.5V20"/></svg>Table</button>
+          <button id="tab_updates" data-tab="updates" aria-pressed="false"><svg class="nvi" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 12a8.5 8.5 0 1 0 2.8-6.3L3 8.5"/><path d="M3 3.5v5h5"/><path d="M12 8v4.3l3 1.8"/></svg>Updates</button>
         </div>
       </div>
     </div>
@@ -918,6 +927,13 @@ const DATA = {
 /* ===== LOG:START — auto-maintained by update_oil_dashboard.py (newest first). Do not hand-edit. ===== */
 const UPDATE_LOG = [
   {
+    "time": "2026-07-22 09:35",
+    "outcome": "nochange",
+    "label": "No new EIA data",
+    "detail": "",
+    "dataThrough": "2026-07-10"
+  },
+  {
     "time": "2026-07-17 13:31",
     "outcome": "updated",
     "label": "Dashboard updated",
@@ -967,8 +983,8 @@ const UPDATE_LOG = [
    between INV:START/END; the updater overwrites this block. level = month-end
    stock (mmbbl); change = month-over-month. ===== */
 const INV_DATA = {
-  "asOf": "2026-07-10",
-  "generated": "2026-07-17 13:20",
+  "asOf": "2026-07-17",
+  "generated": "2026-07-22 09:33",
   "source": "WPSR psw09/psw01",
   "years": [
     2021,
@@ -1167,7 +1183,7 @@ const INV_DATA = {
             459.495,
             433.712,
             408.359,
-            409.665,
+            411.675,
             null,
             null,
             null,
@@ -1253,7 +1269,7 @@ const INV_DATA = {
             397.924,
             357.119,
             325.655,
-            316.504,
+            311.447,
             null,
             null,
             null,
@@ -1339,7 +1355,7 @@ const INV_DATA = {
             29.772,
             22.441,
             19.666,
-            20.044,
+            19.37,
             null,
             null,
             null,
@@ -1425,7 +1441,7 @@ const INV_DATA = {
             7.609,
             8.137,
             7.922,
-            8.025,
+            7.792,
             null,
             null,
             null,
@@ -1511,7 +1527,7 @@ const INV_DATA = {
             114.403,
             102.952,
             98.058,
-            97.885,
+            97.068,
             null,
             null,
             null,
@@ -1597,7 +1613,7 @@ const INV_DATA = {
             266.087,
             252.5,
             237.498,
-            235.123,
+            239.799,
             null,
             null,
             null,
@@ -1683,7 +1699,7 @@ const INV_DATA = {
             26.1,
             24.397,
             22.568,
-            22.485,
+            22.244,
             null,
             null,
             null,
@@ -1769,7 +1785,7 @@ const INV_DATA = {
             45.297,
             45.726,
             42.313,
-            46.147,
+            44.772,
             null,
             null,
             null,
@@ -1855,7 +1871,7 @@ const INV_DATA = {
             13.586,
             13.707,
             13.81,
-            13.861,
+            13.798,
             null,
             null,
             null,
@@ -1941,7 +1957,7 @@ const INV_DATA = {
             667.0,
             -124.0,
             404.0,
-            400.0,
+            150.0,
             null,
             null,
             null,
@@ -1999,7 +2015,7 @@ const INV_DATA = {
             599.0,
             494.0,
             382.0,
-            225.0,
+            228.0,
             null,
             null,
             null,
@@ -2085,7 +2101,7 @@ const INV_DATA = {
             857.419,
             790.831,
             734.014,
-            726.169,
+            723.122,
             null,
             null,
             null,
@@ -2171,7 +2187,7 @@ const INV_DATA = {
             28.592,
             25.692,
             23.747,
-            23.925,
+            24.124,
             null,
             null,
             null,
@@ -2257,7 +2273,7 @@ const INV_DATA = {
             9.644,
             10.527,
             12.84,
-            10.288,
+            9.692,
             null,
             null,
             null,
@@ -2343,7 +2359,7 @@ const INV_DATA = {
             31.638,
             24.82,
             23.029,
-            23.174,
+            22.679,
             null,
             null,
             null,
@@ -2429,7 +2445,7 @@ const INV_DATA = {
             28.422,
             26.565,
             24.706,
-            24.915,
+            25.568,
             null,
             null,
             null,
@@ -2515,7 +2531,7 @@ const INV_DATA = {
             58.652,
             38.36,
             33.385,
-            33.914,
+            33.96,
             null,
             null,
             null,
@@ -2601,7 +2617,7 @@ const INV_DATA = {
             24.366,
             25.124,
             20.813,
-            22.856,
+            22.984,
             null,
             null,
             null,
@@ -2689,7 +2705,7 @@ const INV_DATA = {
             -2.141,
             -25.783,
             -25.353,
-            1.306,
+            3.316,
             null,
             null,
             null,
@@ -2775,7 +2791,7 @@ const INV_DATA = {
             -17.14,
             -40.805,
             -31.464,
-            -9.151,
+            -14.208,
             null,
             null,
             null,
@@ -2861,7 +2877,7 @@ const INV_DATA = {
             -1.693,
             -7.331,
             -2.775,
-            0.378,
+            -0.296,
             null,
             null,
             null,
@@ -2947,7 +2963,7 @@ const INV_DATA = {
             -0.445,
             0.528,
             -0.215,
-            0.103,
+            -0.13,
             null,
             null,
             null,
@@ -3033,7 +3049,7 @@ const INV_DATA = {
             0.414,
             -11.451,
             -4.894,
-            -0.173,
+            -0.99,
             null,
             null,
             null,
@@ -3119,7 +3135,7 @@ const INV_DATA = {
             -2.52,
             -13.587,
             -15.002,
-            -2.375,
+            2.301,
             null,
             null,
             null,
@@ -3205,7 +3221,7 @@ const INV_DATA = {
             0.592,
             -1.703,
             -1.829,
-            -0.083,
+            -0.324,
             null,
             null,
             null,
@@ -3291,7 +3307,7 @@ const INV_DATA = {
             -0.18,
             0.429,
             -3.413,
-            3.834,
+            2.459,
             null,
             null,
             null,
@@ -3377,7 +3393,7 @@ const INV_DATA = {
             -0.071,
             0.121,
             0.103,
-            0.051,
+            -0.012,
             null,
             null,
             null,
@@ -3463,7 +3479,7 @@ const INV_DATA = {
             702.0,
             -791.0,
             528.0,
-            -4.0,
+            -254.0,
             null,
             null,
             null,
@@ -3521,7 +3537,7 @@ const INV_DATA = {
             51.0,
             -105.0,
             -112.0,
-            -157.0,
+            -154.0,
             null,
             null,
             null,
@@ -3607,7 +3623,7 @@ const INV_DATA = {
             -19.281,
             -66.588,
             -56.817,
-            -7.845,
+            -10.892,
             null,
             null,
             null,
@@ -3693,7 +3709,7 @@ const INV_DATA = {
             0.407,
             -2.899,
             -1.945,
-            0.178,
+            0.377,
             null,
             null,
             null,
@@ -3779,7 +3795,7 @@ const INV_DATA = {
             -0.071,
             0.883,
             2.313,
-            -2.551,
+            -3.148,
             null,
             null,
             null,
@@ -3865,7 +3881,7 @@ const INV_DATA = {
             0.595,
             -6.818,
             -1.791,
-            0.144,
+            -0.35,
             null,
             null,
             null,
@@ -3951,7 +3967,7 @@ const INV_DATA = {
             0.034,
             -1.857,
             -1.859,
-            0.209,
+            0.862,
             null,
             null,
             null,
@@ -4037,7 +4053,7 @@ const INV_DATA = {
             12.189,
             -20.292,
             -4.975,
-            0.529,
+            0.576,
             null,
             null,
             null,
@@ -4123,7 +4139,7 @@ const INV_DATA = {
             -0.005,
             0.758,
             -4.311,
-            2.043,
+            2.17,
             null,
             null,
             null,
@@ -4287,7 +4303,7 @@ const INV_DATA = {
             222.299,
             214.955,
             213.966,
-            210.529,
+            211.294,
             null,
             null,
             null,
@@ -4373,7 +4389,7 @@ const INV_DATA = {
             55.63,
             56.616,
             57.224,
-            54.08,
+            53.095,
             null,
             null,
             null,
@@ -4459,7 +4475,7 @@ const INV_DATA = {
             49.562,
             43.306,
             43.915,
-            44.726,
+            43.538,
             null,
             null,
             null,
@@ -4545,7 +4561,7 @@ const INV_DATA = {
             80.895,
             81.261,
             76.477,
-            75.448,
+            78.176,
             null,
             null,
             null,
@@ -4631,7 +4647,7 @@ const INV_DATA = {
             7.794,
             6.702,
             7.178,
-            6.857,
+            6.807,
             null,
             null,
             null,
@@ -4717,7 +4733,7 @@ const INV_DATA = {
             28.417,
             27.07,
             29.171,
-            29.419,
+            29.677,
             null,
             null,
             null,
@@ -4803,7 +4819,7 @@ const INV_DATA = {
             45.319,
             41.739,
             41.524,
-            39.616,
+            40.152,
             null,
             null,
             null,
@@ -4889,7 +4905,7 @@ const INV_DATA = {
             16.964,
             15.897,
             15.132,
-            13.871,
+            13.131,
             null,
             null,
             null,
@@ -4975,7 +4991,7 @@ const INV_DATA = {
             10.511,
             9.105,
             8.747,
-            8.221,
+            8.853,
             null,
             null,
             null,
@@ -5061,7 +5077,7 @@ const INV_DATA = {
             12.142,
             12.073,
             12.925,
-            12.959,
+            13.354,
             null,
             null,
             null,
@@ -5147,7 +5163,7 @@ const INV_DATA = {
             775.0,
             935.0,
             1016.0,
-            967.0,
+            807.0,
             null,
             null,
             null,
@@ -5233,7 +5249,7 @@ const INV_DATA = {
             344.0,
             780.0,
             639.0,
-            354.0,
+            494.0,
             null,
             null,
             null,
@@ -5319,7 +5335,7 @@ const INV_DATA = {
             9104.0,
             8594.0,
             9131.0,
-            8844.0,
+            8947.0,
             null,
             null,
             null,
@@ -5405,7 +5421,7 @@ const INV_DATA = {
             24.418,
             25.012,
             23.433,
-            23.805,
+            23.616,
             null,
             null,
             null,
@@ -5493,7 +5509,7 @@ const INV_DATA = {
             -18.562,
             -7.344,
             -0.989,
-            -3.437,
+            -2.672,
             null,
             null,
             null,
@@ -5579,7 +5595,7 @@ const INV_DATA = {
             -3.857,
             0.986,
             0.608,
-            -3.144,
+            -4.129,
             null,
             null,
             null,
@@ -5665,7 +5681,7 @@ const INV_DATA = {
             -8.875,
             -6.256,
             0.609,
-            0.811,
+            -0.377,
             null,
             null,
             null,
@@ -5751,7 +5767,7 @@ const INV_DATA = {
             -5.478,
             0.366,
             -4.784,
-            -1.029,
+            1.699,
             null,
             null,
             null,
@@ -5837,7 +5853,7 @@ const INV_DATA = {
             -1.257,
             -1.092,
             0.476,
-            -0.321,
+            -0.371,
             null,
             null,
             null,
@@ -5923,7 +5939,7 @@ const INV_DATA = {
             0.904,
             -1.347,
             2.101,
-            0.248,
+            0.506,
             null,
             null,
             null,
@@ -6009,7 +6025,7 @@ const INV_DATA = {
             -8.095,
             -3.58,
             -0.215,
-            -1.908,
+            -1.372,
             null,
             null,
             null,
@@ -6095,7 +6111,7 @@ const INV_DATA = {
             -5.043,
             -1.067,
             -0.765,
-            -1.261,
+            -2.001,
             null,
             null,
             null,
@@ -6181,7 +6197,7 @@ const INV_DATA = {
             -1.707,
             -1.406,
             -0.358,
-            -0.526,
+            0.106,
             null,
             null,
             null,
@@ -6267,7 +6283,7 @@ const INV_DATA = {
             -0.11,
             -0.069,
             0.852,
-            0.034,
+            0.429,
             null,
             null,
             null,
@@ -6353,7 +6369,7 @@ const INV_DATA = {
             -54.0,
             160.0,
             81.0,
-            -49.0,
+            -209.0,
             null,
             null,
             null,
@@ -6439,7 +6455,7 @@ const INV_DATA = {
             -158.0,
             436.0,
             -141.0,
-            -285.0,
+            -145.0,
             null,
             null,
             null,
@@ -6525,7 +6541,7 @@ const INV_DATA = {
             418.0,
             -510.0,
             537.0,
-            -287.0,
+            -184.0,
             null,
             null,
             null,
@@ -6611,7 +6627,7 @@ const INV_DATA = {
             -3.312,
             0.594,
             -1.579,
-            0.372,
+            0.183,
             null,
             null,
             null,
@@ -6755,7 +6771,7 @@ const INV_DATA = {
             103.638,
             102.301,
             108.599,
-            108.175,
+            109.57,
             null,
             null,
             null,
@@ -6841,7 +6857,7 @@ const INV_DATA = {
             25.893,
             22.2,
             22.996,
-            22.627,
+            23.893,
             null,
             null,
             null,
@@ -6927,7 +6943,7 @@ const INV_DATA = {
             25.881,
             25.041,
             27.771,
-            28.862,
+            28.586,
             null,
             null,
             null,
@@ -7013,7 +7029,7 @@ const INV_DATA = {
             38.033,
             41.587,
             42.74,
-            42.252,
+            43.101,
             null,
             null,
             null,
@@ -7099,7 +7115,7 @@ const INV_DATA = {
             3.695,
             3.456,
             3.448,
-            3.493,
+            3.182,
             null,
             null,
             null,
@@ -7185,7 +7201,7 @@ const INV_DATA = {
             10.135,
             10.017,
             11.644,
-            10.94,
+            10.808,
             null,
             null,
             null,
@@ -7271,7 +7287,7 @@ const INV_DATA = {
             1595.0,
             1618.0,
             1327.0,
-            1546.0,
+            1604.0,
             null,
             null,
             null,
@@ -7357,7 +7373,7 @@ const INV_DATA = {
             126.0,
             121.0,
             108.0,
-            93.0,
+            173.0,
             null,
             null,
             null,
@@ -7443,7 +7459,7 @@ const INV_DATA = {
             4113.0,
             3468.0,
             3614.0,
-            3156.0,
+            3718.0,
             null,
             null,
             null,
@@ -7529,7 +7545,7 @@ const INV_DATA = {
             25.198,
             29.499,
             30.05,
-            34.276,
+            29.47,
             null,
             null,
             null,
@@ -7617,7 +7633,7 @@ const INV_DATA = {
             -14.187,
             -1.337,
             6.298,
-            -0.424,
+            0.971,
             null,
             null,
             null,
@@ -7703,7 +7719,7 @@ const INV_DATA = {
             -2.159,
             -3.693,
             0.796,
-            -0.369,
+            0.897,
             null,
             null,
             null,
@@ -7789,7 +7805,7 @@ const INV_DATA = {
             -3.658,
             -0.84,
             2.73,
-            1.091,
+            0.815,
             null,
             null,
             null,
@@ -7875,7 +7891,7 @@ const INV_DATA = {
             -6.99,
             3.554,
             1.153,
-            -0.488,
+            0.361,
             null,
             null,
             null,
@@ -7961,7 +7977,7 @@ const INV_DATA = {
             -0.583,
             -0.239,
             -0.008,
-            0.045,
+            -0.266,
             null,
             null,
             null,
@@ -8047,7 +8063,7 @@ const INV_DATA = {
             -0.797,
             -0.118,
             1.627,
-            -0.704,
+            -0.836,
             null,
             null,
             null,
@@ -8133,7 +8149,7 @@ const INV_DATA = {
             189.0,
             23.0,
             -291.0,
-            219.0,
+            277.0,
             null,
             null,
             null,
@@ -8219,7 +8235,7 @@ const INV_DATA = {
             9.0,
             -5.0,
             -13.0,
-            -15.0,
+            65.0,
             null,
             null,
             null,
@@ -8305,7 +8321,7 @@ const INV_DATA = {
             74.0,
             -645.0,
             146.0,
-            -458.0,
+            104.0,
             null,
             null,
             null,
@@ -8391,7 +8407,7 @@ const INV_DATA = {
             -3.974,
             4.301,
             0.551,
-            4.226,
+            -0.579,
             null,
             null,
             null,
@@ -8535,7 +8551,7 @@ const INV_DATA = {
             44.166,
             45.353,
             48.01,
-            48.418,
+            47.388,
             null,
             null,
             null,
@@ -8621,7 +8637,7 @@ const INV_DATA = {
             10.943,
             11.971,
             11.137,
-            12.437,
+            11.313,
             null,
             null,
             null,
@@ -8707,7 +8723,7 @@ const INV_DATA = {
             7.073,
             7.585,
             7.519,
-            7.324,
+            7.883,
             null,
             null,
             null,
@@ -8793,7 +8809,7 @@ const INV_DATA = {
             14.799,
             14.251,
             16.844,
-            15.813,
+            15.996,
             null,
             null,
             null,
@@ -8879,7 +8895,7 @@ const INV_DATA = {
             0.707,
             0.723,
             0.631,
-            0.765,
+            0.642,
             null,
             null,
             null,
@@ -8965,7 +8981,7 @@ const INV_DATA = {
             10.644,
             10.822,
             11.878,
-            12.079,
+            11.553,
             null,
             null,
             null,
@@ -9051,7 +9067,7 @@ const INV_DATA = {
             243.0,
             408.0,
             275.0,
-            412.0,
+            290.0,
             null,
             null,
             null,
@@ -9137,7 +9153,7 @@ const INV_DATA = {
             56.0,
             131.0,
             61.0,
-            112.0,
+            155.0,
             null,
             null,
             null,
@@ -9223,7 +9239,7 @@ const INV_DATA = {
             1780.0,
             1727.0,
             1680.0,
-            1760.0,
+            2146.0,
             null,
             null,
             null,
@@ -9309,7 +9325,7 @@ const INV_DATA = {
             24.812,
             26.261,
             28.577,
-            27.51,
+            22.082,
             null,
             null,
             null,
@@ -9397,7 +9413,7 @@ const INV_DATA = {
             0.176,
             1.187,
             2.657,
-            0.408,
+            -0.622,
             null,
             null,
             null,
@@ -9483,7 +9499,7 @@ const INV_DATA = {
             1.027,
             1.028,
             -0.834,
-            1.3,
+            0.176,
             null,
             null,
             null,
@@ -9569,7 +9585,7 @@ const INV_DATA = {
             -0.914,
             0.512,
             -0.066,
-            -0.195,
+            0.364,
             null,
             null,
             null,
@@ -9655,7 +9671,7 @@ const INV_DATA = {
             0.622,
             -0.548,
             2.593,
-            -1.031,
+            -0.848,
             null,
             null,
             null,
@@ -9741,7 +9757,7 @@ const INV_DATA = {
             -0.223,
             0.016,
             -0.092,
-            0.134,
+            0.011,
             null,
             null,
             null,
@@ -9827,7 +9843,7 @@ const INV_DATA = {
             -0.336,
             0.178,
             1.056,
-            0.201,
+            -0.325,
             null,
             null,
             null,
@@ -9913,7 +9929,7 @@ const INV_DATA = {
             -137.0,
             165.0,
             -133.0,
-            137.0,
+            15.0,
             null,
             null,
             null,
@@ -9999,7 +10015,7 @@ const INV_DATA = {
             -94.0,
             75.0,
             -70.0,
-            51.0,
+            94.0,
             null,
             null,
             null,
@@ -10085,7 +10101,7 @@ const INV_DATA = {
             -5.0,
             -53.0,
             -47.0,
-            80.0,
+            466.0,
             null,
             null,
             null,
@@ -10171,7 +10187,7 @@ const INV_DATA = {
             0.168,
             1.449,
             2.316,
-            -1.067,
+            -6.495,
             null,
             null,
             null,
@@ -10325,7 +10341,7 @@ const INV_DATA = {
             16.071,
             16.881,
             17.196,
-            17.123,
+            17.065,
             null,
             null,
             null,
@@ -10411,7 +10427,7 @@ const INV_DATA = {
             0.789,
             0.773,
             0.617,
-            0.78,
+            0.804,
             null,
             null,
             null,
@@ -10497,7 +10513,7 @@ const INV_DATA = {
             3.616,
             4.148,
             4.258,
-            4.224,
+            4.28,
             null,
             null,
             null,
@@ -10583,7 +10599,7 @@ const INV_DATA = {
             9.362,
             9.505,
             9.613,
-            9.437,
+            9.379,
             null,
             null,
             null,
@@ -10669,7 +10685,7 @@ const INV_DATA = {
             0.445,
             0.636,
             0.676,
-            0.663,
+            0.655,
             null,
             null,
             null,
@@ -10755,7 +10771,7 @@ const INV_DATA = {
             1.859,
             1.82,
             2.033,
-            2.019,
+            1.948,
             null,
             null,
             null,
@@ -10841,7 +10857,7 @@ const INV_DATA = {
             89.6,
             94.7,
             96.6,
-            96.2,
+            96.1,
             null,
             null,
             null,
@@ -10927,7 +10943,7 @@ const INV_DATA = {
             86.1,
             83.5,
             68.3,
-            85.0,
+            86.9,
             null,
             null,
             null,
@@ -11013,7 +11029,7 @@ const INV_DATA = {
             84.9,
             97.1,
             99.8,
-            99.1,
+            100.3,
             null,
             null,
             null,
@@ -11099,7 +11115,7 @@ const INV_DATA = {
             95.8,
             98.1,
             98.1,
-            96.8,
+            96.7,
             null,
             null,
             null,
@@ -11185,7 +11201,7 @@ const INV_DATA = {
             67.6,
             97.1,
             103.2,
-            101.4,
+            100.0,
             null,
             null,
             null,
@@ -11271,7 +11287,7 @@ const INV_DATA = {
             80.1,
             80.2,
             93.7,
-            91.0,
+            88.7,
             null,
             null,
             null,
@@ -11359,7 +11375,7 @@ const INV_DATA = {
             -0.308,
             0.81,
             0.315,
-            -0.073,
+            -0.131,
             null,
             null,
             null,
@@ -11445,7 +11461,7 @@ const INV_DATA = {
             -0.04,
             -0.016,
             -0.156,
-            0.163,
+            0.187,
             null,
             null,
             null,
@@ -11531,7 +11547,7 @@ const INV_DATA = {
             -0.056,
             0.532,
             0.11,
-            -0.034,
+            0.022,
             null,
             null,
             null,
@@ -11617,7 +11633,7 @@ const INV_DATA = {
             -0.1,
             0.143,
             0.108,
-            -0.176,
+            -0.234,
             null,
             null,
             null,
@@ -11703,7 +11719,7 @@ const INV_DATA = {
             -0.104,
             0.191,
             0.04,
-            -0.013,
+            -0.021,
             null,
             null,
             null,
@@ -11789,7 +11805,7 @@ const INV_DATA = {
             -0.007,
             -0.039,
             0.213,
-            -0.014,
+            -0.085,
             null,
             null,
             null,
@@ -11875,7 +11891,7 @@ const INV_DATA = {
             -2.5,
             5.1,
             1.9,
-            -0.4,
+            -0.5,
             null,
             null,
             null,
@@ -11961,7 +11977,7 @@ const INV_DATA = {
             -5.1,
             -2.6,
             -15.2,
-            16.7,
+            18.6,
             null,
             null,
             null,
@@ -12047,7 +12063,7 @@ const INV_DATA = {
             -1.8,
             12.2,
             2.7,
-            -0.7,
+            0.5,
             null,
             null,
             null,
@@ -12133,7 +12149,7 @@ const INV_DATA = {
             -1.6,
             2.3,
             0.0,
-            -1.3,
+            -1.4,
             null,
             null,
             null,
@@ -12219,7 +12235,7 @@ const INV_DATA = {
             -17.4,
             29.5,
             6.1,
-            -1.8,
+            -3.2,
             null,
             null,
             null,
@@ -12305,7 +12321,7 @@ const INV_DATA = {
             -2.0,
             0.1,
             13.5,
-            -2.7,
+            -5.0,
             null,
             null,
             null,
@@ -12317,16 +12333,16 @@ const INV_DATA = {
     }
   ],
   "weekly": {
-    "period": "2026-07-10",
+    "period": "2026-07-17",
     "items": [
       {
         "code": "WCESTUS1",
         "label": "Commercial crude",
         "unit": "mmbbl",
         "dec": 1,
-        "level": 409.665,
-        "wow": -1.692,
-        "z": -2.05,
+        "level": 411.675,
+        "wow": 2.01,
+        "z": -2.0,
         "lean": "bull"
       },
       {
@@ -12334,9 +12350,9 @@ const INV_DATA = {
         "label": "Cushing",
         "unit": "mmbbl",
         "dec": 1,
-        "level": 20.044,
-        "wow": 0.43,
-        "z": -1.39,
+        "level": 19.37,
+        "wow": -0.674,
+        "z": -1.65,
         "lean": "bull"
       },
       {
@@ -12344,9 +12360,9 @@ const INV_DATA = {
         "label": "SPR crude",
         "unit": "mmbbl",
         "dec": 1,
-        "level": 316.504,
-        "wow": -2.985,
-        "z": -1.26,
+        "level": 311.447,
+        "wow": -5.057,
+        "z": -1.3,
         "lean": null
       },
       {
@@ -12354,9 +12370,9 @@ const INV_DATA = {
         "label": "Gasoline",
         "unit": "mmbbl",
         "dec": 1,
-        "level": 210.529,
-        "wow": -1.533,
-        "z": -2.87,
+        "level": 211.294,
+        "wow": 0.765,
+        "z": -2.75,
         "lean": "bull"
       },
       {
@@ -12364,9 +12380,9 @@ const INV_DATA = {
         "label": "Distillate",
         "unit": "mmbbl",
         "dec": 1,
-        "level": 108.175,
-        "wow": 4.556,
-        "z": -1.02,
+        "level": 109.57,
+        "wow": 1.395,
+        "z": -1.01,
         "lean": "bull"
       },
       {
@@ -12374,9 +12390,9 @@ const INV_DATA = {
         "label": "Jet",
         "unit": "mmbbl",
         "dec": 1,
-        "level": 48.418,
-        "wow": 0.842,
-        "z": 2.12,
+        "level": 47.388,
+        "wow": -1.03,
+        "z": 1.52,
         "lean": "bear"
       },
       {
@@ -12384,9 +12400,9 @@ const INV_DATA = {
         "label": "Crude runs",
         "unit": "mmbbl/d",
         "dec": 2,
-        "level": 17.123,
-        "wow": 0.099,
-        "z": 1.49,
+        "level": 17.065,
+        "wow": -0.058,
+        "z": 1.7,
         "lean": null
       },
       {
@@ -12394,9 +12410,9 @@ const INV_DATA = {
         "label": "Refinery util.",
         "unit": "%",
         "dec": 1,
-        "level": 96.2,
-        "wow": 0.4,
-        "z": 1.89,
+        "level": 96.1,
+        "wow": -0.1,
+        "z": 2.01,
         "lean": null
       },
       {
@@ -12404,43 +12420,43 @@ const INV_DATA = {
         "label": "Total demand",
         "unit": "kbbl/d",
         "dec": 0,
-        "level": 19477.0,
-        "wow": -1040.0,
-        "z": -0.83,
-        "lean": "bear",
-        "ma4": 20316,
-        "yoyPct": 0.3
+        "level": 20519.0,
+        "wow": 1042.0,
+        "z": -0.14,
+        "lean": "neutral",
+        "ma4": 20378,
+        "yoyPct": -1.0
       }
     ]
   },
   "signal": {
     "lean": "mixed",
-    "score": 4.38,
+    "score": 5.89,
     "drivers": [
       {
         "label": "Gasoline",
         "lean": "bull",
-        "z": -2.87
-      },
-      {
-        "label": "Jet",
-        "lean": "bear",
-        "z": 2.12
+        "z": -2.75
       },
       {
         "label": "Commercial crude",
         "lean": "bull",
-        "z": -2.05
+        "z": -2.0
       },
       {
         "label": "Cushing",
         "lean": "bull",
-        "z": -1.39
+        "z": -1.65
+      },
+      {
+        "label": "Jet",
+        "lean": "bear",
+        "z": 1.52
       }
     ]
   },
   "demand": {
-    "asOf": "2026-07-10",
+    "asOf": "2026-07-17",
     "products": [
       {
         "key": "gasoline",
@@ -12448,10 +12464,10 @@ const INV_DATA = {
         "label": "Gasoline demand",
         "unit": "kbbl/d",
         "dec": 0,
-        "asOf": "2026-07-10",
-        "latest": 8899,
-        "yearAgo": 8994,
-        "yoyPct": -1.1,
+        "asOf": "2026-07-17",
+        "latest": 8942,
+        "yearAgo": 8814,
+        "yoyPct": 1.5,
         "curYear": 2026,
         "weeks": [
           1,
@@ -12536,7 +12552,7 @@ const INV_DATA = {
           8962.2,
           8990.8,
           8898.8,
-          null,
+          8941.8,
           null,
           null,
           null,
@@ -12730,10 +12746,10 @@ const INV_DATA = {
         "label": "Distillate demand",
         "unit": "kbbl/d",
         "dec": 0,
-        "asOf": "2026-07-10",
-        "latest": 3652,
-        "yearAgo": 3732,
-        "yoyPct": -2.1,
+        "asOf": "2026-07-17",
+        "latest": 3699,
+        "yearAgo": 3619,
+        "yoyPct": 2.2,
         "curYear": 2026,
         "weeks": [
           1,
@@ -12818,7 +12834,7 @@ const INV_DATA = {
           3667.5,
           3778.2,
           3652.5,
-          null,
+          3698.8,
           null,
           null,
           null,
@@ -13012,10 +13028,10 @@ const INV_DATA = {
         "label": "Jet demand",
         "unit": "kbbl/d",
         "dec": 0,
-        "asOf": "2026-07-10",
-        "latest": 1789,
-        "yearAgo": 1748,
-        "yoyPct": 2.3,
+        "asOf": "2026-07-17",
+        "latest": 1901,
+        "yearAgo": 1742,
+        "yoyPct": 9.1,
         "curYear": 2026,
         "weeks": [
           1,
@@ -13100,7 +13116,7 @@ const INV_DATA = {
           1781.5,
           1869.2,
           1789.0,
-          null,
+          1901.0,
           null,
           null,
           null,
@@ -13294,10 +13310,10 @@ const INV_DATA = {
         "label": "Total products supplied",
         "unit": "kbbl/d",
         "dec": 0,
-        "asOf": "2026-07-10",
-        "latest": 20316,
-        "yearAgo": 20262,
-        "yoyPct": 0.3,
+        "asOf": "2026-07-17",
+        "latest": 20378,
+        "yearAgo": 20576,
+        "yoyPct": -1.0,
         "curYear": 2026,
         "weeks": [
           1,
@@ -13382,7 +13398,7 @@ const INV_DATA = {
           20638.5,
           20617.8,
           20315.8,
-          null,
+          20377.5,
           null,
           null,
           null,
@@ -13573,616 +13589,616 @@ const INV_DATA = {
     ]
   },
   "positioning": {
-    "asOf": "2026-07-10",
+    "asOf": "2026-07-17",
     "series": {
       "WCESTUS1": {
         "label": "U.S. commercial crude (excl SPR)",
         "product": "crude",
         "unit": "mmbbl",
         "dec": 1,
-        "period": "2026-07-10",
-        "latest": 409.665,
-        "z": -2.05,
-        "surplus": -26.999,
+        "period": "2026-07-17",
+        "latest": 411.675,
+        "z": -2.0,
+        "surplus": -23.083,
         "pct": 0,
         "n": 15,
-        "mean": 436.664
+        "mean": 434.758
       },
       "WCSSTUS1": {
         "label": "U.S. SPR crude",
         "product": "crude",
         "unit": "mmbbl",
         "dec": 1,
-        "period": "2026-07-10",
-        "latest": 316.504,
-        "z": -1.26,
-        "surplus": -128.392,
+        "period": "2026-07-17",
+        "latest": 311.447,
+        "z": -1.3,
+        "surplus": -132.547,
         "pct": 0,
         "n": 15,
-        "mean": 444.896
+        "mean": 443.994
       },
       "W_EPC0_SAX_YCUOK_MBBL": {
         "label": "Cushing, OK",
         "product": "crude",
         "unit": "mmbbl",
         "dec": 1,
-        "period": "2026-07-10",
-        "latest": 20.044,
-        "z": -1.39,
-        "surplus": -10.299,
+        "period": "2026-07-17",
+        "latest": 19.37,
+        "z": -1.65,
+        "surplus": -10.344,
         "pct": 0,
         "n": 15,
-        "mean": 30.343
+        "mean": 29.714
       },
       "WCESTP11": {
         "label": "PADD 1 \u2014 East Coast",
         "product": "crude",
         "unit": "mmbbl",
         "dec": 1,
-        "period": "2026-07-10",
-        "latest": 8.025,
-        "z": -0.37,
-        "surplus": -0.271,
+        "period": "2026-07-17",
+        "latest": 7.792,
+        "z": -0.67,
+        "surplus": -0.449,
         "pct": 33,
         "n": 15,
-        "mean": 8.296
+        "mean": 8.241
       },
       "WCESTP21": {
         "label": "PADD 2 \u2014 Midwest",
         "product": "crude",
         "unit": "mmbbl",
         "dec": 1,
-        "period": "2026-07-10",
-        "latest": 97.885,
-        "z": -1.74,
-        "surplus": -14.508,
+        "period": "2026-07-17",
+        "latest": 97.068,
+        "z": -2.05,
+        "surplus": -14.809,
         "pct": 0,
         "n": 15,
-        "mean": 112.393
+        "mean": 111.877
       },
       "WCESTP31": {
         "label": "PADD 3 \u2014 Gulf Coast",
         "product": "crude",
         "unit": "mmbbl",
         "dec": 1,
-        "period": "2026-07-10",
-        "latest": 235.123,
-        "z": -1.31,
-        "surplus": -9.549,
-        "pct": 0,
+        "period": "2026-07-17",
+        "latest": 239.799,
+        "z": -0.59,
+        "surplus": -3.859,
+        "pct": 40,
         "n": 15,
-        "mean": 244.672
+        "mean": 243.658
       },
       "WCESTP41": {
         "label": "PADD 4 \u2014 Rocky Mountain",
         "product": "crude",
         "unit": "mmbbl",
         "dec": 1,
-        "period": "2026-07-10",
-        "latest": 22.485,
-        "z": -1.63,
-        "surplus": -1.271,
-        "pct": 7,
+        "period": "2026-07-17",
+        "latest": 22.244,
+        "z": -1.94,
+        "surplus": -1.327,
+        "pct": 0,
         "n": 15,
-        "mean": 23.756
+        "mean": 23.571
       },
       "WCESTP51": {
         "label": "PADD 5 \u2014 West Coast",
         "product": "crude",
         "unit": "mmbbl",
         "dec": 1,
-        "period": "2026-07-10",
-        "latest": 46.147,
-        "z": -1.1,
-        "surplus": -1.4,
-        "pct": 13,
+        "period": "2026-07-17",
+        "latest": 44.772,
+        "z": -1.88,
+        "surplus": -2.639,
+        "pct": 0,
         "n": 15,
-        "mean": 47.547
+        "mean": 47.411
       },
       "WCRFPUS2": {
         "label": "Crude production \u2014 U.S.",
         "product": "crude",
         "unit": "mmbbl/d",
         "dec": 2,
-        "period": "2026-07-10",
-        "latest": 13.861,
-        "z": 1.75,
-        "surplus": 1.412,
+        "period": "2026-07-17",
+        "latest": 13.798,
+        "z": 1.67,
+        "surplus": 1.367,
         "pct": 100,
         "n": 15,
-        "mean": 12.449
+        "mean": 12.431
       },
       "WCRAIUS2": {
         "label": "Adjustment (unaccounted-for crude) \u2014 U.S.",
         "product": "crude",
         "unit": "kbbl/d",
         "dec": 0,
-        "period": "2026-07-10",
-        "latest": 400.0,
-        "z": -0.2,
-        "surplus": -166.8,
+        "period": "2026-07-17",
+        "latest": 150.0,
+        "z": -0.33,
+        "surplus": -252.267,
         "pct": 40,
         "n": 15,
-        "mean": 566.8
+        "mean": 402.267
       },
       "WCRTPUS2": {
         "label": "Transfers to crude oil supply \u2014 U.S.",
         "product": "crude",
         "unit": "kbbl/d",
         "dec": 0,
-        "period": "2026-07-10",
-        "latest": 225.0,
-        "z": -3.28,
-        "surplus": -297.5,
+        "period": "2026-07-17",
+        "latest": 228.0,
+        "z": -5.83,
+        "surplus": -293.5,
         "pct": 0,
         "n": 6,
-        "mean": 522.5
+        "mean": 521.5
       },
       "WGTSTUS1": {
         "label": "Gasoline stocks \u2014 U.S. total",
         "product": "gasoline",
         "unit": "mmbbl",
         "dec": 1,
-        "period": "2026-07-10",
-        "latest": 210.529,
-        "z": -2.87,
-        "surplus": -17.777,
+        "period": "2026-07-17",
+        "latest": 211.294,
+        "z": -2.75,
+        "surplus": -16.036,
         "pct": 0,
         "n": 15,
-        "mean": 228.306
+        "mean": 227.33
       },
       "WGTSTP11": {
         "label": "Gasoline stocks \u2014 PADD 1 (East Coast)",
         "product": "gasoline",
         "unit": "mmbbl",
         "dec": 1,
-        "period": "2026-07-10",
-        "latest": 54.08,
-        "z": -0.94,
-        "surplus": -4.878,
-        "pct": 7,
+        "period": "2026-07-17",
+        "latest": 53.095,
+        "z": -1.06,
+        "surplus": -4.816,
+        "pct": 13,
         "n": 15,
-        "mean": 58.958
+        "mean": 57.911
       },
       "WGTSTP21": {
         "label": "Gasoline stocks \u2014 PADD 2 (Midwest)",
         "product": "gasoline",
         "unit": "mmbbl",
         "dec": 1,
-        "period": "2026-07-10",
-        "latest": 44.726,
-        "z": -1.52,
-        "surplus": -3.226,
+        "period": "2026-07-17",
+        "latest": 43.538,
+        "z": -2.21,
+        "surplus": -4.261,
         "pct": 0,
         "n": 15,
-        "mean": 47.952
+        "mean": 47.799
       },
       "WGTSTP31": {
         "label": "Gasoline stocks \u2014 PADD 3 (Gulf Coast)",
         "product": "gasoline",
         "unit": "mmbbl",
         "dec": 1,
-        "period": "2026-07-10",
-        "latest": 75.448,
-        "z": -3.23,
-        "surplus": -8.865,
+        "period": "2026-07-17",
+        "latest": 78.176,
+        "z": -2.13,
+        "surplus": -6.338,
         "pct": 0,
         "n": 15,
-        "mean": 84.313
+        "mean": 84.514
       },
       "WGTSTP41": {
         "label": "Gasoline stocks \u2014 PADD 4 (Rockies)",
         "product": "gasoline",
         "unit": "mmbbl",
         "dec": 1,
-        "period": "2026-07-10",
-        "latest": 6.857,
-        "z": 0.43,
-        "surplus": 0.233,
+        "period": "2026-07-17",
+        "latest": 6.807,
+        "z": 0.53,
+        "surplus": 0.236,
         "pct": 67,
         "n": 15,
-        "mean": 6.624
+        "mean": 6.571
       },
       "WGTSTP51": {
         "label": "Gasoline stocks \u2014 PADD 5 (West Coast)",
         "product": "gasoline",
         "unit": "mmbbl",
         "dec": 1,
-        "period": "2026-07-10",
-        "latest": 29.419,
-        "z": -0.8,
-        "surplus": -1.04,
+        "period": "2026-07-17",
+        "latest": 29.677,
+        "z": -0.66,
+        "surplus": -0.857,
         "pct": 27,
         "n": 15,
-        "mean": 30.459
+        "mean": 30.534
       },
       "W_EPOBGRR_SAE_NUS_MBBL": {
         "label": "RBOB stocks \u2014 U.S. total",
         "product": "gasoline",
         "unit": "mmbbl",
         "dec": 1,
-        "period": "2026-07-10",
-        "latest": 39.616,
-        "z": -4.6,
-        "surplus": -11.397,
+        "period": "2026-07-17",
+        "latest": 40.152,
+        "z": -3.86,
+        "surplus": -10.364,
         "pct": 0,
         "n": 15,
-        "mean": 51.013
+        "mean": 50.516
       },
       "W_EPOBGRR_SAE_R10_MBBL": {
         "label": "RBOB stocks \u2014 PADD 1 (East Coast)",
         "product": "gasoline",
         "unit": "mmbbl",
         "dec": 1,
-        "period": "2026-07-10",
-        "latest": 13.871,
-        "z": -2.25,
-        "surplus": -4.991,
-        "pct": 7,
+        "period": "2026-07-17",
+        "latest": 13.131,
+        "z": -2.58,
+        "surplus": -5.346,
+        "pct": 0,
         "n": 15,
-        "mean": 18.862
+        "mean": 18.477
       },
       "W_EPOBGRR_SAE_R30_MBBL": {
         "label": "RBOB stocks \u2014 PADD 3 (Gulf Coast)",
         "product": "gasoline",
         "unit": "mmbbl",
         "dec": 1,
-        "period": "2026-07-10",
-        "latest": 8.221,
-        "z": -5.31,
-        "surplus": -3.676,
+        "period": "2026-07-17",
+        "latest": 8.853,
+        "z": -3.43,
+        "surplus": -3.017,
         "pct": 0,
         "n": 15,
-        "mean": 11.897
+        "mean": 11.87
       },
       "W_EPOBGRR_SAE_R50_MBBL": {
         "label": "RBOB stocks \u2014 PADD 5 (West Coast)",
         "product": "gasoline",
         "unit": "mmbbl",
         "dec": 1,
-        "period": "2026-07-10",
-        "latest": 12.959,
-        "z": -2.5,
-        "surplus": -1.304,
-        "pct": 0,
+        "period": "2026-07-17",
+        "latest": 13.354,
+        "z": -1.63,
+        "surplus": -0.934,
+        "pct": 7,
         "n": 15,
-        "mean": 14.263
+        "mean": 14.288
       },
       "W_EPM0F_EEX_NUS-Z00_MBBLD": {
         "label": "Gasoline exports \u2014 U.S.",
         "product": "gasoline",
         "unit": "kbbl/d",
         "dec": 0,
-        "period": "2026-07-10",
-        "latest": 967.0,
-        "z": 0.66,
-        "surplus": 83.4,
-        "pct": 73,
+        "period": "2026-07-17",
+        "latest": 807.0,
+        "z": -0.37,
+        "surplus": -44.2,
+        "pct": 33,
         "n": 15,
-        "mean": 883.6
+        "mean": 851.2
       },
       "WGTIMUS2": {
         "label": "Gasoline imports \u2014 U.S.",
         "product": "gasoline",
         "unit": "kbbl/d",
         "dec": 0,
-        "period": "2026-07-10",
-        "latest": 354.0,
-        "z": -2.31,
-        "surplus": -452.133,
+        "period": "2026-07-17",
+        "latest": 494.0,
+        "z": -1.52,
+        "surplus": -303.4,
         "pct": 0,
         "n": 15,
-        "mean": 806.133
+        "mean": 797.4
       },
       "WGFUPUS2": {
         "label": "Gasoline product supplied (demand) \u2014 U.S.",
         "product": "gasoline",
         "unit": "kbbl/d",
         "dec": 0,
-        "period": "2026-07-10",
-        "latest": 8844.0,
-        "z": -0.31,
-        "surplus": -124.867,
-        "pct": 33,
+        "period": "2026-07-17",
+        "latest": 8947.0,
+        "z": -0.22,
+        "surplus": -81.733,
+        "pct": 47,
         "n": 15,
-        "mean": 8968.867
+        "mean": 9028.733
       },
       "WDISTUS1": {
         "label": "Distillate stocks \u2014 U.S. total",
         "product": "distillate",
         "unit": "mmbbl",
         "dec": 1,
-        "period": "2026-07-10",
-        "latest": 108.175,
-        "z": -1.02,
-        "surplus": -12.577,
+        "period": "2026-07-17",
+        "latest": 109.57,
+        "z": -1.01,
+        "surplus": -11.439,
         "pct": 13,
         "n": 15,
-        "mean": 120.752
+        "mean": 121.009
       },
       "WDISTP11": {
         "label": "Distillate stocks \u2014 PADD 1 (East Coast)",
         "product": "distillate",
         "unit": "mmbbl",
         "dec": 1,
-        "period": "2026-07-10",
-        "latest": 22.627,
-        "z": -1.39,
-        "surplus": -8.173,
-        "pct": 0,
+        "period": "2026-07-17",
+        "latest": 23.893,
+        "z": -1.24,
+        "surplus": -7.255,
+        "pct": 7,
         "n": 15,
-        "mean": 30.8
+        "mean": 31.148
       },
       "WDISTP21": {
         "label": "Distillate stocks \u2014 PADD 2 (Midwest)",
         "product": "distillate",
         "unit": "mmbbl",
         "dec": 1,
-        "period": "2026-07-10",
-        "latest": 28.862,
-        "z": -0.22,
-        "surplus": -0.706,
+        "period": "2026-07-17",
+        "latest": 28.586,
+        "z": -0.32,
+        "surplus": -0.984,
         "pct": 40,
         "n": 15,
-        "mean": 29.568
+        "mean": 29.57
       },
       "WDISTP31": {
         "label": "Distillate stocks \u2014 PADD 3 (Gulf Coast)",
         "product": "distillate",
         "unit": "mmbbl",
         "dec": 1,
-        "period": "2026-07-10",
-        "latest": 42.252,
-        "z": -0.73,
-        "surplus": -2.435,
+        "period": "2026-07-17",
+        "latest": 43.101,
+        "z": -0.5,
+        "surplus": -1.62,
         "pct": 27,
         "n": 15,
-        "mean": 44.687
+        "mean": 44.721
       },
       "WDISTP41": {
         "label": "Distillate stocks \u2014 PADD 4 (Rockies)",
         "product": "distillate",
         "unit": "mmbbl",
         "dec": 1,
-        "period": "2026-07-10",
-        "latest": 3.493,
-        "z": -1.25,
-        "surplus": -0.304,
-        "pct": 20,
+        "period": "2026-07-17",
+        "latest": 3.182,
+        "z": -3.07,
+        "surplus": -0.568,
+        "pct": 0,
         "n": 15,
-        "mean": 3.797
+        "mean": 3.75
       },
       "WDISTP51": {
         "label": "Distillate stocks \u2014 PADD 5 (West Coast)",
         "product": "distillate",
         "unit": "mmbbl",
         "dec": 1,
-        "period": "2026-07-10",
-        "latest": 10.94,
-        "z": -0.92,
-        "surplus": -0.96,
-        "pct": 27,
+        "period": "2026-07-17",
+        "latest": 10.808,
+        "z": -1.18,
+        "surplus": -1.012,
+        "pct": 13,
         "n": 15,
-        "mean": 11.9
+        "mean": 11.82
       },
       "WDIEXUS2": {
         "label": "Distillate exports \u2014 U.S.",
         "product": "distillate",
         "unit": "kbbl/d",
         "dec": 0,
-        "period": "2026-07-10",
-        "latest": 1546.0,
-        "z": 0.92,
-        "surplus": 179.733,
-        "pct": 80,
+        "period": "2026-07-17",
+        "latest": 1604.0,
+        "z": 1.39,
+        "surplus": 260.267,
+        "pct": 87,
         "n": 15,
-        "mean": 1366.267
+        "mean": 1343.733
       },
       "WDIIMUS2": {
         "label": "Distillate imports \u2014 U.S.",
         "product": "distillate",
         "unit": "kbbl/d",
         "dec": 0,
-        "period": "2026-07-10",
-        "latest": 93.0,
-        "z": -0.5,
-        "surplus": -19.733,
-        "pct": 33,
+        "period": "2026-07-17",
+        "latest": 173.0,
+        "z": 0.68,
+        "surplus": 32.8,
+        "pct": 80,
         "n": 15,
-        "mean": 112.733
+        "mean": 140.2
       },
       "WDIUPUS2": {
         "label": "Distillate product supplied (demand) \u2014 U.S.",
         "product": "distillate",
         "unit": "kbbl/d",
         "dec": 0,
-        "period": "2026-07-10",
-        "latest": 3156.0,
-        "z": -1.32,
-        "surplus": -441.467,
-        "pct": 7,
+        "period": "2026-07-17",
+        "latest": 3718.0,
+        "z": -0.06,
+        "surplus": -13.867,
+        "pct": 53,
         "n": 15,
-        "mean": 3597.467
+        "mean": 3731.867
       },
       "WKJSTUS1": {
         "label": "Jet stocks \u2014 U.S. total",
         "product": "jet",
         "unit": "mmbbl",
         "dec": 1,
-        "period": "2026-07-10",
-        "latest": 48.418,
-        "z": 2.12,
-        "surplus": 4.829,
+        "period": "2026-07-17",
+        "latest": 47.388,
+        "z": 1.52,
+        "surplus": 3.776,
         "pct": 100,
         "n": 15,
-        "mean": 43.589
+        "mean": 43.612
       },
       "WKJSTP11": {
         "label": "Jet stocks \u2014 PADD 1 (East Coast)",
         "product": "jet",
         "unit": "mmbbl",
         "dec": 1,
-        "period": "2026-07-10",
-        "latest": 12.437,
-        "z": 1.13,
-        "surplus": 1.046,
-        "pct": 80,
+        "period": "2026-07-17",
+        "latest": 11.313,
+        "z": 0.09,
+        "surplus": 0.09,
+        "pct": 47,
         "n": 15,
-        "mean": 11.391
+        "mean": 11.223
       },
       "WKJSTP21": {
         "label": "Jet stocks \u2014 PADD 2 (Midwest)",
         "product": "jet",
         "unit": "mmbbl",
         "dec": 1,
-        "period": "2026-07-10",
-        "latest": 7.324,
-        "z": 0.31,
-        "surplus": 0.134,
-        "pct": 67,
+        "period": "2026-07-17",
+        "latest": 7.883,
+        "z": 1.94,
+        "surplus": 0.596,
+        "pct": 100,
         "n": 15,
-        "mean": 7.19
+        "mean": 7.287
       },
       "WKJSTP31": {
         "label": "Jet stocks \u2014 PADD 3 (Gulf Coast)",
         "product": "jet",
         "unit": "mmbbl",
         "dec": 1,
-        "period": "2026-07-10",
-        "latest": 15.813,
-        "z": 1.17,
-        "surplus": 1.745,
+        "period": "2026-07-17",
+        "latest": 15.996,
+        "z": 1.06,
+        "surplus": 1.801,
         "pct": 80,
         "n": 15,
-        "mean": 14.068
+        "mean": 14.195
       },
       "WKJSTP41": {
         "label": "Jet stocks \u2014 PADD 4 (Rockies)",
         "product": "jet",
         "unit": "mmbbl",
         "dec": 1,
-        "period": "2026-07-10",
-        "latest": 0.765,
-        "z": 0.73,
-        "surplus": 0.057,
-        "pct": 73,
+        "period": "2026-07-17",
+        "latest": 0.642,
+        "z": -0.77,
+        "surplus": -0.055,
+        "pct": 20,
         "n": 15,
-        "mean": 0.708
+        "mean": 0.697
       },
       "WKJSTP51": {
         "label": "Jet stocks \u2014 PADD 5 (West Coast)",
         "product": "jet",
         "unit": "mmbbl",
         "dec": 1,
-        "period": "2026-07-10",
-        "latest": 12.079,
-        "z": 1.5,
-        "surplus": 1.847,
-        "pct": 93,
+        "period": "2026-07-17",
+        "latest": 11.553,
+        "z": 0.92,
+        "surplus": 1.343,
+        "pct": 80,
         "n": 15,
-        "mean": 10.232
+        "mean": 10.21
       },
       "WKJEXUS2": {
         "label": "Jet exports \u2014 U.S.",
         "product": "jet",
         "unit": "kbbl/d",
         "dec": 0,
-        "period": "2026-07-10",
-        "latest": 412.0,
-        "z": 3.3,
-        "surplus": 223.0,
+        "period": "2026-07-17",
+        "latest": 290.0,
+        "z": 1.71,
+        "surplus": 117.667,
         "pct": 100,
         "n": 15,
-        "mean": 189.0
+        "mean": 172.333
       },
       "WKJIMUS2": {
         "label": "Jet imports \u2014 U.S.",
         "product": "jet",
         "unit": "kbbl/d",
         "dec": 0,
-        "period": "2026-07-10",
-        "latest": 112.0,
-        "z": 0.01,
-        "surplus": 0.8,
-        "pct": 47,
+        "period": "2026-07-17",
+        "latest": 155.0,
+        "z": 0.9,
+        "surplus": 52.867,
+        "pct": 93,
         "n": 15,
-        "mean": 111.2
+        "mean": 102.133
       },
       "WKJUPUS2": {
         "label": "Jet product supplied (demand) \u2014 U.S.",
         "product": "jet",
         "unit": "kbbl/d",
         "dec": 0,
-        "period": "2026-07-10",
-        "latest": 1760.0,
-        "z": 0.74,
-        "surplus": 121.4,
-        "pct": 73,
+        "period": "2026-07-17",
+        "latest": 2146.0,
+        "z": 2.8,
+        "surplus": 481.4,
+        "pct": 100,
         "n": 15,
-        "mean": 1638.6
+        "mean": 1664.6
       },
       "WCRRIUS2": {
         "label": "Crude runs \u2014 U.S. total",
         "product": "refining",
         "unit": "mmbbl/d",
         "dec": 2,
-        "period": "2026-07-10",
-        "latest": 17.123,
-        "z": 1.49,
-        "surplus": 0.595,
+        "period": "2026-07-17",
+        "latest": 17.065,
+        "z": 1.7,
+        "surplus": 0.681,
         "pct": 100,
         "n": 15,
-        "mean": 16.528
+        "mean": 16.384
       },
       "WCRRIP12": {
         "label": "Crude runs \u2014 PADD 1 (East Coast)",
         "product": "refining",
         "unit": "mmbbl/d",
         "dec": 2,
-        "period": "2026-07-10",
-        "latest": 0.78,
-        "z": 0.48,
-        "surplus": 0.042,
-        "pct": 47,
+        "period": "2026-07-17",
+        "latest": 0.804,
+        "z": 0.83,
+        "surplus": 0.062,
+        "pct": 73,
         "n": 15,
-        "mean": 0.738
+        "mean": 0.742
       },
       "WCRRIP22": {
         "label": "Crude runs \u2014 PADD 2 (Midwest)",
         "product": "refining",
         "unit": "mmbbl/d",
         "dec": 2,
-        "period": "2026-07-10",
-        "latest": 4.224,
-        "z": 1.33,
-        "surplus": 0.212,
+        "period": "2026-07-17",
+        "latest": 4.28,
+        "z": 1.8,
+        "surplus": 0.355,
         "pct": 100,
         "n": 15,
-        "mean": 4.012
+        "mean": 3.925
       },
       "WCRRIP32": {
         "label": "Crude runs \u2014 PADD 3 (Gulf Coast)",
         "product": "refining",
         "unit": "mmbbl/d",
         "dec": 2,
-        "period": "2026-07-10",
-        "latest": 9.437,
-        "z": 1.8,
-        "surplus": 0.45,
+        "period": "2026-07-17",
+        "latest": 9.379,
+        "z": 1.99,
+        "surplus": 0.424,
         "pct": 100,
         "n": 15,
-        "mean": 8.987
+        "mean": 8.955
       },
       "WCRRIP42": {
         "label": "Crude runs \u2014 PADD 4 (Rockies)",
         "product": "refining",
         "unit": "mmbbl/d",
         "dec": 2,
-        "period": "2026-07-10",
-        "latest": 0.663,
-        "z": 1.7,
-        "surplus": 0.05,
-        "pct": 100,
+        "period": "2026-07-17",
+        "latest": 0.655,
+        "z": 1.43,
+        "surplus": 0.042,
+        "pct": 93,
         "n": 15,
         "mean": 0.613
       },
@@ -14191,306 +14207,306 @@ const INV_DATA = {
         "product": "refining",
         "unit": "mmbbl/d",
         "dec": 2,
-        "period": "2026-07-10",
-        "latest": 2.019,
-        "z": -1.85,
-        "surplus": -0.159,
+        "period": "2026-07-17",
+        "latest": 1.948,
+        "z": -2.54,
+        "surplus": -0.201,
         "pct": 0,
         "n": 15,
-        "mean": 2.178
+        "mean": 2.149
       },
       "WPULEUS3": {
         "label": "Refinery utilization \u2014 U.S. total",
         "product": "refining",
         "unit": "%",
         "dec": 1,
-        "period": "2026-07-10",
-        "latest": 96.2,
-        "z": 1.89,
-        "surplus": 2.78,
+        "period": "2026-07-17",
+        "latest": 96.1,
+        "z": 2.01,
+        "surplus": 3.347,
         "pct": 100,
         "n": 15,
-        "mean": 93.42
+        "mean": 92.753
       },
       "W_NA_YUP_R10_PER": {
         "label": "Refinery utilization \u2014 PADD 1 (East Coast)",
         "product": "refining",
         "unit": "%",
         "dec": 1,
-        "period": "2026-07-10",
-        "latest": 85.0,
-        "z": -0.34,
-        "surplus": -2.647,
+        "period": "2026-07-17",
+        "latest": 86.9,
+        "z": -0.24,
+        "surplus": -1.573,
         "pct": 40,
         "n": 15,
-        "mean": 87.647
+        "mean": 88.473
       },
       "W_NA_YUP_R20_PER": {
         "label": "Refinery utilization \u2014 PADD 2 (Midwest)",
         "product": "refining",
         "unit": "%",
         "dec": 1,
-        "period": "2026-07-10",
-        "latest": 99.1,
-        "z": 1.07,
-        "surplus": 4.073,
+        "period": "2026-07-17",
+        "latest": 100.3,
+        "z": 1.61,
+        "surplus": 7.273,
         "pct": 100,
         "n": 15,
-        "mean": 95.027
+        "mean": 93.027
       },
       "W_NA_YUP_R30_PER": {
         "label": "Refinery utilization \u2014 PADD 3 (Gulf Coast)",
         "product": "refining",
         "unit": "%",
         "dec": 1,
-        "period": "2026-07-10",
-        "latest": 96.8,
-        "z": 0.99,
-        "surplus": 2.233,
-        "pct": 73,
+        "period": "2026-07-17",
+        "latest": 96.7,
+        "z": 1.18,
+        "surplus": 2.38,
+        "pct": 87,
         "n": 15,
-        "mean": 94.567
+        "mean": 94.32
       },
       "W_NA_YUP_R40_PER": {
         "label": "Refinery utilization \u2014 PADD 4 (Rockies)",
         "product": "refining",
         "unit": "%",
         "dec": 1,
-        "period": "2026-07-10",
-        "latest": 101.4,
-        "z": 1.07,
-        "surplus": 6.767,
-        "pct": 93,
+        "period": "2026-07-17",
+        "latest": 100.0,
+        "z": 0.62,
+        "surplus": 4.66,
+        "pct": 87,
         "n": 15,
-        "mean": 94.633
+        "mean": 95.34
       },
       "W_NA_YUP_R50_PER": {
         "label": "Refinery utilization \u2014 PADD 5 (West Coast)",
         "product": "refining",
         "unit": "%",
         "dec": 1,
-        "period": "2026-07-10",
-        "latest": 91.0,
-        "z": 0.66,
-        "surplus": 2.76,
-        "pct": 80,
+        "period": "2026-07-17",
+        "latest": 88.7,
+        "z": 0.34,
+        "surplus": 1.333,
+        "pct": 53,
         "n": 15,
-        "mean": 88.24
+        "mean": 87.367
       },
       "WRPUPUS2": {
         "label": "Total products supplied (demand)",
         "product": "other",
         "unit": "kbbl/d",
         "dec": 0,
-        "period": "2026-07-10",
-        "latest": 19477.0,
-        "z": -0.83,
-        "surplus": -823.067,
+        "period": "2026-07-17",
+        "latest": 20519.0,
+        "z": -0.14,
+        "surplus": -108.667,
         "pct": 33,
         "n": 15,
-        "mean": 20300.067
+        "mean": 20627.667
       },
       "WCEIMUS2": {
         "label": "Crude imports \u2014 U.S.",
         "product": "other",
         "unit": "kbbl/d",
         "dec": 0,
-        "period": "2026-07-10",
-        "latest": 5689.0,
-        "z": -1.96,
-        "surplus": -820.333,
+        "period": "2026-07-17",
+        "latest": 5806.0,
+        "z": -2.0,
+        "surplus": -835.467,
         "pct": 0,
         "n": 15,
-        "mean": 6509.333
+        "mean": 6641.467
       },
       "WCREXUS2": {
         "label": "Crude exports \u2014 U.S.",
         "product": "other",
         "unit": "kbbl/d",
         "dec": 0,
-        "period": "2026-07-10",
-        "latest": 3721.0,
-        "z": 0.23,
-        "surplus": 178.6,
-        "pct": 40,
+        "period": "2026-07-17",
+        "latest": 3353.0,
+        "z": -0.36,
+        "surplus": -347.2,
+        "pct": 27,
         "n": 15,
-        "mean": 3542.4
+        "mean": 3700.2
       }
     }
   },
   "weeklyReport": {
-    "asOf": "2026-07-10",
-    "generated": "2026-07-17 13:20",
+    "asOf": "2026-07-17",
+    "generated": "2026-07-22 09:33",
     "signal": {
       "lean": "mixed",
-      "score": 4.38,
+      "score": 5.89,
       "drivers": [
         {
           "label": "Gasoline",
           "lean": "bull",
-          "z": -2.87
-        },
-        {
-          "label": "Jet",
-          "lean": "bear",
-          "z": 2.12
+          "z": -2.75
         },
         {
           "label": "Commercial crude",
           "lean": "bull",
-          "z": -2.05
+          "z": -2.0
         },
         {
           "label": "Cushing",
           "lean": "bull",
-          "z": -1.39
+          "z": -1.65
+        },
+        {
+          "label": "Jet",
+          "lean": "bear",
+          "z": 1.52
         }
       ]
     },
     "narrative": [
       {
         "label": "Commercial crude",
-        "dir": "dn",
-        "text": "Commercial crude drew 1.7 mmbbl to 409.7 mmbbl \u2014 27 mmbbl below the seasonal norm (0th pctile \u00b7 tight)",
+        "dir": "up",
+        "text": "Commercial crude built 2.0 mmbbl to 411.7 mmbbl \u2014 23 mmbbl below the seasonal norm (0th pctile \u00b7 tight)",
         "lean": "bull"
       },
       {
         "label": "Cushing",
-        "dir": "up",
-        "text": "Cushing built 0.4 mmbbl to 20.0 mmbbl \u2014 10 mmbbl below the seasonal norm (0th pctile \u00b7 tight)",
+        "dir": "dn",
+        "text": "Cushing drew 0.7 mmbbl to 19.4 mmbbl \u2014 10 mmbbl below the seasonal norm (0th pctile \u00b7 tight)",
         "lean": "bull"
       },
       {
         "label": "Gasoline",
-        "dir": "dn",
-        "text": "Gasoline drew 1.5 mmbbl to 210.5 mmbbl \u2014 18 mmbbl below the seasonal norm (0th pctile \u00b7 tight)",
+        "dir": "up",
+        "text": "Gasoline built 0.8 mmbbl to 211.3 mmbbl \u2014 16 mmbbl below the seasonal norm (0th pctile \u00b7 tight)",
         "lean": "bull"
       },
       {
         "label": "RBOB \u2014 PADD 1",
         "dir": "dn",
-        "text": "RBOB \u2014 PADD 1 drew 0.4 mmbbl to 13.9 mmbbl \u2014 5 mmbbl below the seasonal norm (7th pctile \u00b7 tight)",
+        "text": "RBOB \u2014 PADD 1 drew 0.7 mmbbl to 13.1 mmbbl \u2014 5 mmbbl below the seasonal norm (0th pctile \u00b7 tight)",
         "lean": "bull"
       },
       {
         "label": "Distillate",
         "dir": "up",
-        "text": "Distillate built 4.6 mmbbl to 108.2 mmbbl \u2014 13 mmbbl below the seasonal norm (13th pctile \u00b7 tight)",
+        "text": "Distillate built 1.4 mmbbl to 109.6 mmbbl \u2014 11 mmbbl below the seasonal norm (13th pctile \u00b7 tight)",
         "lean": "bull"
       },
       {
         "label": "Distillate \u2014 PADD 1",
         "dir": "up",
-        "text": "Distillate \u2014 PADD 1 built 1.3 mmbbl to 22.6 mmbbl \u2014 8 mmbbl below the seasonal norm (0th pctile \u00b7 tight)",
+        "text": "Distillate \u2014 PADD 1 built 1.3 mmbbl to 23.9 mmbbl \u2014 7 mmbbl below the seasonal norm (7th pctile \u00b7 tight)",
         "lean": "bull"
       },
       {
         "label": "Jet",
-        "dir": "up",
-        "text": "Jet built 0.8 mmbbl to 48.4 mmbbl \u2014 5 mmbbl above the seasonal norm (100th pctile \u00b7 ample)",
+        "dir": "dn",
+        "text": "Jet drew 1.0 mmbbl to 47.4 mmbbl \u2014 4 mmbbl above the seasonal norm (100th pctile \u00b7 ample)",
         "lean": "bear"
       },
       {
         "label": "SPR",
         "dir": "dn",
-        "text": "SPR drew 3.0 mmbbl to 316.5 mmbbl \u2014 128 mmbbl below the seasonal norm (0th pctile \u00b7 tight)",
+        "text": "SPR drew 5.1 mmbbl to 311.4 mmbbl \u2014 133 mmbbl below the seasonal norm (0th pctile \u00b7 tight)",
         "lean": null
       },
       {
         "label": "Refinery runs",
-        "dir": "up",
-        "text": "Refinery runs rose 0.099 to 17.123 mmbbl/d (utilization 96.2%)"
+        "dir": "dn",
+        "text": "Refinery runs fell 0.058 to 17.065 mmbbl/d (utilization 96.1%)"
       },
       {
         "label": "Crude production",
-        "dir": "up",
-        "text": "Crude production rose 0.001 to 13.861 mmbbl/d"
+        "dir": "dn",
+        "text": "Crude production fell 0.063 to 13.798 mmbbl/d"
       },
       {
         "label": "Total products supplied",
-        "dir": "dn",
-        "text": "Total products supplied fell 1040 to 19477 kbbl/d",
+        "dir": "up",
+        "text": "Total products supplied rose 1042 to 20519 kbbl/d",
         "sub": [
-          "Gasoline -1 to 8,844 kbbl/d w/w",
-          "Distillate -1,151 to 3,156 kbbl/d w/w",
-          "Jet -258 to 1,760 kbbl/d w/w"
+          "Gasoline +103 to 8,947 kbbl/d w/w",
+          "Distillate +562 to 3,718 kbbl/d w/w",
+          "Jet +386 to 2,146 kbbl/d w/w"
         ],
-        "lean": "bear"
+        "lean": "neutral"
       }
     ],
     "crudeBalance": [
       {
         "item": "Field production",
-        "kbd": 13861,
+        "kbd": 13798,
         "kind": ""
       },
       {
         "item": "Imports",
-        "kbd": 5689,
+        "kbd": 5806,
         "kind": ""
       },
       {
         "item": "Exports",
-        "kbd": -3721,
+        "kbd": -3353,
         "kind": ""
       },
       {
         "item": "Adjustment",
-        "kbd": 400,
+        "kbd": 150,
         "kind": ""
       },
       {
         "item": "Transfers to crude supply",
-        "kbd": 225,
+        "kbd": 228,
         "kind": ""
       },
       {
         "item": "Total new supply",
-        "kbd": 20175,
+        "kbd": 19982,
         "kind": "sum"
       },
       {
         "item": "Refinery net inputs (runs)",
-        "kbd": 17123,
+        "kbd": 17065,
         "kind": ""
       },
       {
         "item": "Exports",
-        "kbd": -3721,
+        "kbd": -3353,
         "kind": ""
       },
       {
         "item": "Implied stock change",
-        "kbd": -669,
+        "kbd": -436,
         "kind": "sum"
       },
       {
         "item": "Reported stock change (comm + SPR)",
-        "kbd": -668,
+        "kbd": -435,
         "kind": "chk"
       }
     ],
     "products": [
       {
         "product": "Gasoline",
-        "demand": 8844,
-        "imports": 354,
-        "exports": 967,
-        "stockChg": -219
+        "demand": 8947,
+        "imports": 494,
+        "exports": 807,
+        "stockChg": 109
       },
       {
         "product": "Distillate",
-        "demand": 3156,
-        "imports": 93,
-        "exports": 1546,
-        "stockChg": 651
+        "demand": 3718,
+        "imports": 173,
+        "exports": 1604,
+        "stockChg": 199
       },
       {
         "product": "Jet",
-        "demand": 1760,
-        "imports": 112,
-        "exports": 412,
-        "stockChg": 120
+        "demand": 2146,
+        "imports": 155,
+        "exports": 290,
+        "stockChg": -147
       }
     ]
   }
