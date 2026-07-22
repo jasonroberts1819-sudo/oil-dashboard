@@ -15730,7 +15730,7 @@ function renderMacro(){
       <div class="aw">${a.w}d${a.fired?`<span class="abadge">ACTIONABLE TRADE</span>`:''}</div>
       <div class="an">${a.fired? A.label : (!a.reg.naming?'Context lens — does not name':(a.reg.mixed?'No signal — mixed':a.reg.name))}</div>
       <div class="am">${a.fired? a.reg.name+' · '+got : got+' · '+need}</div>
-      ${a.fired? `<div class="am" style="color:var(--ink-3)">history (28 fires, 1988–2026): the named move typically ran ~2 more weeks and was spent by ~3 months — a fire marks a mature move, not a fresh one</div>`:''}
+      ${a.fired? `<div class="am" style="color:var(--ink-3)">history (28 fires, 1988–2026): the move typically kept going for ~2 more weeks, then stalled — and had often reversed by ~3 months. A fire marks a move already well underway, not a fresh one</div>`:''}
     </div>`;
   }).join("") + `</div>`;
   const cov=reg.cov;
