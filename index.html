@@ -16334,6 +16334,17 @@ function riskWarnings(r){
     reversion distance to trade.</span>`);
   return warn.length?`<div class="tirwarn">${warn.join("")}</div>`:"";
 }
+/* Name the structure being scored ONLY when `legs` actually names contracts and they
+   differ from the held instrument. `legs` is a free-text field: for the box it reads
+   "Ratio 1:0.30, not 1:1" and for flat price "Outright, tactical — see the forward surplus
+   below", neither of which is a set of months. Printing those after "the structure scored
+   today" would have produced "(Ratio 1:0.30, not 1:1 today) ... which is on different
+   months" — confident, and nonsense. */
+function scoredLegs(it,mo){
+  const legs=it.legs||"";
+  if(!/[A-Z]{2}[FGHJKMNQUVXZ]\d{2}/.test(legs)) return "";
+  return legs===(mo.pair||mo.structure)?"":legs;
+}
 function riskBaselineNote(r){
   return (r.baseline&&r.pctile!=null)?`<p class="cotnote" style="margin:6px 2px 0">Percentile and z are measured against ${r.baseline}.</p>`:"";
 }
@@ -16487,7 +16498,7 @@ function renderTradeIdeas(){
         <span class="tirank">${i+1}</span>
         <div>
           <h2 style="margin:0"><span class="tiside s-${((mo&&mo.dirn)||it.dirn||'').toLowerCase()}">${(mo&&mo.dirn)||it.dirn}</span>${mo?titleNoSide({structure:mo.structure,dirn:mo.dirn||it.dirn}):titleNoSide(it)}</h2>
-          <p class="csub" style="margin:2px 0 0">${it.type} · ${it.market} · ${mo?(mo.pair||mo.structure):it.legs}</p>
+          <p class="csub" style="margin:2px 0 0">${it.type} · ${it.market} · ${mo?(mo.pair||it.legs||mo.structure):it.legs}</p>
         </div>
         <span class="ticonv ${cv}">${it.conviction}</span>
       </div>
@@ -16507,7 +16518,7 @@ function renderTradeIdeas(){
         </div>
         <p class="cotnote" style="margin:7px 2px 0">Measured from where the trade was actually put on, never re-anchored${mo.stopBasis?`; stop set at ${mo.stopBasis}`:""}. Exits fire on this instrument (${mo.pair||mo.structure}), not on whatever the idea layer evaluates today.</p>
         ${(it.risk&&(riskSimCells(it.risk)||riskWarnings(it.risk)))?`
-          <p class="cotnote" style="margin:9px 2px 0;padding-top:7px;border-top:1px solid var(--border)"><b>Measured on the structure scored today${(it.legs&&it.legs!==(mo.pair||mo.structure))?` (${it.legs})`:""}</b> — expectancy, win rate, hold and percentile are properties of that structure's history, not of your open position${(it.legs&&it.legs!==(mo.pair||mo.structure))?`, which is on different months`:""}.</p>
+          <p class="cotnote" style="margin:9px 2px 0;padding-top:7px;border-top:1px solid var(--border)"><b>Measured on the structure scored today${scoredLegs(it,mo)?` (${scoredLegs(it,mo)})`:""}</b> — expectancy, win rate, hold and percentile are properties of that structure's history, not of your open position${scoredLegs(it,mo)?`, which is on different months`:""}.</p>
           ${riskSimCells(it.risk)?`<div class="tirstat">${riskSimCells(it.risk)}</div>`:""}
           ${riskBaselineNote(it.risk)}
           ${riskWarnings(it.risk)}`:""}
