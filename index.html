@@ -66,7 +66,7 @@
   header.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px;margin-bottom:22px}
   h1{font-size:22px;margin:0 0 4px;letter-spacing:-.01em}
   .sub{color:var(--ink-2);font-size:13.5px;margin:0;max-width:64ch}
-  .asof{font-size:12px;color:var(--ink-3);text-align:right;white-space:nowrap}
+  .asof{font-size:12px;color:var(--ink-3);white-space:nowrap;margin:2px 0 8px}
   .asof b{color:var(--ink-2)}
   .ustat{font-size:11.5px;font-weight:600;padding:2px 9px;border-radius:20px;white-space:nowrap;display:inline-block}
   .ustat.updated{color:var(--pos);background:color-mix(in srgb,var(--pos) 14%,transparent)}
@@ -470,12 +470,9 @@
 <div class="wrap">
   <header class="top">
     <div>
-      <h1>US Petroleum Inventories &amp; Crude Balance <span class="badge" id="themeBadge" role="button" tabindex="0" title="Toggle light/dark">◐ theme</span></h1>
-      <p class="sub">Weekly EIA ending-stock year overlays by product — crude, gasoline (+ RBOB), distillate, jet (U.S. &amp; PADD 1–5) — plus the monthly crude builds (+) / draws (−) balance vs the 2018–2025 seasonal average. Source: EIA Weekly Petroleum Status Report + Petroleum Supply Monthly.</p>
-    </div>
-    <div class="asof">
+      <h1>Oil Dashboard <span class="badge" id="themeBadge" role="button" tabindex="0" title="Toggle light/dark">◐ theme</span></h1>
       <!-- placeholder only; setTab()/setHeaderAsOf() rewrite this per active tab -->
-      As of <b id="asof">—</b>
+      <div class="asof">As of <b id="asof">—</b></div>
     </div>
   </header>
 
@@ -16480,7 +16477,7 @@ function nextCatalysts(){
   const up=CAL_DATA.events.filter(e=>e.d>=today).slice(0,3);
   if(!up.length) return "";
   const parts=up.map(e=>`${e.approx?"~":""}${calShort(e.label)} <b>${calFmtD(e.d).replace(/^\w+,\s*/,"")}</b>`);
-  return `<span class="gnext" title="Next catalysts — full list on the Calendar tab">Next: ${parts.join(" · ")}</span>`;
+  return `<span class="gnext" title="Next catalysts — full list on the Calendar tab">Upcoming calendar events: ${parts.join(" · ")}</span>`;
 }
 function renderCalendar(){
   const box=$("#calendarView");
