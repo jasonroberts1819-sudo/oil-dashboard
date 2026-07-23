@@ -15408,9 +15408,14 @@ let macroWin=28, macroMode='corr';   // 'corr' = correlation level, 'z' = vs its
    deferred — it changes the score's scale, so every bar would need re-deriving. */
 /* Bars are in Z UNITS now (strength = mean|z|), so they are NOT comparable to the old
    correlation-space bars. Re-derived by calibrate_alarms.py against the correlated null. */
+/* ALARMS exist only where NAMING does (NAMING_WINDOWS). An 84d "Macro Swing Alert"
+   {align:0.50, strength:1.8} sat here until 2026-07-23, doubly unreachable — alarm
+   evaluation filters to NAMING_WINDOWS=[28] AND macroRegime forces mixed=true on
+   every non-naming window, and checkAlarm requires !mixed. Deleted (Jason's call,
+   2026-07-23) rather than carried as dead config the harness kept measuring; if 84d
+   alarms ever return, calibrate fresh — git history has the old gate. */
 const ALARMS={
-  28:  {align:0.50, strength:1.7, label:'Tactical Regime Alert'},
-  84:  {align:0.50, strength:1.8, label:'Macro Swing Alert'}
+  28:  {align:0.50, strength:1.7, label:'Tactical Regime Alert'}
 };
 function checkAlarm(M, w){
   const key=String(w), A=ALARMS[w];
@@ -15622,11 +15627,15 @@ const REGBAR={
       'Liquidity melt-up (Fed easing)':0.29,'Demand destruction / recession':0.25,'Liquidity crunch (dollar up)':0.96}
 };
 const regBar=(w,name)=> (REGBAR[w]||{})[name] ?? 0.80;
-/* CALIB_SIG = hash of the REGIMES table + instrument set that the bars above were calibrated
-   under (calibrate_alarms.calib_signature()). check_model.py recomputes it from the live
-   REGIMES/assets and FAILS the build if it differs — i.e. if the regimes or instruments
-   changed but the bars were not re-derived. Refresh it (with the bars) after calibrate_alarms.py. */
-const CALIB_SIG="868891902b2f";
+/* CALIB_SIG = hash of the SETTINGS the bars were calibrated under: the REGIMES table,
+   the window set, which windows carry alarms, STAG_VETO, COUPLE_EXCLUDE, and the
+   instrument set from macro_heatmap.py's INSTRUMENTS table (calibrate_alarms.
+   calib_signature()). check_model.py recomputes it and FAILS the build if it differs —
+   i.e. settings changed but the bars were not re-derived. REDEFINED 2026-07-23: it
+   previously hashed the payload's surviving download list, so a transient Yahoo outage
+   blocked publish blaming a settings change that never happened; outage days now
+   publish with the health banner instead. Refresh (with the bars) after calibrate_alarms. */
+const CALIB_SIG="6b491512f328";
 /* IDIOBAR — naming bar for the 'Oil-Specific / decoupled' pseudo-regime (2026-07-21, review
    finding 2; the read was called 'Idiosyncratic / supply-driven' until 2026-07-22 — see the
    rename note in macroRegime for why the causal half of that name did not survive).
