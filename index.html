@@ -15651,8 +15651,13 @@ const IDIOBAR={28:0.13, 84:-0.32};
    significant — a real regime shift" from 4 flags, where the true chance is ~9-10%. The
    MAX statistic (nfBonf) is provably immune to the same correlation (MC-verified, exact
    to 3dp); the COUNT statistic is not. Same independence-error class as audit_weights'
-   SE — third instance in this model. Derived by calibrate_alarms.flag_quantiles(). */
-const FLAGBAR={28:{p95:4,p99:7}, 84:{p95:4,p99:7}};
+   SE — third instance in this model. Derived by calibrate_alarms.flag_quantiles().
+   84d bumped 4/7 -> 5/8 on 2026-07-23: the first quarterly drift check flagged it in
+   BOTH seeds (5/5 and 8/8) — the null now yields one more coincidental co-flag, so 4
+   was labelling "unusual" slightly too easily. Adopted by Jason under the drift rule;
+   REGBAR[28] crunch was flagged the same run and deliberately KEPT (seed spread 0.15,
+   stored value is the conservative side). 28d held at 4/7 (seeds split, within rule). */
+const FLAGBAR={28:{p95:4,p99:7}, 84:{p95:5,p99:8}};
 /* CONTRA-EVIDENCE VETO (2026-07-20) — the model's first discriminative mechanism.
    Signatures only score their OWN instruments, so a regime is never penalized for loud
    evidence AGAINST it: during debasement-flavored reflations, Stagflation's monetary block
