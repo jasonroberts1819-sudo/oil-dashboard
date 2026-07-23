@@ -608,7 +608,9 @@
     <div id="igrid" class="chartgrid"></div>
   </div>
 
-  <footer>
+  <!-- shown only on the Updates tab (setTab toggles it): methodology is reference
+       material, not something to repeat under every tab -->
+  <footer id="methodology" class="hidden">
     <h3>Methodology &amp; sources</h3>
     Balance identity (EIA Petroleum Supply Monthly): <code>field production + transfers to crude supply + imports + adjustment = refinery &amp; blender net inputs + exports + stock change (incl. SPR)</code>.
     <!-- date-generic on purpose (2026-07-23): this prose is hand-maintained and no
@@ -17024,6 +17026,7 @@ function setTab(key){
   $("#tradeView").classList.toggle("hidden", key!=="trade");
   $("#contextView").classList.toggle("hidden", key!=="context");
   $("#updatesView").classList.toggle("hidden", key!=="updates");
+  $("#methodology").classList.toggle("hidden", key!=="updates");
   $("#crudeBalance").classList.toggle("hidden", key!=="crude");
   $("#kpis").classList.toggle("hidden", (isProd && key!=="crude") || key==="forward" || key==="calendar");
   if(isProd){ if(key==="crude") renderCharts(); INV.show(key); renderProdBalance(key); renderDemand(key); }
