@@ -571,6 +571,7 @@
         <p class="csub">2026 total-crude stock change split into commercial and Strategic Petroleum Reserve · mmbbl. Segments sum to the total change.</p>
         <div class="legend" id="legend3"></div>
         <div class="chartbox"><div class="tip" id="tip3"></div><svg id="chart3"></svg></div>
+        <div class="csub" id="sprNote" style="margin-top:6px"></div>
       </section>
       <hr style="border:0;border-top:1px solid var(--border);margin:24px 0 16px" />
       <h2 style="font-size:16px;margin:0 0 4px;letter-spacing:-.01em">Crude — weekly ending stocks (year overlay)</h2>
@@ -927,12 +928,46 @@ const DATA = {
       "note": "17-Jul \u00b7 lowest since Apr-1984",
       "dir": "dn"
     }
-  ]
+  ],
+  "usCommFc": {
+    "Aug": 14.9,
+    "Sep": 21.3,
+    "Oct": 1.6,
+    "Nov": 10.5,
+    "Dec": -9.6
+  },
+  "usSprFc": {
+    "Aug": -0.8,
+    "Sep": 10.6,
+    "Oct": 16.5,
+    "Nov": 7.4,
+    "Dec": -6.1
+  },
+  "sprOutlook": {
+    "level": 311.4,
+    "drawAhead": 6.9,
+    "refillAhead": 34.5,
+    "troughMon": "Aug"
+  }
 };
 /* ===== DATA:END ===== */
 
 /* ===== LOG:START — auto-maintained by update_oil_dashboard.py (newest first). Do not hand-edit. ===== */
 const UPDATE_LOG = [
+  {
+    "time": "2026-07-23 11:17",
+    "outcome": "updated",
+    "label": "Dashboard updated",
+    "detail": "data through 2026-07-17; new: MCRSCUS1, MCESTUS1, MCSSTUS1, MCRSTUS1, WCESTUS1, WCSSTUS1, W_EPC0_SAX_YCUOK_MBBL, MGTSTUS1, MDISTUS1, MKJSTUS1, WGTSTUS1, WDISTUS1, WKJSTUS1",
+    "dataThrough": "2026-07-17"
+  },
+  {
+    "time": "2026-07-23 11:14",
+    "outcome": "updated",
+    "label": "Dashboard updated",
+    "detail": "data through 2026-07-17; new: MCRSCUS1, MCESTUS1, MCSSTUS1, MCRSTUS1, WCESTUS1, WCSSTUS1, W_EPC0_SAX_YCUOK_MBBL, MGTSTUS1, MDISTUS1, MKJSTUS1, WGTSTUS1, WDISTUS1, WKJSTUS1",
+    "dataThrough": "2026-07-17"
+  },
   {
     "time": "2026-07-23 09:16",
     "outcome": "updated",
@@ -14661,14 +14696,21 @@ function drawGrouped(svgId, tipId, months, series){
 }
 
 /* stacked (commercial + SPR), diverging around zero */
-function drawStacked(svgId, tipId, months, comm, spr, colC, colS){
+function drawStacked(svgId, tipId, months, comm, spr, colC, colS, fcComm, fcSpr){
+  /* fcComm/fcSpr (optional): STEO forecast changes for months with no actuals —
+     rendered hatched, same convention as the weekly-implied bars (2026-07-23) */
+  fcComm=fcComm||{}; fcSpr=fcSpr||{};
+  const isFc = mo => !(mo in comm) && !(mo in spr) && ((mo in fcComm)||(mo in fcSpr));
+  const segsFor = mo => isFc(mo)
+    ? [{v:fcComm[mo],c:colC,name:"Commercial",fc:true},{v:fcSpr[mo],c:colS,name:"SPR",fc:true}]
+    : [{v:comm[mo],c:colC,name:"Commercial"},{v:spr[mo],c:colS,name:"SPR"}];
   const svg=$(svgId), tip=$(tipId);
   const W=svg.clientWidth||svg.parentElement.clientWidth||720;
   const H=Math.round(Math.min(360,Math.max(260,W*0.44)));
   const m={t:16,r:12,b:34,l:40}, iw=W-m.l-m.r, ih=H-m.t-m.b;
   let lo=0,hi=0;
   months.forEach(mo=>{
-    const c=comm[mo]||0,s=spr[mo]||0;
+    const c=(isFc(mo)?fcComm[mo]:comm[mo])||0, s=(isFc(mo)?fcSpr[mo]:spr[mo])||0;
     const posT=(c>0?c:0)+(s>0?s:0), negT=(c<0?c:0)+(s<0?s:0);
     hi=Math.max(hi,posT); lo=Math.min(lo,negT);
   });
@@ -14677,6 +14719,17 @@ function drawStacked(svgId, tipId, months, comm, spr, colC, colS){
   const NS="http://www.w3.org/2000/svg";
   svg.setAttribute("viewBox",`0 0 ${W} ${H}`); svg.innerHTML="";
   const add=(t,a)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);svg.appendChild(e);return e;};
+  // hatch patterns for STEO-forecast segments (same visual convention as drawGrouped)
+  const defs=document.createElementNS(NS,"defs"); svg.appendChild(defs);
+  [colC,colS].forEach((col,ci)=>{
+    const p=document.createElementNS(NS,"pattern");
+    p.setAttribute("id",`hatchS${svgId.replace('#','')}_${ci}`);
+    p.setAttribute("width","5");p.setAttribute("height","5");
+    p.setAttribute("patternTransform","rotate(45)");p.setAttribute("patternUnits","userSpaceOnUse");
+    const bg=document.createElementNS(NS,"rect");bg.setAttribute("width","5");bg.setAttribute("height","5");bg.setAttribute("fill",col);bg.setAttribute("opacity","0.42");
+    const ln=document.createElementNS(NS,"rect");ln.setAttribute("width","2.4");ln.setAttribute("height","5");ln.setAttribute("fill",col);
+    p.appendChild(bg);p.appendChild(ln);defs.appendChild(p);
+  });
   const ticks=niceTicks(lo,hi,5);
   ticks.forEach(t=>{
     add("line",{x1:m.l,x2:W-m.r,y1:y(t),y2:y(t),stroke:t===0?css('--axis'):css('--grid'),"stroke-width":t===0?1.4:1});
@@ -14686,26 +14739,29 @@ function drawStacked(svgId, tipId, months, comm, spr, colC, colS){
   months.forEach((mo,i)=>{
     const cx=m.l+band*i+band/2;
     add("text",{x:cx,y:H-12,"text-anchor":"middle","font-size":11,fill:css('--ink-2')}).textContent=mo;
-    const segs=[{v:comm[mo],c:colC,name:"Commercial"},{v:spr[mo],c:colS,name:"SPR"}];
+    const segs=segsFor(mo);
     // stack positives up, negatives down, preserving order
     let posBase=0,negBase=0;
-    segs.forEach(seg=>{
+    segs.forEach((seg,si)=>{
       const v=seg.v; if(v==null||v===0) return;
       let yTop,yBot;
       if(v>0){yBot=y(posBase);posBase+=v;yTop=y(posBase);}
       else{yTop=y(negBase);negBase+=v;yBot=y(negBase);}
       const hgt=Math.abs(yBot-yTop);
-      const rect=add("rect",{x:cx-bw/2,y:Math.min(yTop,yBot),width:bw,height:hgt,fill:seg.c,stroke:css('--surface'),"stroke-width":1.4,rx:2});
+      const fill=seg.fc?`url(#hatchS${svgId.replace('#','')}_${si})`:seg.c;
+      const rect=add("rect",{x:cx-bw/2,y:Math.min(yTop,yBot),width:bw,height:hgt,fill,stroke:css('--surface'),"stroke-width":1.4,rx:2});
       const enter=()=>{
         rect.setAttribute("opacity","0.82");
-        const tot=(comm[mo]||0)+(spr[mo]||0);
+        const cv=seg.fc?fcComm[mo]:comm[mo], sv=seg.fc?fcSpr[mo]:spr[mo];
+        const tot=(cv||0)+(sv||0);
         // every bar here is current-year, so the header can carry the through-date itself
         const partialTo = (DATA.usBasis||{})[mo]==='partial' ? (()=>{ const t=String(DATA.asOf||"").split("-");
           return t.length===3 ? ` <span style="opacity:.55;font-weight:400">through ${DATA.months[+t[1]-1]} ${+t[2]}</span>` : ""; })() : "";
         tip.innerHTML=`<b>${mo} — ${monthLong(mo)}</b>${partialTo}`+
-          `<div class="row"><span class="mut">Commercial</span><b>${fmt(comm[mo])}</b></div>`+
-          `<div class="row"><span class="mut">SPR</span><b>${fmt(spr[mo])}</b></div>`+
-          `<div class="row"><span class="mut">Total</span><b>${fmt(tot)}</b></div>`;
+          `<div class="row"><span class="mut">Commercial</span><b>${fmt(cv)}</b></div>`+
+          `<div class="row"><span class="mut">SPR</span><b>${fmt(sv)}</b></div>`+
+          `<div class="row"><span class="mut">Total</span><b>${fmt(tot)}</b></div>`+
+          (seg.fc?`<div class="row"><span class="mut">basis</span><span>STEO forecast</span></div>`:"");
         const box=svg.getBoundingClientRect(),pb=svg.parentElement.getBoundingClientRect();
         tip.style.left=(cx*(box.width/W)+(box.left-pb.left))+"px";
         tip.style.top=(Math.min(yTop,yBot,y0)*(box.height/H)+(box.top-pb.top))+"px";
@@ -14973,8 +15029,17 @@ function renderCharts(){
     {name:"2018–25 average",color:cavg}
   ]);
 
-  drawStacked("#chart3","#tip3",DATA.months,DATA.usComm2026,DATA.usSpr2026,ccomm,cspr);
-  legend("#legend3",[{name:"Commercial",color:ccomm},{name:"SPR",color:cspr}]);
+  drawStacked("#chart3","#tip3",DATA.months,DATA.usComm2026,DATA.usSpr2026,ccomm,cspr,
+              DATA.usCommFc,DATA.usSprFc);
+  legend("#legend3",[{name:"Commercial",color:ccomm},{name:"SPR",color:cspr},
+                     {name:"STEO forecast",color:cspr,hatch:true}]);
+  const so=DATA.sprOutlook, sn=document.getElementById('sprNote');
+  if(sn) sn.textContent = so
+    ? `SPR now ${so.level} mmbbl · STEO's rest-of-year path: `
+      + (so.drawAhead>0?`${so.drawAhead} mmbbl further draw${so.troughMon?` (trough ${so.troughMon})`:""}`:`no further draw`)
+      + (so.refillAhead>0?`, ${so.refillAhead} mmbbl refill by Dec`:"")
+      + ` — EIA projection, not an announced program total`
+    : "";
 }
 
 /* ----------------------------- updates tab ------------------------------ */
