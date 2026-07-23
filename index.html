@@ -1050,7 +1050,7 @@ const UPDATE_LOG = [
    stock (mmbbl); change = month-over-month. ===== */
 const INV_DATA = {
   "asOf": "2026-07-17",
-  "generated": "2026-07-23 09:34",
+  "generated": "2026-07-23 18:09",
   "source": "WPSR psw09/psw01",
   "years": [
     2021,
@@ -12496,7 +12496,9 @@ const INV_DATA = {
     ]
   },
   "signal": {
-    "lean": "mixed",
+    "lean": "bullish",
+    "split": true,
+    "split_note": "Jet the only bear",
     "score": 5.89,
     "drivers": [
       {
@@ -14402,9 +14404,11 @@ const INV_DATA = {
   },
   "weeklyReport": {
     "asOf": "2026-07-17",
-    "generated": "2026-07-23 09:34",
+    "generated": "2026-07-23 18:09",
     "signal": {
-      "lean": "mixed",
+      "lean": "bullish",
+      "split": true,
+      "split_note": "Jet the only bear",
       "score": 5.89,
       "drivers": [
         {
@@ -14851,9 +14855,10 @@ function renderWeeklyStrip(){
   const sig = (typeof INV_DATA!=='undefined' && INV_DATA && INV_DATA.signal) ? INV_DATA.signal : null;
   let sigChip = "";
   if(sig && sig.lean){
-    const drv = (sig.drivers||[]).slice(0,3).map(d=>`${d.label} ${d.lean==="bull"?"▲":"▼"}`).join(" · ");
-    sigChip = `<span class="gsig ${sig.lean}" title="Net of the seasonal surprises across the headline balances">`
-            + `Net read: ${sig.lean}${drv?` <span class="dr">${drv}</span>`:""}</span>`;
+    const drv = (sig.drivers||[]).slice(0,3).map(d=>`${d.label} <span style="color:var(--${d.lean==="bull"?"pos":"neg"})">${d.lean==="bull"?"▲":"▼"}</span>`).join(" · ");
+    const note = sig.split_note ? ` <span style="text-transform:none;color:var(--ink);font-weight:400">(${sig.split_note})</span>` : "";
+    sigChip = `<span class="gsig ${sig.lean}" title="Net seasonal surprise across the headline balances (5-yr norm); the bracket names the balance leaning against the read.">`
+            + `Net read: ${sig.lean}${note}${drv?` <span class="dr">${drv}</span>`:""}</span>`;
   }
   // COT positioning-extreme chips: only when managed money sits at a 5-yr tail
   // (net percentile or %-of-OI percentile <=10 / >=90). Absent most weeks — by design.
@@ -16164,7 +16169,7 @@ function renderWeeklyReport(){
   let banner = "";
   if(sig && sig.lean){
     const drv = (sig.drivers||[]).map(d=>`${d.label} <b>${d.lean==="bull"?"bullish":"bearish"}</b> (${d.z>0?"+":""}${d.z}σ)`).join(" · ");
-    banner = `<div class="wsignal ${sig.lean}"><span class="wsw">Net seasonal read: ${sig.lean}</span>`
+    banner = `<div class="wsignal ${sig.lean}"><span class="wsw">Net seasonal read: ${sig.lean}${sig.split_note?`<span style="text-transform:none;color:var(--ink);font-weight:400"> (${sig.split_note})</span>`:""}</span>`
            + (drv?`<span class="wsd">${drv}</span>`:"") + `</div>`;
   }
   const crows = (wr.crudeBalance||[]).map(r=>`<tr class="${r.kind?'wsum':''}"><td>${r.item}</td><td class="num">${kf(r.kbd)}</td></tr>`).join("");
