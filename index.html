@@ -474,9 +474,8 @@
       <p class="sub">Weekly EIA ending-stock year overlays by product — crude, gasoline (+ RBOB), distillate, jet (U.S. &amp; PADD 1–5) — plus the monthly crude builds (+) / draws (−) balance vs the 2018–2025 seasonal average. Source: EIA Weekly Petroleum Status Report + Petroleum Supply Monthly.</p>
     </div>
     <div class="asof">
-      <!-- placeholder only; JS overwrites with DATA.asOf at load -->
-      As of <b id="asof">—</b><br/>
-      Source: EIA PSM + WPSR
+      <!-- placeholder only; setTab()/setHeaderAsOf() rewrite this per active tab -->
+      As of <b id="asof">—</b>
     </div>
   </header>
 
@@ -16934,8 +16933,54 @@ document.querySelectorAll('#mainnav [data-tab]').forEach(b=>b.addEventListener("
   const mark=()=>nav.classList.toggle("stuck", nav.getBoundingClientRect().top<=0);
   addEventListener("scroll",mark,{passive:true}); mark();
 })();
+/* Header "As of" reflects the ACTIVE tab's own data date, not the crude build — a fixed
+   date misdates every other tab (Trade Ideas, Positioning, Macro …). Each entry pulls the
+   date straight from that tab's own data block so the header can never drift from what the
+   tab renders. */
+function setHeaderAsOf(key){
+  const iso = s => s ? String(s).slice(0,10) : "";   // "2026-07-23 16:17:58" -> "2026-07-23"
+  // top-level `const` blocks aren't window properties, so each is guarded inline by name.
+  const INV = (typeof INV_DATA!=="undefined" && INV_DATA) || null;
+  const COT = (typeof COT_DATA!=="undefined" && COT_DATA) || null;
+  const MAC = (typeof MACRO_DATA!=="undefined" && MACRO_DATA) || null;
+  const TI  = (typeof TI_DATA!=="undefined" && TI_DATA) || null;
+  const LOG = (typeof UPDATE_LOG!=="undefined" && UPDATE_LOG) || null;
+  const TIM = (TI && TI.meta) || {};
+  let date="";
+  switch(key){
+    case "crude": case "gasoline": case "distillate": case "jet": case "refining":
+    case "table":
+      date=iso(DATA.asOf); break;
+    case "weekly": {
+      const wr = INV && INV.weeklyReport;
+      date=iso((wr && wr.asOf) || (INV && INV.asOf)); break;
+    }
+    case "positioning":
+      date=iso(COT && COT.asOf); break;
+    case "macro":
+      date=iso(MAC && MAC.asOf); break;
+    case "forward": {
+      // Projection — anchored to the latest EIA weekly (WPSR) print the dashboard is built on.
+      const wr = INV && INV.weeklyReport;
+      date=iso((wr && wr.asOf) || (INV && INV.asOf) || DATA.asOf); break;
+    }
+    case "trade":
+      date=iso(TIM.curve_asof || TIM.asOf); break;
+    case "context":
+      date=iso(TIM.notes_asof); break;
+    case "calendar":
+      date=calToday(); break;   // forward-looking schedule — anchor to today, not the build stamp
+    case "updates":
+      date=iso(LOG && LOG[0] && LOG[0].time); break;   // newest run
+    default:
+      date=iso(DATA.asOf);
+  }
+  const el=$("#asof");
+  if(el) el.textContent = date || "—";
+}
 function setTab(key){
   activeTab = key;
+  setHeaderAsOf(key);
   const isProd = PRODUCT_TABS.includes(key);
   document.querySelectorAll('#mainnav [data-tab]').forEach(b=>b.setAttribute("aria-pressed", b.dataset.tab===key));
   $("#invView").classList.toggle("hidden", !isProd);
