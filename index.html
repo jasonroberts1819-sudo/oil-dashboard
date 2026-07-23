@@ -14848,12 +14848,18 @@ function renderWeeklyStrip(){
   const arrow = v => v>0?"▲":v<0?"▼":"■";
   const cls   = v => v>0?"up":v<0?"dn":"flat";
   const num   = (v,d) => v.toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d});
-  // seasonal bull/bear chip: below-norm stocks (or strong demand) read bullish
+  // seasonal bull/bear chip: below-norm stocks (or strong demand) read bullish.
+  // Tiles with no directional lean (SPR = policy; runs/util/flows cut both ways;
+  // |z| < 0.5 = too close to call) still show the σ, as a neutral gray chip.
   const seas = it => {
-    if(!it.lean || it.lean==="neutral" || it.z==null) return "";
+    if(it.z==null) return "";
     const zt = (it.z>0?"+":"")+it.z.toFixed(1)+"σ";
+    const z2 = (it.z>0?"+":"")+it.z.toFixed(2);
+    if(!it.lean || it.lean==="neutral")
+      return `<div class="gseas neutral" title="${z2}σ vs the same week of prior years — no directional price read for this series">`
+           + `${zt} <small>vs norm</small></div>`;
     const word = it.lean==="bull"?"bullish":"bearish";
-    return `<div class="gseas ${it.lean}" title="${(it.z>0?"+":"")+it.z.toFixed(2)}σ vs the same week of prior years — ${word} for price">`
+    return `<div class="gseas ${it.lean}" title="${z2}σ vs the same week of prior years — ${word} for price">`
          + `${it.lean==="bull"?"▲":"▼"} ${word} <small>${zt}</small></div>`;
   };
   const tiles = w.items.map(it=>{
