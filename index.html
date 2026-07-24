@@ -16738,9 +16738,10 @@ function renderCushUtil(){
   if(!U || !U.series || !U.series.length){ card.classList.add("hidden"); return; }
   card.classList.remove("hidden");
   const pcls = U.pctile<=25?"dn":U.pctile>=75?"up":"flat";
+  // methodology/provenance (capacity vintage, discontinued survey) lives in
+  // update_oil_dashboard.py + cushing_capacity.json, not on the card (Jason 2026-07-24)
   $("#cushUtilSub").textContent =
-    `Weekly Cushing stocks ÷ EIA est. total storage capacity (working + in-transit; final ${U.capAsof} vintage — capacity survey discontinued). `
-    + `Dashed lines mark the highest utilization observed since ${U.since} and the ~${U.floorMmbbl||18} mmbbl operational floor (reported; hub can't draw much below it).`;
+    `Dashed lines mark the highest utilization observed since ${U.since} and the ~${U.floorMmbbl||18} mmbbl operational floor (reported; hub can't draw much below it).`;
   const floorBit = (U.floorMmbbl!=null && U.aboveFloorMmbbl!=null)
     ? `<span class="yoy ${U.aboveFloorMmbbl<=2?"dn":"flat"}">${U.aboveFloorMmbbl} mmbbl above the ~${U.floorMmbbl} floor</span>` : "";
   $("#cushUtilHead").innerHTML = `
