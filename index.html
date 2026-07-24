@@ -18765,8 +18765,8 @@ function renderHurricane(){
   const mapCard = `<section class="card">
       <h2 style="font-size:14px">7-day Atlantic outlook map</h2>
       <p class="csub">NOAA/NHC graphical tropical weather outlook — served live from nhc.noaa.gov.</p>
+      <p style="margin:2px 0 10px;font-size:14.5px;font-weight:600"><a href="${H.modelsUrl||"https://www.tropicaltidbits.com/analysis/models/?model=ecmwf"}" target="_blank" rel="noopener">Forecast model guidance — ECMWF runs (Tropical Tidbits) →</a></p>
       <a href="${H.nhcUrl}" target="_blank" rel="noopener"><img src="${H.mapUrl}" alt="NHC 7-day Atlantic tropical weather outlook" style="width:100%;height:auto;border-radius:8px;border:1px solid var(--border)"/></a>
-      <p class="csub" style="margin:8px 0 0"><a href="${H.modelsUrl||"https://www.tropicaltidbits.com/analysis/models/?model=ecmwf"}" target="_blank" rel="noopener">Forecast model guidance — ECMWF runs (Tropical Tidbits) →</a></p>
     </section>`;
   box.innerHTML = bseeCard + storms.map(stormCard).join("") + quiet + outlookCard + mapCard;
 }
