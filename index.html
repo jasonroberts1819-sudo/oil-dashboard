@@ -560,7 +560,7 @@
       </section>
       <section class="card">
         <h2>Cushing, OK hub — builds / draws by month</h2>
-        <p class="csub">2026 vs 2018–2025 average · Weekly-derived. Hub near its ~20 mmbbl operational floor.</p>
+        <p class="csub">2026 vs 2018–2025 average · Weekly-derived. Hub near its ~18 mmbbl operational floor.</p>
         <div class="legend" id="legend2"></div>
         <div class="chartbox"><div class="tip" id="tip2"></div><svg id="chart2"></svg></div>
       </section>
@@ -2547,7 +2547,7 @@ const DATA = {
       "label": "Cushing hub",
       "val": "19.4",
       "unit": "mmbbl",
-      "note": "17-Jul \u00b7 -0.7 vs prior wk \u00b7 below ~20 floor",
+      "note": "17-Jul \u00b7 -0.7 vs prior wk",
       "dir": "dn"
     },
     {
@@ -2583,6 +2583,13 @@ const DATA = {
 
 /* ===== LOG:START — auto-maintained by update_oil_dashboard.py (newest first). Do not hand-edit. ===== */
 const UPDATE_LOG = [
+  {
+    "time": "2026-07-24 11:09",
+    "outcome": "updated",
+    "label": "Dashboard updated",
+    "detail": "data through 2026-07-17; new: MCRSCUS1, MCESTUS1, MCSSTUS1, MCRSTUS1, WCESTUS1, WCSSTUS1, W_EPC0_SAX_YCUOK_MBBL, MGTSTUS1, MDISTUS1, MKJSTUS1, WGTSTUS1, WDISTUS1, WKJSTUS1",
+    "dataThrough": "2026-07-17"
+  },
   {
     "time": "2026-07-24 10:58",
     "outcome": "updated",
@@ -16737,7 +16744,6 @@ function renderCushUtil(){
   const U=DATA.cushingUtil;
   if(!U || !U.series || !U.series.length){ card.classList.add("hidden"); return; }
   card.classList.remove("hidden");
-  const pcls = U.pctile<=25?"dn":U.pctile>=75?"up":"flat";
   // methodology/provenance (capacity vintage, discontinued survey) lives in
   // update_oil_dashboard.py + cushing_capacity.json, not on the card (Jason 2026-07-24)
   $("#cushUtilSub").textContent =
@@ -16747,7 +16753,6 @@ function renderCushUtil(){
   $("#cushUtilHead").innerHTML = `
     <span class="big">${U.pct.toFixed(1)}<small>% of capacity</small></span>
     ${floorBit}
-    <span class="yoy ${pcls}">${ordN(U.pctile)} %ile since ${U.since}</span>
     <span class="ago">${U.stocksMmbbl} of ${U.capMmbbl} mmbbl · week ending ${U.date}</span>`;
   const svg=$("#cushUtilChart"), tip=$("#cushUtilTip");
   const NS="http://www.w3.org/2000/svg";
