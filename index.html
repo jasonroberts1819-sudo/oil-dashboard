@@ -770,6 +770,9 @@ const DATA = {
       "pct": 89.0,
       "date": "2016-02-26"
     },
+    "floorMmbbl": 18.0,
+    "floorPct": 22.3,
+    "aboveFloorMmbbl": 1.4,
     "pctile": 0,
     "n": 799,
     "since": "2011",
@@ -2580,6 +2583,13 @@ const DATA = {
 
 /* ===== LOG:START — auto-maintained by update_oil_dashboard.py (newest first). Do not hand-edit. ===== */
 const UPDATE_LOG = [
+  {
+    "time": "2026-07-24 10:58",
+    "outcome": "updated",
+    "label": "Dashboard updated",
+    "detail": "data through 2026-07-17; new: MCRSCUS1, MCESTUS1, MCSSTUS1, MCRSTUS1, WCESTUS1, WCSSTUS1, W_EPC0_SAX_YCUOK_MBBL, MGTSTUS1, MDISTUS1, MKJSTUS1, WGTSTUS1, WDISTUS1, WKJSTUS1",
+    "dataThrough": "2026-07-17"
+  },
   {
     "time": "2026-07-24 10:36",
     "outcome": "updated",
@@ -16718,9 +16728,10 @@ function renderCharts(){
 }
 
 /* --------------- Cushing storage utilization (stocks ÷ capacity) --------- */
-/* Reference lines are the OBSERVED min/max utilization over the full sample —
-   measured by the builder, not a hand-set "tank bottom" percent (EIA publishes
-   no Cushing operational-minimum figure; see update_oil_dashboard.py). */
+/* Upper reference line = OBSERVED record-high utilization (measured by the
+   builder). Lower line = the ~18 mmbbl REPORTED operational floor (desk/press
+   consensus, Jason 2026-07-24 — EIA publishes no official minimum; provenance
+   in update_oil_dashboard.py). */
 function renderCushUtil(){
   const card=$("#cushUtilCard"); if(!card) return;
   const U=DATA.cushingUtil;
@@ -16729,9 +16740,12 @@ function renderCushUtil(){
   const pcls = U.pctile<=25?"dn":U.pctile>=75?"up":"flat";
   $("#cushUtilSub").textContent =
     `Weekly Cushing stocks ÷ EIA est. total storage capacity (working + in-transit; final ${U.capAsof} vintage — capacity survey discontinued). `
-    + `Dashed lines mark the highest and lowest utilization observed since ${U.since}.`;
+    + `Dashed lines mark the highest utilization observed since ${U.since} and the ~${U.floorMmbbl||18} mmbbl operational floor (reported; hub can't draw much below it).`;
+  const floorBit = (U.floorMmbbl!=null && U.aboveFloorMmbbl!=null)
+    ? `<span class="yoy ${U.aboveFloorMmbbl<=2?"dn":"flat"}">${U.aboveFloorMmbbl} mmbbl above the ~${U.floorMmbbl} floor</span>` : "";
   $("#cushUtilHead").innerHTML = `
     <span class="big">${U.pct.toFixed(1)}<small>% of capacity</small></span>
+    ${floorBit}
     <span class="yoy ${pcls}">${ordN(U.pctile)} %ile since ${U.since}</span>
     <span class="ago">${U.stocksMmbbl} of ${U.capMmbbl} mmbbl · week ending ${U.date}</span>`;
   const svg=$("#cushUtilChart"), tip=$("#cushUtilTip");
@@ -16740,7 +16754,8 @@ function renderCushUtil(){
   const H=Math.round(Math.min(240,Math.max(190,W*0.4)));
   const m={t:14,r:10,b:22,l:40}, iw=W-m.l-m.r, ih=H-m.t-m.b;
   const vals=U.series, dates=U.dates, n=vals.length;
-  let lo=Math.max(0,U.histMin.pct-6), hi=Math.min(100,U.histMax.pct+6);
+  const floorPct=U.floorPct!=null?U.floorPct:U.histMin.pct;
+  let lo=Math.max(0,Math.min(U.histMin.pct,floorPct)-6), hi=Math.min(100,U.histMax.pct+6);
   const x=i=> m.l+iw*i/Math.max(1,n-1), y=v=> m.t+ih*(hi-v)/(hi-lo);
   svg.setAttribute("viewBox",`0 0 ${W} ${H}`); svg.innerHTML="";
   const add=(t,a)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);svg.appendChild(e);return e;};
@@ -16753,12 +16768,12 @@ function renderCushUtil(){
     if(+yr%2===1 || W>=640) add("text",{x:x(i),y:H-7,"text-anchor":"middle","font-size":9,fill:css('--ink-3')}).textContent="'"+yr.slice(2);
   }});
   const mmDate = s => { const t=s.split("-"); return `${DATA.months[+t[1]-1]}-${t[0]}`; };
-  [["histMax","record high"],["histMin","record low"]].forEach(([k,lab])=>{
-    const R=U[k];
-    add("line",{x1:m.l,x2:W-m.r,y1:y(R.pct),y2:y(R.pct),stroke:css('--ink-3'),"stroke-width":1,"stroke-dasharray":"5 4",opacity:.75});
-    add("text",{x:W-m.r-1,y:y(R.pct)+(k==="histMax"?11:-4),"text-anchor":"end","font-size":8.5,fill:css('--ink-3')})
-      .textContent=`${lab} ${R.pct.toFixed(0)}% (${mmDate(R.date)})`;
-  });
+  add("line",{x1:m.l,x2:W-m.r,y1:y(U.histMax.pct),y2:y(U.histMax.pct),stroke:css('--ink-3'),"stroke-width":1,"stroke-dasharray":"5 4",opacity:.75});
+  add("text",{x:W-m.r-1,y:y(U.histMax.pct)+11,"text-anchor":"end","font-size":8.5,fill:css('--ink-3')})
+    .textContent=`record high ${U.histMax.pct.toFixed(0)}% (${mmDate(U.histMax.date)})`;
+  add("line",{x1:m.l,x2:W-m.r,y1:y(floorPct),y2:y(floorPct),stroke:css('--neg'),"stroke-width":1.2,"stroke-dasharray":"5 4",opacity:.8});
+  add("text",{x:m.l+3,y:y(floorPct)-4,"text-anchor":"start","font-size":8.5,fill:css('--neg')})
+    .textContent=U.floorPct!=null?`operational floor ~${U.floorMmbbl} mmbbl (${U.floorPct.toFixed(0)}%)`:`record low ${U.histMin.pct.toFixed(0)}% (${mmDate(U.histMin.date)})`;
   const col=css('--c2026');
   let dp="", ap="";
   vals.forEach((v,i)=>{ const px=x(i).toFixed(1), pyy=y(v).toFixed(1);
