@@ -422,13 +422,16 @@
      layout; once you're scrolling you already know it, and a 3-row nav would eat
      a quarter of a laptop viewport. */
   .mainnav.stuck .navlab{display:none}
+  /* WRAP, not horizontal scroll (2026-07-25): the bar was nowrap + overflow-x
+     with the scrollbar HIDDEN — once the tab row outgrew the bar (Hurricane
+     Tracker made it 10 tabs) everything past the edge was unreachable by mouse,
+     cut off at "Market Context" with no affordance. A second compact row keeps
+     every tab clickable at any width. */
   .mainnav.stuck .mainnav-in{align-items:center;gap:4px 14px;padding:7px 20px;
-    max-width:1120px;margin:0 auto;
-    flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
-  .mainnav.stuck .mainnav-in::-webkit-scrollbar{display:none}
+    max-width:1120px;margin:0 auto;flex-wrap:wrap}
   .mainnav.stuck .navgrp{flex-direction:row}
   .mainnav.stuck .navgrp+.navgrp::before{top:6px;bottom:6px;left:-8px}
-  .mainnav.stuck .navtabs{flex-wrap:nowrap;gap:5px}
+  .mainnav.stuck .navtabs{flex-wrap:wrap;gap:5px}
   .mainnav.stuck .navtabs button{flex-direction:row;gap:6px;min-width:0;
     padding:6px 10px;font-size:12px}
   .mainnav.stuck .navtabs .nvi{width:15px;height:15px}
