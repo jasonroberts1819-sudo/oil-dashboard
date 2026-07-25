@@ -18437,11 +18437,14 @@ function ledgerBlock(L){
       <td class="num ${rcls}"><b>${fmtR(o.openR)}</b></td>
       <td>${!o.t1Hit?"initial":( /trail/i.test(o.stopBasis||"") ? "trailing" : "T1 hit · breakeven")}</td>
       <td class="num">${o.sessions||0}/${o.timeStop||"—"}</td></tr>`;}).join("");
+  // display label only — the ledger's internal exit key stays "decay" so history,
+  // cooldowns and state files are untouched (Jason's naming, 2026-07-25)
+  const EXIT_LABEL={decay:"signal lapsed"};
   const closed=(L.closed||[]).map(c=>{
     const rcls=(c.realisedR||0)>0?"tipos-n":"tineg-n";
     return `<tr><td>${c.structure||c.id}</td><td>${c.dirn||""}</td>
       <td>${c.opened||""}</td><td>${c.exitDate||""}</td>
-      <td><span class="tiexit x-${c.exit}">${c.exit}</span></td>
+      <td><span class="tiexit x-${c.exit}">${EXIT_LABEL[c.exit]||c.exit}</span></td>
       <td class="num">${c.exitLevel==null?"—":(+c.exitLevel).toFixed(2)}</td>
       <td class="num ${rcls}"><b>${fmtR(c.realisedR)}</b></td></tr>`;}).join("");
   const by=S.byReason||{};
@@ -18462,12 +18465,12 @@ function ledgerBlock(L){
       <th class="num">Sessions</th></tr></thead><tbody>${open}</tbody></table></div>`
       : `<p class="cotnote" style="padding:4px 2px">Nothing open.</p>`}
     <p class="cotnote" style="margin-top:10px;border-top:1px solid var(--border);padding-top:8px">
-      Exits: stop · target · time stop · signal decay · and a <b>hard close 4 business days
-      before front expiry</b>, ahead of spot-month position limits. Ideas never open inside
-      that window.</p>
+      Exits: stop · target · time stop · signal lapsed (the entry signal stopped firing) ·
+      and a <b>hard close 4 business days before front expiry</b>, ahead of spot-month
+      position limits. Ideas never open inside that window.</p>
   </section>
   ${closed?`<section class="card"><h2>Recently closed</h2>
-    <p class="csub">${Object.entries(by).filter(([,v])=>v).map(([k,v])=>`${v} ${k}`).join(" · ")||"—"}</p>
+    <p class="csub">${Object.entries(by).filter(([,v])=>v).map(([k,v])=>`${v} ${EXIT_LABEL[k]||k}`).join(" · ")||"—"}</p>
     <div class="tbwrap"><table class="titab"><thead><tr><th>Structure</th><th>Dir</th>
       <th>Opened</th><th>Closed</th><th>Exit</th><th class="num">Level</th>
       <th class="num">Realised R</th></tr></thead><tbody>${closed}</tbody></table></div>
