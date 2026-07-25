@@ -378,12 +378,21 @@
   /* ---- primary navigation ------------------------------------------------
      Sticky so it stays reachable on a long page, and grouped by kind so the
      structure of the dashboard is legible before you've clicked anything. */
-  .mainnav{position:sticky;top:0;z-index:30;margin:0 0 18px;
+  /* NOT position:sticky (2026-07-25): the stuck state collapses the nav from its
+     full two-row layout to a slim bar. A sticky element keeps its box in flow, so
+     that collapse removed ~160px of document height exactly at the pin boundary —
+     content jumped under the cursor and scroll-anchoring fought it (Jason's
+     "glitches when scrolling down from the top"). Now: the nav scrolls away
+     normally; once FULLY past (plus hysteresis), the compact bar comes back as
+     position:fixed with a same-height spacer holding its place in flow — the
+     class flip can never move layout, so there is nothing to jitter. */
+  .mainnav{position:relative;z-index:30;margin:0 0 18px;
     background:color-mix(in srgb,var(--bg) 88%,transparent);
     backdrop-filter:saturate(180%) blur(12px);
     -webkit-backdrop-filter:saturate(180%) blur(12px);
     border-bottom:1px solid transparent;transition:border-color .18s,box-shadow .18s}
-  .mainnav.stuck{border-bottom-color:var(--border);box-shadow:0 6px 20px rgba(16,20,28,.07)}
+  .mainnav.stuck{position:fixed;top:0;left:0;right:0;margin:0;
+    border-bottom-color:var(--border);box-shadow:0 6px 20px rgba(16,20,28,.07)}
   :root[data-theme="dark"] .mainnav.stuck{box-shadow:0 6px 20px rgba(0,0,0,.45)}
   .mainnav-in{display:flex;flex-wrap:wrap;align-items:flex-end;gap:8px 22px;padding:10px 0 11px}
   .navgrp{display:flex;flex-direction:column;gap:5px;position:relative}
@@ -413,7 +422,8 @@
      layout; once you're scrolling you already know it, and a 3-row nav would eat
      a quarter of a laptop viewport. */
   .mainnav.stuck .navlab{display:none}
-  .mainnav.stuck .mainnav-in{align-items:center;gap:4px 14px;padding:7px 0;
+  .mainnav.stuck .mainnav-in{align-items:center;gap:4px 14px;padding:7px 20px;
+    max-width:1120px;margin:0 auto;
     flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
   .mainnav.stuck .mainnav-in::-webkit-scrollbar{display:none}
   .mainnav.stuck .navgrp{flex-direction:row}
@@ -18782,12 +18792,41 @@ const PRODUCT_TABS = ["crude","gasoline","distillate","jet","refining"];
 let activeTab = "crude";
 $("#ex2020").addEventListener("change",e=>{state.ex2020=e.target.checked; renderCharts();});
 document.querySelectorAll('#mainnav [data-tab]').forEach(b=>b.addEventListener("click",()=>setTab(b.dataset.tab)));
-/* shadow the nav only once it's actually pinned, so it reads flat at rest */
+/* Compact fixed nav once the full nav has scrolled past (2026-07-25 rework — see
+   the .mainnav CSS comment): a same-height spacer holds the nav's place in flow
+   while it's fixed, and a hysteresis band stops boundary oscillation, so the
+   class flip can never move layout under the cursor. */
 (function(){
   const nav=document.getElementById("mainnav");
   if(!nav) return;
-  const mark=()=>nav.classList.toggle("stuck", nav.getBoundingClientRect().top<=0);
-  addEventListener("scroll",mark,{passive:true}); mark();
+  let spacer=null, expandedH=0, engageY=0;
+  function measure(){
+    const wasStuck=nav.classList.contains("stuck");
+    if(wasStuck){nav.classList.remove("stuck"); if(spacer) spacer.style.display="none";}
+    // include the nav's bottom margin: .stuck zeroes it, so the spacer must carry
+    // BOTH the height and the margin or the flip still nudges the document
+    expandedH=nav.offsetHeight+(parseFloat(getComputedStyle(nav).marginBottom)||0);
+    engageY=nav.offsetTop+expandedH;
+    if(spacer) spacer.style.height=expandedH+"px";
+    if(wasStuck){if(spacer) spacer.style.display=""; nav.classList.add("stuck");}
+  }
+  function mark(){
+    const y=window.scrollY, stuck=nav.classList.contains("stuck");
+    if(!stuck && y>engageY+8){
+      if(!spacer){spacer=document.createElement("div"); nav.parentNode.insertBefore(spacer,nav);}
+      spacer.style.height=expandedH+"px"; spacer.style.display="";
+      nav.classList.add("stuck");
+    }else if(stuck && y<Math.max(0,engageY-48)){
+      nav.classList.remove("stuck");
+      if(spacer) spacer.style.display="none";
+    }
+  }
+  addEventListener("scroll",mark,{passive:true});
+  addEventListener("resize",()=>{measure(); mark();});
+  measure(); mark();
+  // re-measure after the whole script has run: the public site removes the Table
+  // button AFTER this IIFE, which can change the nav's wrapped height
+  setTimeout(()=>{measure(); mark();},0);
 })();
 /* Header "As of" reflects the ACTIVE tab's own data date, not the crude build — a fixed
    date misdates every other tab (Trade Ideas, Positioning, Macro …). Each entry pulls the
