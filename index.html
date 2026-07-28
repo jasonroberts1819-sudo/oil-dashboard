@@ -19125,8 +19125,8 @@ function ledgerBlock(L){
       :"Re-priced on settlement as of"} ${L.asOf||"—"}. ${S.open||0} open${S.hitRate!=null?` · closed history:
       ${S.hitRate}% hit rate, ${fmtR(S.avgR)} average`:""}.</p>
     ${open?`<div class="tbwrap"><table class="titab"><thead><tr><th>Structure</th><th>Dir</th>
-      <th class="num">Entry</th><th class="num">Stop</th><th class="num">Target</th>
-      <th class="num">Last</th><th class="num">Open R</th><th>Stop basis</th>
+      <th class="num">Open Level</th><th class="num">Stop</th><th class="num">Target</th>
+      <th class="num">Current Level</th><th class="num">Open R</th><th>Stop basis</th>
       <th class="num">Sessions</th></tr></thead><tbody>${open}</tbody></table></div>`
       : `<p class="cotnote" style="padding:4px 2px">Nothing open.</p>`}
     <p class="cotnote" style="margin-top:10px;border-top:1px solid var(--border);padding-top:8px">
