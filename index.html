@@ -10579,7 +10579,7 @@ const INV_DATA = {
           "label": "TSA checkpoint travelers \u2014 U.S. (monthly avg of daily)",
           "unit": "mn travelers/day",
           "src": "TSA checkpoint travel numbers (tsa.gov, public domain)",
-          "asOf": "2026-07-26"
+          "asOf": "2026-07-27"
         },
         {
           "code": "DERIV_DOS_JET",
@@ -11440,7 +11440,7 @@ const INV_DATA = {
             2.475,
             2.541,
             2.691,
-            2.688,
+            2.69,
             null,
             null,
             null,
@@ -12388,7 +12388,7 @@ const INV_DATA = {
             -0.059,
             0.066,
             0.15,
-            -0.003,
+            -0.001,
             null,
             null,
             null,
@@ -19503,11 +19503,26 @@ function renderHurricane(){
       <p class="csub" style="margin:0"><a href="${s.url}" target="_blank" rel="noopener">NHC advisories →</a></p>
     </section>`;
   };
-  const bseeCard = gulf.length? `<section class="card" style="margin-bottom:12px;border-color:#dc2626">
+  /* BSEE shut-in stats (2026-07-28, Jason's pick): real reported numbers from BSEE's
+     daily activation releases, pulled via its RSS (fetch_bsee in hurricane_tracker.py —
+     the www site 403s scripts, the feed doesn't). Renders whenever a fresh release
+     exists, even if the storm has left the inGulf box (activations outlast the flag);
+     numbers that failed to parse simply don't render — the title+link still do. */
+  const B=H.bsee||null;
+  const bseeStats = B? `<section class="card" style="margin-bottom:12px;border-color:#dc2626">
+      <h2 style="font-size:14px">Gulf shut-ins — BSEE reported <span style="font-weight:400;color:var(--ink-3);font-size:11px">· ${B.date}</span></h2>
+      ${(B.oilPct!=null||B.gasPct!=null||B.platforms!=null)?`<p style="margin:6px 0 0;font-size:14px">${[
+        B.oilPct!=null?`<b style="color:#dc2626">${B.oilPct.toFixed(1)}%</b> of Gulf oil production shut in`:null,
+        B.gasPct!=null?`<b>${B.gasPct.toFixed(1)}%</b> of gas`:null,
+        B.platforms!=null?`<b>${B.platforms}</b> platforms evacuated`:null
+      ].filter(Boolean).join(" · ")}</p>`:""}
+      <p class="csub" style="margin:6px 0 0"><a href="${B.url}" target="_blank" rel="noopener">${B.title} →</a></p>
+    </section>` : "";
+  const bseeCard = bseeStats || (gulf.length? `<section class="card" style="margin-bottom:12px;border-color:#dc2626">
       <h2 style="font-size:14px">Gulf production watch</h2>
       <p class="csub" style="margin:2px 0 0">${gulf.length===1?`${gulf[0].classLabel} ${gulf[0].name} is`:`${gulf.length} systems are`} inside the Gulf — BSEE posts daily production shut-in and platform evacuation statistics during activations.</p>
       <p class="csub" style="margin:6px 0 0"><a href="${H.bseeUrl}" target="_blank" rel="noopener">BSEE hurricane activity statistics →</a></p>
-    </section>` : "";
+    </section>` : "");
   const quiet = !atl.length? `<section class="card" style="margin-bottom:12px">
       <h2 style="font-size:14px">No active Atlantic systems</h2>
       <p class="csub" style="margin:2px 0 0">${H.seasonActive?"Season is active (Jun 1 – Nov 30) — formation outlook below.":"Atlantic hurricane season runs Jun 1 – Nov 30."}</p>
