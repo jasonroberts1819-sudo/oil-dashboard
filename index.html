@@ -19623,7 +19623,7 @@ function renderIndexRolls(){
 
   const calCard=`<section class="card">
     <h2>Roll calendar — lots per day, next ~3 months</h2>
-    <p class="csub">Net lots that indexed money must roll each business day (sell near / buy far; short-fund rolls netted). Small line = that day's lots as % of the from-contract's open interest — the selling pressure on the leg being exited. Hover a cell for the per-fund breakdown and the %-of-OI on both legs. Holdings as of ${esc(R.holdingsAsOf||"")}.</p>
+    <p class="csub">Gross benchmark roll demand in lot-equivalents per business day (sell near / buy far; short-fund rolls netted). Index-complex flows are swap-channel notionals — the ceiling on screen flow, since dealers net them inside their books before hedging; ETP flows are actual futures. Small line = % of the from-contract's open interest. Hover a cell for the per-fund breakdown and the %-of-OI on both legs. Holdings as of ${esc(R.holdingsAsOf||"")}.</p>
     <div style="overflow-x:auto"><table class="rolltab">
       <thead><tr><th>Day</th>${PRODS.map(p=>`<th>${p}</th>`).join("")}<th>Selection windows</th></tr></thead>
       <tbody>${calRows}</tbody>
@@ -19638,8 +19638,8 @@ function renderIndexRolls(){
     return `<tr><td>${esc(c.name)}</td><td style="white-space:nowrap">${aum}</td>${lots}<td>${esc(c.rule)}</td><td style="white-space:nowrap">${esc(c.next||"—")}</td></tr>`;
   }).join("");
   const cxCard=`<section class="card">
-    <h2>Index complexes — implied petroleum lots</h2>
-    <p class="csub">Tracking AUM × 2026 target weight ÷ live contract notional. Lots shown are total positions; the calendar spreads each roll window at the index's daily fraction.</p>
+    <h2>Index complexes — implied petroleum lot-equivalents</h2>
+    <p class="csub">Tracking AUM × target weight ÷ live contract notional — benchmark exposure in lot-equivalents, not futures held (swap-channel exposure nets inside dealer books; CFTC swap-dealer data shows WTI books carry it against producer shorts, while ICE Brent dealer net length ≈ these totals). The calendar spreads each roll window at the index's daily fraction.</p>
     <div style="overflow-x:auto"><table class="rolltab">
       <thead><tr><th>Index</th><th>Tracking</th>${PRODS.map(p=>`<th style="text-align:right">${p}</th>`).join("")}<th>Roll rule</th><th>Next window</th></tr></thead>
       <tbody>${cxRows}</tbody>
