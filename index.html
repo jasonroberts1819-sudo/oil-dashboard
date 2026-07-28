@@ -19144,7 +19144,14 @@ function ledgerBlock(L){
 function renderTradeIdeas(){
   const box=$("#tradeView");
   const D=(typeof TI_DATA!=='undefined'&&TI_DATA&&TI_DATA.ideas)?TI_DATA:null;
-  if(!D||!D.ideas.length){
+  /* The "run --inject" fallback is ONLY for a page that has never been built. ZERO
+     PUBLISHABLE IDEAS IS A VALID, DESIGNED STATE (2026-07-27, hit live after the ~$10
+     crash closed the whole book into re-entry cooldowns and left the rest under the
+     0.25 bar; there is deliberately no minimum idea count). It used to early-return
+     here, which hid the ledger, closed trades, data currency and the footer and made a
+     working system look broken. Jason's rule: render everything as normal and the ideas
+     section just reads "No current trade recommendations". */
+  if(!D){
     box.innerHTML='<section class="card"><p class="csub" style="padding:10px">No ideas yet — run '
       +'<code>python trade_ideas.py --inject</code>.</p></section>'; return; }
   const M=D.meta||{}, C=D.context||{};
@@ -19188,6 +19195,10 @@ function renderTradeIdeas(){
      bearish notes exist. That one names a concrete conflict on the idea it applies to, so it is
      actionable where the banner was ambient. Keep the payload. */
   html+=`</section>`;
+
+  if(!D.ideas.length){
+    html+=`<section class="card"><p class="csub" style="padding:10px"><b>No current trade recommendations</b></p></section>`;
+  }
 
   // ideas
   for(const [i,it] of (D.ideas||[]).entries()){
