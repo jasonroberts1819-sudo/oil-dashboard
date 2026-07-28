@@ -19459,7 +19459,7 @@ function renderPositioning(){
       <p class="csub" style="margin:4px 0 0">4-week: crude ${SF.crude4wk>=0?'+':''}${SF.crude4wk}k${SF.prod4wk!=null?` · products ${SF.prod4wk>=0?'+':''}${SF.prod4wk}k`:''} · net position now: crude ${SF.crudeNet>=0?'+':''}${SF.crudeNet}k lots${SF.prodNet!=null?`, products ${SF.prodNet>=0?'+':''}${SF.prodNet}k lots`:''}</p>
       ${strip(SF.crude,'Crude (WTI + Brent)')}
       ${SF.products?strip(SF.products,'Products (RBOB + HO + Gasoil)'):''}
-      <p class="cotnote" style="margin-top:8px">Week-over-week change in managed-money net positions, in contracts (lots) — complete report weeks only. Hover a bar for the week's figure.</p>
+      <p class="cotnote" style="margin-top:8px">Week-over-week change in managed-money net positions, in contracts (lots). Hover a bar for the week's figure.</p>
     </section>`;
   }
   box.innerHTML = `
