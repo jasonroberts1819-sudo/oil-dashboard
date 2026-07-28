@@ -18401,7 +18401,7 @@ function renderMacro(){
       <div class="csub" style="margin:2px 0 8px">WTI <b>${fm(AT.wtiMove)}</b> to $${AT.wtiLevel.toFixed(2)} — macro <b>${fm(AT.macro)}</b> · oil-specific <b>${fm(AT.oilSpecific)}</b></div>
       ${rowsH}
       <div class="regrow" style="grid-template-columns:250px 1fr 52px;border-top:1px solid var(--border);margin-top:4px;padding-top:6px" title="The part of the week's WTI move not accounted for by co-movement with any macro group — the oil-specific (idiosyncratic) component: supply, inventories, geopolitics, positioning."><span><b>Oil-specific</b></span>${abar(AT.oilSpecific,'var(--cavg)')}<span style="text-align:right"><b>${fm(AT.oilSpecific)}</b></span></div>
-      <p class="cotnote" style="margin-top:8px">Each row: the group's own move, whether WTI currently trades <b>correlated</b> or <b>inverse</b> to it over the ${AT.win}-session beta window, and that co-movement's share of the week's WTI change in $/bbl. The macro basket explains ${AT.r2==null?'—':Math.round(AT.r2*100)+'%'} of daily WTI variance; the rest is oil-specific. Co-movement, not causation — hover any row for the plain-English read.</p>
+      <p class="cotnote" style="margin-top:8px">Each row: the group's own move, whether WTI currently trades <b>correlated</b> or <b>inverse</b> to it over the ${AT.win}-session beta window, and that co-movement's share of the week's WTI change in $/bbl. The macro basket explains ${AT.r2==null?'—':Math.round(AT.r2*100)+'%'} of daily WTI variance; the rest is oil-specific. Co-movement, not causation — hover any row for further explanation.</p>
     </section>`;
   }
   const cov=reg.cov;
