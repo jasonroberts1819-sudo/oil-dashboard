@@ -19626,7 +19626,7 @@ function renderIndexRolls(){
 
   const calCard=`<section class="card">
     <h2>Roll calendar — lots per day, next ~3 months</h2>
-    <p class="csub">Estimated screen roll flow in lots per business day (sell near / buy far; short-fund rolls netted). Swap-channel index flows are scaled by the measured dealer-residual participation — weekly swap-dealer outright longs ÷ swap-channel notional${R.scrPart?`, currently binding for ${esc(Object.entries(R.scrPart.p).map(([p,v])=>`${p} at ${Math.round(v*100)}%`).join(", "))} (COT ${esc(R.scrPart.asOf||"")})`:""}; other legs and all direct-holding ETPs are unscaled. Small line = % of the from-contract's open interest. Hover a cell for the per-fund breakdown, gross benchmark demand, and the %-of-OI on both legs. Holdings as of ${esc(R.holdingsAsOf||"")}.</p>
+    <p class="csub">Estimated screen roll flow in lots per business day (sell near / buy far; short-fund rolls netted). Small line = % of current contract's open interest. Hover a cell for the per-fund breakdown, gross benchmark demand, and the %-of-OI on both legs. Holdings as of ${esc(R.holdingsAsOf||"")}.</p>
     <div style="overflow-x:auto"><table class="rolltab">
       <thead><tr><th>Day</th>${PRODS.map(p=>`<th>${p}</th>`).join("")}<th>Selection windows</th></tr></thead>
       <tbody>${calRows}</tbody>
@@ -19646,7 +19646,7 @@ function renderIndexRolls(){
   }).join("");
   const cxCard=`<section class="card">
     <h2>Index complexes — implied petroleum lot-equivalents</h2>
-    <p class="csub">Tracking AUM × target weight ÷ live contract notional — benchmark exposure in lot-equivalents, not futures held (swap-channel exposure nets inside dealer books; CFTC swap-dealer data shows WTI books carry it against producer shorts, while ICE Brent dealer net length ≈ these totals). scr = estimated futures actually on screen, capped by measured weekly swap-dealer outright longs and allocated pro-rata across indices; shown only where the cap binds. The calendar spreads each roll window at the index's daily fraction.</p>
+    <p class="csub">Tracking AUM × target weight ÷ live contract notional — benchmark exposure in lot-equivalents. scr = estimated futures on screen. The calendar spreads each roll window at the index's daily fraction.</p>
     <div style="overflow-x:auto"><table class="rolltab">
       <thead><tr><th>Index</th><th>Tracking</th>${PRODS.map(p=>`<th style="text-align:right">${p}</th>`).join("")}<th>Roll rule</th><th>Next window</th></tr></thead>
       <tbody>${cxRows}</tbody>
