@@ -19562,6 +19562,8 @@ function renderIndexRolls(){
   const R=(typeof ROLL_DATA!=="undefined" && ROLL_DATA) || null;
   if(!R){ box.innerHTML='<section class="card"><p class="csub" style="padding:10px">No index-roll data yet — run <code>python index_rolls.py</code>.</p></section>'; return; }
   const PRODS=["WTI","Brent","RBOB","ULSD","Gasoil"];
+  // one hue per product so adjacent bars read separately (mid-saturation: works on both themes)
+  const PCOL={WTI:"#3e8f6a",Brent:"#3b6fb5",RBOB:"#d98a2b",ULSD:"#8a63c9",Gasoil:"#2b9aa8"};
   const num=n=>Math.round(n).toLocaleString("en-US");
   const kfmt=n=>{const a=Math.abs(n); const s=a>=10000?(a/1000).toFixed(1).replace(/\.0$/,"")+"k":num(a); return (n<0?"−":"")+s;};
   const bn=v=>v==null?"—":(v>=1e9?"$"+(v/1e9).toFixed(1).replace(/\.0$/,"")+"bn":"$"+Math.round(v/1e6)+"m");
@@ -19612,7 +19614,9 @@ function renderIndexRolls(){
     const fr=Object.entries(x.from[p]||{});
     const sub=fr.length?fr.map(([f,l])=>`${pctf(l/OI[f])} of ${f}`).slice(0,2).join(" · "):"";
     const t=esc(lines.join("\n"));
-    return `<td class="rollcell ${cls}" title="${t}"><span class="rollbar" style="width:${w}%"></span><span class="rollnum">${kfmt(v)}${sub?`<span class="rolloi">${sub}</span>`:""}</span></td>`;
+    const col=v<0?"var(--neg)":PCOL[p];
+    const barSty=`width:${w}%;background:color-mix(in srgb,${col} 22%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,${col} 45%,transparent)`;
+    return `<td class="rollcell ${cls}" title="${t}"><span class="rollbar" style="${barSty}"></span><span class="rollnum">${kfmt(v)}${sub?`<span class="rolloi">${sub}</span>`:""}</span></td>`;
   };
   let lastM=null;
   const calRows=days.map(x=>{
@@ -19628,7 +19632,7 @@ function renderIndexRolls(){
     <h2>Roll calendar — lots per day, next ~3 months</h2>
     <p class="csub">Estimated screen roll flow in lots per business day (sell near / buy far; short-fund rolls netted). Small line = % of current contract's open interest. Hover a cell for the per-fund breakdown, gross benchmark demand, and the %-of-OI on both legs. Holdings as of ${esc(R.holdingsAsOf||"")}.</p>
     <div style="overflow-x:auto"><table class="rolltab">
-      <thead><tr><th>Day</th>${PRODS.map(p=>`<th>${p}</th>`).join("")}<th>Selection windows</th></tr></thead>
+      <thead><tr><th>Day</th>${PRODS.map(p=>`<th><span class="rolldot" style="background:${PCOL[p]}"></span>${p}</th>`).join("")}<th>Selection windows</th></tr></thead>
       <tbody>${calRows}</tbody>
     </table></div>
   </section>`;
@@ -19673,9 +19677,9 @@ function renderIndexRolls(){
     .rolltab th{text-align:left;padding:6px 8px;border-bottom:1px solid var(--border);font-size:12px;color:var(--ink-3)}
     .rolltab td{padding:5px 8px;border-bottom:1px solid color-mix(in srgb,var(--border) 45%,transparent);vertical-align:middle}
     .rollcell{position:relative;min-width:78px;text-align:right;font-variant-numeric:tabular-nums}
-    .rollbar{position:absolute;left:0;top:15%;height:70%;border-radius:3px;background:color-mix(in srgb,var(--pos) 16%,transparent)}
-    .rollcell.neg .rollbar{background:color-mix(in srgb,var(--neg) 18%,transparent)}
+    .rollbar{position:absolute;left:0;top:15%;height:70%;border-radius:3px}
     .rollcell.neg .rollnum{color:var(--neg)}
+    .rolldot{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:5px;vertical-align:baseline}
     .rollnum{position:relative}
     .rolloi{display:block;font-size:10.5px;line-height:1.25;color:var(--ink-3);font-weight:400;white-space:nowrap}
     .rollchip{display:inline-block;border:1px solid var(--border);border-radius:10px;padding:1px 7px;font-size:11.5px;color:var(--ink-3);white-space:nowrap}
