@@ -19116,10 +19116,20 @@ function scoredLegs(it,mo){
    held row carries `level`, a fresh frame does not, so Last is dropped rather than
    printed as n/a. */
 function levelCells(o,unit){
+  // $/gal structures (RBOB/HO calendar spreads, RB/HO) quote in 4 decimals — 2 dp on a
+  // 0.19 $/gal spread hides the whole tick structure (Jason, 2026-07-29)
+  const d=/gal/i.test(unit||"")?4:2;
   const cells=[["Entry",o.entry],["Stop",o.stop],["T1",o.t1],["Target",o.target],["Last",o.level]];
   return `<div class="tirlv">`+cells.filter(c=>c[1]!==undefined).map(([k,v])=>
-    `<span><i>${k}</i>${v==null?"n/a":(+v).toFixed(2)}${(v!=null&&unit)?`<em style="font-weight:400;color:var(--ink-3)"> ${unit}</em>`:""}</span>`
+    `<span><i>${k}</i>${v==null?"n/a":(+v).toFixed(d)}${(v!=null&&unit)?`<em style="font-weight:400;color:var(--ink-3)"> ${unit}</em>`:""}</span>`
   ).join("")+`</div>`;
+}
+/* Ledger rows carry no unit field, so gal-quoted structures are recognised by their
+   structure text: RBOB/HO calendar spreads and the RB/HO product spread — never cracks,
+   which quote $/bbl. Same 4-decimal rule as levelCells. */
+function ledgerDec(row){
+  const s=(row.structure||"")+"";
+  return (/RB\/HO/.test(s) || (/(RBOB|\bHO\b)/i.test(s) && /spread/i.test(s) && !/crack/i.test(s))) ? 4 : 2;
 }
 /* The reference-distribution note ("measured against continuous front (2000-08-23→)")
    was removed from the cards 2026-07-22 at Jason's call: which window a percentile was
@@ -19158,10 +19168,11 @@ function ledgerBlock(L){
   const S=L.summary||{};
   const open=(L.open||[]).map(o=>{
     const rcls=(o.openR||0)>0?"tipos-n":((o.openR||0)<0?"tineg-n":"");
+    const dd=ledgerDec(o);
     return `<tr><td>${o.structure||o.id}${o.noCard?` <span title="No idea card is published for this position this run — its idea did not score, so there is no current thesis on the page. It is still being risk-managed on its own instrument." style="color:var(--ink-3);font-size:11px">· no current card</span>`:""}</td><td>${o.dirn||""}</td>
-      <td class="num">${o.entry==null?"—":(+o.entry).toFixed(2)}</td><td class="num">${o.stop==null?"—":(+o.stop).toFixed(2)}</td>
-      <td class="num">${o.target==null?"—":(+o.target).toFixed(2)}</td>
-      <td class="num">${o.level==null?"—":(+o.level).toFixed(2)}</td>
+      <td class="num">${o.entry==null?"—":(+o.entry).toFixed(dd)}</td><td class="num">${o.stop==null?"—":(+o.stop).toFixed(dd)}</td>
+      <td class="num">${o.target==null?"—":(+o.target).toFixed(dd)}</td>
+      <td class="num">${o.level==null?"—":(+o.level).toFixed(dd)}</td>
       <td class="num ${rcls}"><b>${fmtR(o.openR)}</b></td>
       <td>${!o.t1Hit?"initial":( /trail/i.test(o.stopBasis||"") ? "trailing" : "T1 hit · breakeven")}</td>
       <td class="num">${o.sessions||0}/${o.timeStop||"—"}</td></tr>`;}).join("");
@@ -19170,11 +19181,12 @@ function ledgerBlock(L){
   const EXIT_LABEL={decay:"signal lapsed"};
   const closed=(L.closed||[]).map(c=>{
     const rcls=(c.realisedR||0)>0?"tipos-n":"tineg-n";
+    const dd=ledgerDec(c);
     return `<tr><td>${c.structure||c.id}</td><td>${c.dirn||""}</td>
       <td>${c.opened||""}</td><td>${c.exitDate||""}</td>
       <td><span class="tiexit x-${c.exit}">${EXIT_LABEL[c.exit]||c.exit}</span></td>
-      <td class="num">${c.entry==null?"—":(+c.entry).toFixed(2)}</td>
-      <td class="num">${c.exitLevel==null?"—":(+c.exitLevel).toFixed(2)}</td>
+      <td class="num">${c.entry==null?"—":(+c.entry).toFixed(dd)}</td>
+      <td class="num">${c.exitLevel==null?"—":(+c.exitLevel).toFixed(dd)}</td>
       <td class="num ${rcls}"><b>${fmtR(c.realisedR)}</b></td></tr>`;}).join("");
   const by=S.byReason||{};
   return `<section class="card">
