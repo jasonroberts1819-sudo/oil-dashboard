@@ -19573,18 +19573,19 @@ function renderIndexRolls(){
   // ---- per-day per-product nets + column maxes for bar scaling
   const OI=R.oi||{};
   const pctf=r=>{const p=Math.abs(r)*100; return (p>=10?Math.round(p):p>=1?p.toFixed(1):p.toFixed(2))+"%";};
+  // cells show ESTIMATED SCREEN FLOW (e.sl where the dealer-residual cap binds, else
+  // gross); gross benchmark demand stays in the hover breakdown (Jason, 2026-07-28)
   const days=(R.cal||[]).map(c=>{
-    const net={}, tip={}, from={}, pair={}, scr={}, hasScr={};
+    const net={}, tip={}, from={}, pair={};
     for(const e of (c.ev||[])){
-      net[e.p]=(net[e.p]||0)+e.l;
-      scr[e.p]=(scr[e.p]||0)+(e.sl!=null?e.sl:e.l);
-      if(e.sl!=null) hasScr[e.p]=true;
-      (tip[e.p]=tip[e.p]||[]).push(`${e.w} ${e.l>0?"+":""}${num(e.l)}${e.sl!=null?` (scr ≈${num(e.sl)})`:""}  ${e.f} → ${e.t}`);
-      if(OI[e.f]) (from[e.p]=from[e.p]||{})[e.f]=((from[e.p]||{})[e.f]||0)+e.l;
+      const eff=e.sl!=null?e.sl:e.l;
+      net[e.p]=(net[e.p]||0)+eff;
+      (tip[e.p]=tip[e.p]||[]).push(`${e.w} ${eff>0?"+":""}${num(eff)}${e.sl!=null?` (gross ${num(e.l)})`:""}  ${e.f} → ${e.t}`);
+      if(OI[e.f]) (from[e.p]=from[e.p]||{})[e.f]=((from[e.p]||{})[e.f]||0)+eff;
       const pk=e.f+"→"+e.t;
-      (pair[e.p]=pair[e.p]||{})[pk]=((pair[e.p]||{})[pk]||0)+e.l;
+      (pair[e.p]=pair[e.p]||{})[pk]=((pair[e.p]||{})[pk]||0)+eff;
     }
-    return {d:c.d, net, tip, from, pair, scr, hasScr, win:c.win||[]};
+    return {d:c.d, net, tip, from, pair, win:c.win||[]};
   });
   const colMax={};
   for(const p of PRODS) colMax[p]=Math.max(1,...days.map(x=>Math.abs(x.net[p]||0)));
@@ -19607,12 +19608,9 @@ function renderIndexRolls(){
       oiBits.push(s);
     }
     if(oiBits.length) lines.push("", ...oiBits);
-    // cell sub-line: % of the FROM-contract's OI (selling pressure on that leg),
-    // plus the dealer-residual screen-flow estimate where it caps below gross
+    // cell sub-line: estimated screen flow as % of the FROM-contract's OI
     const fr=Object.entries(x.from[p]||{});
-    const bits=fr.length?fr.map(([f,l])=>`${pctf(l/OI[f])} of ${f}`).slice(0,2):[];
-    if(x.hasScr[p]) bits.push(`scr ${kfmt(x.scr[p])}`);
-    const sub=bits.join(" · ");
+    const sub=fr.length?fr.map(([f,l])=>`${pctf(l/OI[f])} of ${f}`).slice(0,2).join(" · "):"";
     const t=esc(lines.join("\n"));
     return `<td class="rollcell ${cls}" title="${t}"><span class="rollbar" style="width:${w}%"></span><span class="rollnum">${kfmt(v)}${sub?`<span class="rolloi">${sub}</span>`:""}</span></td>`;
   };
@@ -19628,7 +19626,7 @@ function renderIndexRolls(){
 
   const calCard=`<section class="card">
     <h2>Roll calendar — lots per day, next ~3 months</h2>
-    <p class="csub">Gross benchmark roll demand in lot-equivalents per business day (sell near / buy far; short-fund rolls netted). Index-complex flows are swap-channel notionals — the ceiling on screen flow, since dealers net them inside their books before hedging; ETP flows are actual futures. Small line = % of the from-contract's open interest${R.scrPart?`, and scr = estimated screen flow (gross × dealer-residual participation: weekly swap-dealer outright longs ÷ swap-channel notional — currently caps below gross for ${esc(Object.entries(R.scrPart.p).map(([p,v])=>`${p} at ${Math.round(v*100)}%`).join(", "))}; COT ${esc(R.scrPart.asOf||"")})`:""}. Hover a cell for the per-fund breakdown and the %-of-OI on both legs. Holdings as of ${esc(R.holdingsAsOf||"")}.</p>
+    <p class="csub">Estimated screen roll flow in lots per business day (sell near / buy far; short-fund rolls netted). Swap-channel index flows are scaled by the measured dealer-residual participation — weekly swap-dealer outright longs ÷ swap-channel notional${R.scrPart?`, currently binding for ${esc(Object.entries(R.scrPart.p).map(([p,v])=>`${p} at ${Math.round(v*100)}%`).join(", "))} (COT ${esc(R.scrPart.asOf||"")})`:""}; other legs and all direct-holding ETPs are unscaled. Small line = % of the from-contract's open interest. Hover a cell for the per-fund breakdown, gross benchmark demand, and the %-of-OI on both legs. Holdings as of ${esc(R.holdingsAsOf||"")}.</p>
     <div style="overflow-x:auto"><table class="rolltab">
       <thead><tr><th>Day</th>${PRODS.map(p=>`<th>${p}</th>`).join("")}<th>Selection windows</th></tr></thead>
       <tbody>${calRows}</tbody>
