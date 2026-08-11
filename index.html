@@ -19648,7 +19648,11 @@ function renderIndexRolls(){
   // volumes confirmed gross as the right activity scale); the dealer-residual net-
   // footprint estimate (e.sl) moves to the hover as context
   const ADV=R.adv||{};
-  const days=(R.cal||[]).map(c=>{
+  // forward-looking schedule — anchor to the real date, not the build stamp (same rule as
+  // the Calendar tab), and drop days already past: the builder runs after the close, so
+  // its asOf lags the viewer's date every morning
+  const todayIso=calToday();
+  const days=(R.cal||[]).filter(c=>c.d>=todayIso).map(c=>{
     const net={}, tip={}, from={}, pair={};
     for(const e of (c.ev||[])){
       net[e.p]=(net[e.p]||0)+e.l;
@@ -19661,7 +19665,6 @@ function renderIndexRolls(){
   });
   const colMax={};
   for(const p of PRODS) colMax[p]=Math.max(1,...days.map(x=>Math.abs(x.net[p]||0)));
-  const todayIso=R.asOf;
   const cell=(x,p)=>{
     const v=x.net[p];
     if(!v) return '<td></td>';
@@ -19839,10 +19842,8 @@ function setHeaderAsOf(key){
       const HU = (typeof HURR_DATA!=="undefined" && HURR_DATA) || null;
       date=iso(HU && HU.asOf); break;
     }
-    case "rolls": {
-      const RO = (typeof ROLL_DATA!=="undefined" && ROLL_DATA) || null;
-      date=iso(RO && RO.asOf); break;
-    }
+    case "rolls":
+      date=calToday(); break;   // forward-looking schedule — anchor to today, not the build stamp
     case "updates":
       date=iso(LOG && LOG[0] && LOG[0].time); break;   // newest run
     default:
