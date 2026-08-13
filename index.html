@@ -19562,7 +19562,6 @@ function renderTradeIdeas(){
         </div>
         <span class="ticonv ${cv}">${it.conviction}</span>
       </div>
-      ${mo?`<p class="csub" style="margin:6px 0 0;padding:6px 8px;border-left:3px solid var(--ink-3);background:var(--surface-2)"><b>You hold this — it is not a fresh entry.</b> The levels below are the open position's own, from where it was actually put on${mo.opened?` (${mo.opened})`:""}.${it._manageOnly?` It is not in the ranked list this run because a higher-ranked idea trades the same leg.`:` The idea still ranks, but it is scored on whichever structure is currently tradeable${scoredLegs(it,mo)?` (${scoredLegs(it,mo)} today)`:""} — the position does not roll with it, so the drivers below read the current structure while the levels stay the position's.`}</p>`:""}
       ${(!mo&&(it.pricing||[]).length)?`<div class="tipx">`+it.pricing.map(p=>
         `<span class="tipxi" ${p.pair?`title="${p.pair}"`:""}><i>${p.caption}</i> ${p.text}</span>`
       ).join("")+`</div>`:""}
