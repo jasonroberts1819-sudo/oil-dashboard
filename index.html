@@ -20213,10 +20213,18 @@ function renderProductYields(){
   const cards=D.products.map(p=>`<section class="card">
       <h2>${p.label}</h2>
       <p class="csub" id="yldSub_${p.key}"></p>
-      <div class="chartbox"><svg id="yld_${p.key}"></svg></div>
+      <div class="chartbox"><div class="tip" id="yldTip_${p.key}"></div><svg id="yld_${p.key}"></svg></div>
     </section>`).join("");
+  // Only the four products the WPSR actually carries get a weekly tail; the other thirteen
+  // end at the last published month because EIA publishes no weekly series for them. Naming
+  // them is the difference between "why does coke stop in June" and an answered question —
+  // the earlier wording claimed the whole region ran on, which was true of 4 charts of 17.
+  const wkNames=(D.weeklyProducts||[]).map(k=>{
+    const pr=(D.products||[]).find(x=>x.key===k); return pr?pr.label.toLowerCase():k; });
+  const wkList = wkNames.length>1
+    ? wkNames.slice(0,-1).join(", ")+" and "+wkNames[wkNames.length-1] : (wkNames[0]||"");
   const wkNote = area.weekly
-    ? `The ${cur} line runs on past the monthly publication as a dashed weekly-derived tail, refreshed with every WPSR print.`
+    ? `${wkList.charAt(0).toUpperCase()+wkList.slice(1)} carry a dashed weekly-derived tail past the monthly publication, refreshed with every WPSR print; the rest end at the last published month, which is all EIA publishes for them.`
     : `Monthly only for this region — its refinery base is too small for a stable weekly ratio.`;
   box.innerHTML=`<section class="card">
       <h2>Product yields — ${area.label||""}</h2>
@@ -20312,24 +20320,30 @@ function yldDraw(D){
       const faded=yldFocus!=null&&yldMode==="focus"&&y!==yldFocus;
       const col=yldFade(yldYearColor(years,y), faded?0.15:1);
       const wid=y===yldFocus?2.9:(yldFocus==null&&y===cur?2.4:1.5);
-      if(y!==cur){ row.forEach(note); series.push({data:row.slice(),color:col,width:wid}); return; }
+      // `name` is what puts a series in fbLines' hover tooltip — fbHover skips any series
+      // without one, which is why these charts had no readout until now.
+      if(y!==cur){ row.forEach(note); series.push({data:row.slice(),color:col,width:wid,name:y}); return; }
       let last=-1; row.forEach((v,i)=>{ if(v!=null) last=i; });
       const solid=row.map((v,i)=>i<=last?v:null); solid.forEach(note);
-      series.push({data:solid,color:col,width:wid,dots:!faded});
+      series.push({data:solid,color:col,width:wid,dots:!faded,name:y});
       const wm=wkMonthly(p.key);
       if(Object.keys(wm).length){
         const der=new Array(12).fill(null);
         Object.keys(wm).forEach(m=>{ if(m.slice(0,4)!==String(cur)) return;
           const idx=parseInt(m.slice(5,7),10)-1; if(idx>last) der[idx]=wm[m]; });
         if(last>=0&&der.some(v=>v!=null)) der[last]=row[last];   // join published to derived
-        if(der.some(v=>v!=null)){ der.forEach(note); series.push({data:der,color:col,width:wid,dash:"5 4",dots:!faded}); }
+        if(der.some(v=>v!=null)){ der.forEach(note); series.push({data:der,color:col,width:wid,dash:"5 4",dots:!faded,name:y+" weekly-derived"}); }
       }
     });
-    if(avgArr&&avgArr.some(v=>v!=null)) series.push({data:avgArr,color:css('--ink-2'),width:2.1,dash:"6 4"});
+    if(avgArr&&avgArr.some(v=>v!=null)) series.push({data:avgArr,color:css('--ink-2'),width:2.1,dash:"6 4",name:priors.length+"-yr avg"});
     if(!isFinite(lo)){ if(card) card.classList.add("hidden"); return; }
     const pad=Math.max(0.3,(hi-lo)*0.12);
-    fbLines("yld_"+p.key,{labels:MON,series,band,ymin:lo-pad,ymax:hi+pad,
-      fmt:v=>v.toFixed(Math.abs(hi)<3?1:0)});
+    const dec=Math.abs(hi)<3?1:0;
+    // tipLabels spells the month out: the axis ticks are single letters (J/F/M...) which
+    // are fine under a 12-tick axis but ambiguous as a tooltip heading.
+    fbLines("yld_"+p.key,{labels:MON,tipLabels:MON3,tip:"yldTip_"+p.key,series,band,
+      ymin:lo-pad,ymax:hi+pad,fmt:v=>v.toFixed(dec),
+      tipFmt:v=>v.toFixed(1)+"%"});
     if(sub){
       const row=g[cur]||[]; let last=-1; row.forEach((v,i)=>{ if(v!=null) last=i; });
       const wm=wkMonthly(p.key);
