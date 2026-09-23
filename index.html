@@ -586,7 +586,7 @@
       </section>
       <section class="card">
         <h2>Cushing, OK hub — builds / draws by month</h2>
-        <p class="csub"><span data-yr="cur">2026</span> vs <span data-yr="avg">2018–2025</span> average · Weekly-derived.<span id="cushFloorNote"></span></p>
+        <p class="csub"><span data-yr="cur">2026</span> vs <span data-yr="avg">2018–2025</span> average · million barrels (mmbbl). PSM monthly actuals where published; later months weekly-implied (hatched).<span id="cushFloorNote"></span></p>
         <div class="legend" id="legend2"></div>
         <div class="chartbox"><div class="tip" id="tip2"></div><svg id="chart2"></svg></div>
       </section>
@@ -651,7 +651,7 @@
          updater touches it, so any month names or pull dates written here silently
          go stale as the DATA block advances. The per-month basis is machine-stamped
          in DATA.usBasis / DATA.cushBasis. -->
-    <b>Basis:</b> months confirmed by the PSM are monthly actuals; months after PSM coverage are WPSR weekly-implied, measured calendar month-end to month-end (the level on the last day of a month is read between the weekly prints either side of it); the current month is month-to-date from this month's WPSR reports (shown hatched) until complete. Cushing is weekly-derived throughout.
+    <b>Basis:</b> months confirmed by the PSM are monthly actuals; months after PSM coverage are WPSR weekly-implied, measured calendar month-end to month-end (the level on the last day of a month is read between the weekly prints either side of it); the current month is month-to-date from this month's WPSR reports (shown hatched) until complete. Cushing follows the same basis, from EIA's monthly Cushing series (<code>MCRST_YCUOK_1</code>).
     The seasonal average line covers the eight complete years before the chart's year (2020 optionally excluded) and is computed from EIA series <code>MCRSCUS1</code> (monthly total-crude stock change), re-pulled and re-verified against PSM actuals on each rebuild.
     <details>
       <summary>How this updates as new data lands</summary>
@@ -760,40 +760,40 @@ const DATA = {
     "Sep": -2.1
   },
   "cush": {
-    "Jan": 1.6,
-    "Feb": 2.3,
-    "Mar": 5.0,
-    "Apr": -2.3,
-    "May": -7.0,
-    "Jun": -2.6,
+    "Jan": 1.5,
+    "Feb": 0.7,
+    "Mar": 6.9,
+    "Apr": -3.8,
+    "May": -7.8,
+    "Jun": -0.9,
     "Jul": 1.3,
     "Aug": 1.6,
     "Sep": 1.2
   },
   "cushBasis": {
-    "Jan": "weekly",
-    "Feb": "weekly",
-    "Mar": "weekly",
-    "Apr": "weekly",
-    "May": "weekly",
-    "Jun": "weekly",
+    "Jan": "psm",
+    "Feb": "psm",
+    "Mar": "psm",
+    "Apr": "psm",
+    "May": "psm",
+    "Jun": "psm",
     "Jul": "weekly",
     "Aug": "weekly",
     "Sep": "partial"
   },
   "cushAvg": {
-    "Jan": -2.85,
-    "Feb": 0.05,
-    "Mar": 1.47,
-    "Apr": 2.8,
-    "May": -1.22,
-    "Jun": -2.53,
-    "Jul": -2.08,
-    "Aug": -1.56,
-    "Sep": -0.42,
-    "Oct": 1.75,
-    "Nov": 0.25,
-    "Dec": 1.13
+    "Jan": -2.8,
+    "Feb": 0.11,
+    "Mar": 1.67,
+    "Apr": 2.58,
+    "May": -1.08,
+    "Jun": -2.65,
+    "Jul": -2.25,
+    "Aug": -1.47,
+    "Sep": -0.4,
+    "Oct": 1.85,
+    "Nov": 0.34,
+    "Dec": 0.89
   },
   "cushingUtil": {
     "pct": 29.5,
@@ -2648,6 +2648,13 @@ const DATA = {
 
 /* ===== LOG:START — auto-maintained by update_oil_dashboard.py (newest first). Do not hand-edit. ===== */
 const UPDATE_LOG = [
+  {
+    "time": "2026-09-23 10:17",
+    "outcome": "updated",
+    "label": "Dashboard updated",
+    "detail": "data through 2026-09-18; new: MCRSCUS1, MCESTUS1, MCSSTUS1, MCRSTUS1, WCESTUS1, WCSSTUS1, W_EPC0_SAX_YCUOK_MBBL, MCRST_YCUOK_1, MGTSTUS1, MDISTUS1, MKJSTUS1, WGTSTUS1, WDISTUS1, WKJSTUS1",
+    "dataThrough": "2026-09-18"
+  },
   {
     "time": "2026-09-23 10:03",
     "outcome": "updated",
@@ -17890,6 +17897,7 @@ function renderCharts(){
     {key:"avg",name:`${L.avgM} avg`,color:cavg,vals:DATA.cushAvg}
   ]);
   legend("#legend2",[
+    {name:`${L.yr} actual (PSM)`,color:ccur},
     {name:`${L.yr} weekly-implied`,color:ccur,hatch:true},
     {name:`${L.avgM} average`,color:cavg}
   ]);
