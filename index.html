@@ -225,10 +225,6 @@
   .mheat td.diag{opacity:.4}
   .mheat th.fired{background:#c9a227;color:#2b2200;border-radius:3px}
   .mfocus th.fired{background:#c9a227;color:#2b2200;border-radius:4px;padding:3px 8px}
-  /* both horizons are always shown as columns; a header click selects the window the
-     z-note and full matrix use (same state as the Window toggle), underlined when active */
-  .mfocus th[data-mwin]{cursor:pointer}
-  .mfocus th.sel{box-shadow:inset 0 -2px 0 var(--ink);color:var(--ink)}
   /* alarm strip — all three horizons visible at once, no toggling required */
   .alarmstrip{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
   @media(max-width:760px){.alarmstrip{grid-template-columns:1fr}}
@@ -19012,6 +19008,10 @@ function renderMacro(){
   if(!M){ box.innerHTML='<section class="card"><p class="csub" style="padding:10px">No macro data yet — run <code>python macro_heatmap.py</code>.</p></section>'; return; }
   const assets=M.assets, keys=assets.map(a=>a.key), labelOf=Object.fromEntries(assets.map(a=>[a.key,a.label]));
   const w=String(macroWin), focus=M.wtiFocus[w]||{}, wtiRet=(M.wtiReturn||{})[w]||0;
+  /* ONE WINDOW TOGGLE (2026-09-28, Jason): there used to be a page-level "Window (tables
+     below)" toggle AND a two-column 28d/84d table that ignored it, so toggling changed the
+     z-note and matrix but not the correlations a reader was looking at. The toggle now sits
+     on the correlation card and the table, z-note and full matrix all follow it. */
   const winBtns=M.windows.map(x=>`<button data-mwin="${x}" aria-pressed="${x===macroWin}">${x}d</button>`).join("");
   /* THE REGIME READ IS FIXED AT ITS NAMING WINDOW — it does NOT follow the window toggle.
      The toggle drives the correlation displays below (a genuine question: is this link a
@@ -19275,7 +19275,7 @@ function renderMacro(){
   let frows="", lastGrp=null;
   assets.filter(a=>a.key!=='WTI').forEach(a=>{
     if(a.group!==lastGrp){ lastGrp=a.group; frows+=`<tr><td class="mgrp" colspan="4">${a.group}</td></tr>`; }
-    const cells=M.windows.map(x=>{
+    const cells=[macroWin].map(x=>{
       if(macroMode==='z'){
         const z=((M.wtiFocusZ||{})[String(x)]||{})[a.key], cc=zColorCorr(z);
         return `<td class="c" style="background:${cc.bg};color:${cc.fg}" title="corr ${(M.wtiFocus[String(x)]||{})[a.key]}">${z==null?'—':(z>0?'+':'')+z.toFixed(1)}σ</td>`;
@@ -19349,18 +19349,17 @@ function renderMacro(){
     </section>
     ${ribbonCard}
     ${attrCard}
-    <div class="controls"><div class="grp"><label class="t">Window (tables below)</label><span class="seg" role="group">${winBtns}</span></div></div>
     <section class="card">
-      <h2>WTI correlation by asset &amp; horizon</h2>
+      <h2>WTI correlation by asset <span style="font-weight:400;color:var(--ink-3);font-size:12px">· ${macroWin}d</span></h2>
       <p class="csub">${macroMode==='z'
         ? 'Each correlation <b>z-scored against its own history</b> — ±2σ means that pair\'s relationship is at an extreme versus its norm. Any single cell gets there by chance about 1 day in 20, so several at once is what matters. Red = unusually positive, blue = unusually negative.'
-        : 'Pearson corr of WTI vs each asset at 28d / 84d. Red = moves with WTI, blue = inverse.'}</p>
-      <div class="cotctrl" style="margin-bottom:10px"><div class="grp"><label class="t">Show</label>
+        : `Pearson correlation of WTI's daily moves with each asset over the last ${macroWin} sessions. Red = moves with WTI, blue = inverse.`}</p>
+      <div class="cotctrl" style="margin-bottom:10px"><div class="grp"><label class="t">Window</label><span class="seg" role="group">${winBtns}</span></div><div class="grp"><label class="t">Show</label>
         <span class="seg" role="group">
           <button data-mmode="corr" aria-pressed="${macroMode==='corr'}">Correlation</button>
           <button data-mmode="z" aria-pressed="${macroMode==='z'}">Z vs own history</button>
         </span></div></div>
-      <div class="mwrap"><table class="mfocus"><thead><tr><th></th>${M.windows.map(x=>`<th data-mwin="${x}" class="${firedSet.has(x)?'fired':''}${x===macroWin?' sel':''}" title="Show the ${x}d window in the z-score note and full matrix below">${x}d${firedSet.has(x)?' ★':''}</th>`).join("")}</tr></thead><tbody>${frows}</tbody></table></div>
+      <div class="mwrap"><table class="mfocus"><thead><tr><th></th><th class="${firedSet.has(macroWin)?'fired':''}">${macroWin}d${firedSet.has(macroWin)?' ★':''}</th></tr></thead><tbody>${frows}</tbody></table></div>
       ${extremes.length? `<p class="cotnote" style="margin-top:10px"><b style="color:var(--ink)">|z|≥2 vs own history (${macroWin}d):</b> ${extremes.join(' · ')}<br>
           <b>${hits.length} flagged</b> vs <b>${expFalse.toFixed(1)} expected by chance</b> across ${kTest} assets. Correlated instruments flag in blocs, so the honest bar is the noise distribution of the <i>count</i>: ${FB.p95} flags is its 95th percentile, ${FB.p99} its 99th (Monte-Carlo, correlated null).
           ${hits.length>FB.p99? `<b style="color:var(--ink)">Beyond the 99th percentile of noise — a genuine cluster; these relationships are moving together.</b>`
