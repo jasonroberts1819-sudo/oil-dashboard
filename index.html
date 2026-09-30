@@ -381,7 +381,7 @@
   .ychip .dot{width:10px;height:10px;border-radius:50%;flex:none}
   .ychip[aria-pressed="true"]{color:#fff;border-color:transparent}
   .ychip[aria-pressed="true"] .dot{box-shadow:0 0 0 2px rgba(255,255,255,.55) inset}
-  .ychip.all .dot{background:conic-gradient(from 0deg,#7c3aed,#0891b2,#16a34a,#d97706,#dc2626,#2563eb)}
+  .ychip.all .dot{background:conic-gradient(from 0deg,#7c3aed,#aa81df,#16a34a,#d97706,#dc2626,#2563eb)}
   .chartgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
   @media(max-width:820px){.chartgrid{grid-template-columns:1fr}}
   .chartgrid .card{padding:14px 15px 10px}
@@ -20816,13 +20816,14 @@ function setHeaderAsOf(key){
    drawn and the page shows yield; yldMetric is kept so returning to U.S. restores it. */
 let yldArea=null, yldFocus=null, yldMode="focus", yldBand=true, yldAvg=true, yldMetric="yield", yld4w=true;
 function yldIsMake(D){ return yldMetric==="make" && !!(D.make && D.make.area===yldArea); }
-const YLD_PALETTE=["#7c3aed","#0891b2","#16a34a","#d97706","#dc2626","#2563eb","#db2777","#0d9488","#65a30d"];
+// Same values as INV's YEAR_PALETTE (reasoning for slot 1 lives there): colour = year.
+const YLD_PALETTE=["#7c3aed","#aa81df","#16a34a","#d97706","#dc2626","#2563eb","#db2777","#0d9488","#65a30d"];
 function yldYearColor(years,y){ const i=years.indexOf(y); return YLD_PALETTE[(i<0?0:i)%YLD_PALETTE.length]; }
 // 4-wk average line colour: its OWN hue, never a year's and never grey. Picked by sweeping
 // OKLCH for the colour that separates best from all seven lines it can cross (six year
 // colours + the dashed benchmark), scored with the dataviz validator's maths (OKLab dE x100,
 // Machado-2009 CVD sim): normal-vision dE >= 17.5 (closest: 2025 red; floor 15),
-// protan/deutan >= 9.4 (closest: 2022 cyan; target 8), contrast 3.58:1 light / 4.82:1 dark.
+// protan/deutan >= 9.7 (closest: 2022 lavender; target 8), contrast 3.58:1 light / 4.82:1 dark.
 // The palette's next slot (#db2777) FAILS against 2025 red (10.1). History: --ink first
 // (twin of the dashed benchmark), then the current year's blue (a third blue line beside
 // the solid and dashed ones) - both unreadable, both rejected by Jason.
@@ -21107,7 +21108,15 @@ renderWeeklyStrip();
 /* =================== Inventory year-overlay tab (namespaced) =================== */
 const INV = (function(){
   const DATA = INV_DATA;                       // alias so the ported code reads naturally
-  const YEAR_PALETTE = ["#7c3aed","#0891b2","#16a34a","#d97706","#dc2626","#2563eb","#db2777","#0d9488","#65a30d"];
+  // Slot 1 (the second-oldest year) was cyan #0891b2. It and slot 2's green differ almost only
+  // on the blue-yellow axis (tritan-sim dE 2.7, lightness gap 1.8), the axis thin lines lose
+  // (Jason: "2022 and 2023 look very alike"); cyan was also weak against slot 5's blue (6.7).
+  // Lavender #aa81df clears every line it can cross on these tabs (the other five years, the
+  // dashed benchmark, Product Yields' 4-wk pink) measured with the dataviz validator's maths:
+  // normal dE >= 17.8 (closest: slot 0 purple, separated by LIGHTNESS, dL 13.9), protan/deutan
+  // >= 9.7, tritan >= 14.8; contrast 3.04:1 light / 5.68:1 dark. Mirrored in YLD_PALETTE and
+  // the "All" chip's conic-gradient.
+  const YEAR_PALETTE = ["#7c3aed","#aa81df","#16a34a","#d97706","#dc2626","#2563eb","#db2777","#0d9488","#65a30d"];
   const LONG={Jan:"January",Feb:"February",Mar:"March",Apr:"April",May:"May",Jun:"June",Jul:"July",Aug:"August",Sep:"September",Oct:"October",Nov:"November",Dec:"December"};
   function yearColor(year){ const ys=DATA.years, i=ys.indexOf(year); return YEAR_PALETTE[((i<0?year:i))%YEAR_PALETTE.length]; }
   const CUR = () => DATA.years.length? Math.max(...DATA.years) : null;
