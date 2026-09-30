@@ -142,6 +142,10 @@
   .dmndhead .ago{font-size:12px;color:var(--ink-3);font-variant-numeric:tabular-nums}
   .yl.band i{border-radius:2px;border:1px solid var(--axis)}
   .yl.avg i{height:0;background:none;border-radius:0;border-top:2px dashed var(--ink-2);width:15px}
+  /* line keys inside a toggle's label (Product Yields: the one control row is the legend) */
+  .switch .lkey{display:inline-block;width:16px;height:0;border-top:2px solid var(--ink-2);vertical-align:middle;margin:0 5px 2px 0}
+  .switch .lkey.dash{border-top-style:dashed}
+  .switch .lkey.band{height:8px;border:1px solid var(--axis);border-radius:2px;background:var(--band);margin-bottom:0}
 
   /* positioning tab — z-score bars + PADD heatmap */
   .poscap{font-size:12.5px;color:var(--ink-2);margin:0 0 14px;max-width:80ch}
@@ -20802,7 +20806,10 @@ function setHeaderAsOf(key){
    Chart furniture deliberately mirrors the Inventories/Refining year overlays: the same
    YEAR_PALETTE, a 5-yr min-max range band, a dashed 5-yr average, and year chips with
    Shade-others / Only-that-year. ONE control row drives all 17 charts — per-chart legends
-   would be noise at that count.
+   would be noise at that count, so the row carries a line key beside each line toggle.
+   The 4-wk average wears the CURRENT YEAR's colour: it is that year at weekly resolution.
+   It was --ink solid at first and read as a twin of the --ink-2 dashed benchmark (Jason
+   could not tell them apart); the dashed grey must stay the only benchmark-looking line.
    MEASURE toggle (U.S. only): EIA refinery yield vs product MAKE (refiner+blender production
    / gross inputs — the Street's number, ~11pp higher on gasoline because it keeps ethanol and
    purchased blendstock). YLD_DATA.make carries it; product_yields.make_series() says why it is
@@ -20860,8 +20867,8 @@ function renderProductYields(){
   const has4w = make ? !!(D.make.weekly && Object.keys(D.make.weekly).length) : !!area.weekly;
   const w4Ctl = has4w ? `<div class="grp">
           <label class="t">Weekly</label>
-          <span class="switch" title="Solid dark line: average of the latest four weekly prints, plotted at each week">
-            <input type="checkbox" id="y4w"${yld4w?" checked":""}/><span>4-wk avg</span></span>
+          <span class="switch" title="Thin solid line in ${cur}'s colour: average of the latest four weekly prints, plotted at each week">
+            <input type="checkbox" id="y4w"${yld4w?" checked":""}/><span><i class="lkey" style="border-top-color:${yldYearColor(years,cur)}"></i>${cur} 4-wk avg</span></span>
         </div>` : "";
   box.innerHTML=`<section class="card">
       <h2>${make?"Product make":"Product yields"} — ${area.label||""}</h2>
@@ -20871,9 +20878,9 @@ function renderProductYields(){
         <div class="grp">
           <label class="t">${nprior}-yr benchmark</label>
           <span class="switch" title="Shaded min–max range across the prior ${nprior} years">
-            <input type="checkbox" id="yBand"${yldBand?" checked":""}/><span>Range band</span></span>
+            <input type="checkbox" id="yBand"${yldBand?" checked":""}/><span><i class="lkey band"></i>Range band</span></span>
           <span class="switch" title="Dashed line: average across the prior ${nprior} years">
-            <input type="checkbox" id="yAvg"${yldAvg?" checked":""}/><span>${nprior}-yr avg</span></span>
+            <input type="checkbox" id="yAvg"${yldAvg?" checked":""}/><span><i class="lkey dash"></i>${nprior}-yr avg</span></span>
         </div>
         <div class="grp"><label class="t">Year</label><div class="ychips" id="yychips"></div></div>
         <div class="grp">
@@ -20999,7 +21006,7 @@ function yldDraw(D){
     if(w4pts.length>1){
       const faded=yldFocus!=null&&yldMode==="focus"&&yldFocus!==cur;
       w4pts.forEach(o=>note(o.v));
-      series.push({xy:w4pts.map(o=>[o.x,o.v]),color:yldFade(css('--ink'),faded?0.15:1),width:1.6,name:cur+" 4-wk avg"});
+      series.push({xy:w4pts.map(o=>[o.x,o.v]),color:yldFade(yldYearColor(years,cur),faded?0.15:1),width:1.6,name:cur+" 4-wk avg"});
     }
     if(!isFinite(lo)){ if(card) card.classList.add("hidden"); return; }
     const pad=Math.max(0.3,(hi-lo)*0.12);
