@@ -381,7 +381,7 @@
   .ychip .dot{width:10px;height:10px;border-radius:50%;flex:none}
   .ychip[aria-pressed="true"]{color:#fff;border-color:transparent}
   .ychip[aria-pressed="true"] .dot{box-shadow:0 0 0 2px rgba(255,255,255,.55) inset}
-  .ychip.all .dot{background:conic-gradient(from 0deg,#7c3aed,#aa81df,#16a34a,#d97706,#dc2626,#2563eb)}
+  .ychip.all .dot{background:conic-gradient(from 0deg,#7c3aed,#fb22a5,#16a34a,#858585,#dc2626,#2563eb)}
   .chartgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
   @media(max-width:820px){.chartgrid{grid-template-columns:1fr}}
   .chartgrid .card{padding:14px 15px 10px}
@@ -20816,18 +20816,16 @@ function setHeaderAsOf(key){
    drawn and the page shows yield; yldMetric is kept so returning to U.S. restores it. */
 let yldArea=null, yldFocus=null, yldMode="focus", yldBand=true, yldAvg=true, yldMetric="yield", yld4w=true;
 function yldIsMake(D){ return yldMetric==="make" && !!(D.make && D.make.area===yldArea); }
-// Same values as INV's YEAR_PALETTE (reasoning for slot 1 lives there): colour = year.
-const YLD_PALETTE=["#7c3aed","#aa81df","#16a34a","#d97706","#dc2626","#2563eb","#db2777","#0d9488","#65a30d"];
+// Same values as INV's YEAR_PALETTE (the colour rule and its history live there).
+const YLD_PALETTE=["#7c3aed","#fb22a5","#16a34a","#858585","#dc2626","#2563eb","#db2777","#0d9488","#65a30d"];
 function yldYearColor(years,y){ const i=years.indexOf(y); return YLD_PALETTE[(i<0?0:i)%YLD_PALETTE.length]; }
-// 4-wk average line colour: its OWN hue, never a year's and never grey. Picked by sweeping
-// OKLCH for the colour that separates best from all seven lines it can cross (six year
-// colours + the dashed benchmark), scored with the dataviz validator's maths (OKLab dE x100,
-// Machado-2009 CVD sim): normal-vision dE >= 17.5 (closest: 2025 red; floor 15),
-// protan/deutan >= 9.7 (closest: 2022 lavender; target 8), contrast 3.58:1 light / 4.82:1 dark.
-// The palette's next slot (#db2777) FAILS against 2025 red (10.1). History: --ink first
-// (twin of the dashed benchmark), then the current year's blue (a third blue line beside
-// the solid and dashed ones) - both unreadable, both rejected by Jason.
-const YLD_4WK="#fb22a5";
+// 4-wk average line colour: its OWN hue, never a year's. Brown - Jason's pick from options
+// drawn on the real charts. Pink went to a year slot, where it is the most distinct year
+// colour available (see YEAR_PALETTE). Measured (OKLab dE x100): vs the dashed benchmark 12.2
+// light / 24.7 dark, vs slot-3 grey 12.3 (its weakest pair - both low-chroma), contrast
+// 5.33:1 light / 3.23:1 dark. History: --ink (twin of the dashed benchmark), the current
+// year's blue (a third blue line), pink (moved to a year) - see YEAR_PALETTE for the rule.
+const YLD_4WK="#926030";
 function yldFade(hex,op){
   if(op>=1) return hex;
   const m=/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -20876,7 +20874,7 @@ function renderProductYields(){
   const has4w = make ? !!(D.make.weekly && Object.keys(D.make.weekly).length) : !!area.weekly;
   const w4Ctl = has4w ? `<div class="grp">
           <label class="t">Weekly</label>
-          <span class="switch" title="Pink line: average of the latest four weekly prints, plotted at each week">
+          <span class="switch" title="Brown line: average of the latest four weekly prints, plotted at each week">
             <input type="checkbox" id="y4w"${yld4w?" checked":""}/><span><i class="lkey" style="border-top-color:${YLD_4WK}"></i>${cur} 4-wk avg</span></span>
         </div>` : "";
   box.innerHTML=`<section class="card">
@@ -21108,15 +21106,21 @@ renderWeeklyStrip();
 /* =================== Inventory year-overlay tab (namespaced) =================== */
 const INV = (function(){
   const DATA = INV_DATA;                       // alias so the ported code reads naturally
-  // Slot 1 (the second-oldest year) was cyan #0891b2. It and slot 2's green differ almost only
-  // on the blue-yellow axis (tritan-sim dE 2.7, lightness gap 1.8), the axis thin lines lose
-  // (Jason: "2022 and 2023 look very alike"); cyan was also weak against slot 5's blue (6.7).
-  // Lavender #aa81df clears every line it can cross on these tabs (the other five years, the
-  // dashed benchmark, Product Yields' 4-wk pink) measured with the dataviz validator's maths:
-  // normal dE >= 17.8 (closest: slot 0 purple, separated by LIGHTNESS, dL 13.9), protan/deutan
-  // >= 9.7, tritan >= 14.8; contrast 3.04:1 light / 5.68:1 dark. Mirrored in YLD_PALETTE and
-  // the "All" chip's conic-gradient.
-  const YEAR_PALETTE = ["#7c3aed","#aa81df","#16a34a","#d97706","#dc2626","#2563eb","#db2777","#0d9488","#65a30d"];
+  // Colours are by POSITION, oldest -> newest: each January every year moves one slot older.
+  // RULE (Jason, 2026-09-30, after four rejected tries): every line needs a different colour
+  // NAME. A lighter/darker shade of a colour already on the chart reads as the same line to
+  // him, however far apart the measurement says it is. Rejected so far:
+  //  - cyan vs green (blue-yellow axis only, tritan-sim dE 2.7);
+  //  - lavender vs purple (normal dE 17.8, but the same hue);
+  //  - near-black vs the dashed dark-grey benchmark;
+  //  - a thin blue beside the current year's solid and dashed blue.
+  // His pick, from options drawn on the real charts: slot 1 PINK #fb22a5, slot 3 GREY #858585
+  // (was orange #d97706, which his brown 4-wk line resembled).
+  // The grey is balanced against the dashed benchmark, which flips with the theme (--ink-2):
+  // dE 17.5 light / 15.4 dark; contrast 3.69:1 light / 4.67:1 dark. Pink vs slot 4 red is
+  // 17.5. The hue wheel is FULL - a new line needs a new colour name, not a shade. Mirrored
+  // in YLD_PALETTE and the "All" chip's conic-gradient.
+  const YEAR_PALETTE = ["#7c3aed","#fb22a5","#16a34a","#858585","#dc2626","#2563eb","#db2777","#0d9488","#65a30d"];
   const LONG={Jan:"January",Feb:"February",Mar:"March",Apr:"April",May:"May",Jun:"June",Jul:"July",Aug:"August",Sep:"September",Oct:"October",Nov:"November",Dec:"December"};
   function yearColor(year){ const ys=DATA.years, i=ys.indexOf(year); return YEAR_PALETTE[((i<0?year:i))%YEAR_PALETTE.length]; }
   const CUR = () => DATA.years.length? Math.max(...DATA.years) : null;
