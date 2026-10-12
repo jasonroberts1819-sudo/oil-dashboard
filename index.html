@@ -20004,14 +20004,14 @@ function kbVsAgencies(D){
   const gi=l=>G.quarters.indexOf(l), kq=labs.map(l=>Q.rows.crude[Q.labels.indexOf(l)]);
   const bl=labs.map(l=>G.balance_blend[gi(l)]), ei=labs.map(l=>G.balance_eia[gi(l)]), op=labs.map(l=>G.balance_opec[gi(l)]);
   const n=labs.length, W=svg.clientWidth||svg.parentElement.clientWidth||560, narrow=W<560;
-  const m={l:narrow?34:40, r:14, t:16, b:24}, H=Math.round(Math.min(300,Math.max(210,W*0.55)));
+  const m={l:narrow?34:40, r:14, t:26, b:24}, H=Math.round(Math.min(300,Math.max(210,W*0.55)));
   const iw=W-m.l-m.r, ih=H-m.t-m.b, X=i=>m.l+(n<=1?0.5:i/(n-1))*iw;
   const F=kbFrame(svg,W,H);
   const fq=labs.indexOf(G.history_through);
   if(fq>=0 && fq<n-1) kbShade(F,(X(fq)+X(fq+1))/2, m.t, W-m.r, H-m.b);
   const all=[...kq,...bl,...ei,...op].filter(v=>v!=null);
   const T=turnTicks(Math.min(0,...all)-0.3, Math.max(0,...all)+0.3, 4), y=v=>m.t+ih*(T.hi-v)/(T.hi-T.lo);
-  kbAxis(F,m,W,T.ticks,y,t=>(t>0?"+":"")+t);
+  kbAxis(F,m,W,T.ticks,y,t=>(t>0?"+":"")+t); kbTitle(F,m.l,m.t-12,"Net balance by quarter, mb/d");
   const top=[], bot=[]; labs.forEach((_,i)=>{ if(ei[i]!=null&&op[i]!=null){ top.push(`${X(i)},${y(Math.max(ei[i],op[i]))}`); bot.unshift(`${X(i)},${y(Math.min(ei[i],op[i]))}`); } });
   if(top.length>1) F.P.push(`<polygon points="${top.concat(bot).join(" ")}" fill="rgba(120,127,140,0.28)" stroke="rgba(120,127,140,0.7)" stroke-width="0.8"/>`);
   kbLine(F,bl,X,y,F.cP); kbLine(F,kq,X,y,KB_C.kpler);
@@ -20028,12 +20028,12 @@ function kbVsAgencies(D){
 function kbProduct(D,key){
   const P=kbP(D,key), svg=$("#kb_"+key); if(!P||!svg) return;
   const n=P.labels.length, ci=P.ci, W=svg.clientWidth||svg.parentElement.clientWidth||560, narrow=W<560;
-  const m={l:narrow?36:42, r:10, t:18, b:24}, H=Math.round(Math.min(250,Math.max(180,W*0.42)));
+  const m={l:narrow?36:42, r:10, t:26, b:24}, H=Math.round(Math.min(250,Math.max(180,W*0.42)));
   const iw=W-m.l-m.r, ih=H-m.t-m.b, band=iw/n, X=i=>m.l+band*(i+0.5);
   const F=kbFrame(svg,W,H);
   kbShade(F, m.l+band*ci, m.t, W-m.r, H-m.b);
   const v=P.net.filter(x=>x!=null), T=turnTicks(Math.min(0,...v), Math.max(0,...v), 4), y=x=>m.t+ih*(T.hi-x)/(T.hi-T.lo);
-  kbAxis(F,m,W,T.ticks,y,t=>(t>0?"+":"")+t);
+  kbAxis(F,m,W,T.ticks,y,t=>(t>0?"+":"")+t); kbTitle(F,m.l,m.t-12,"Net balance, mb/d");
   kbBars(F,P.net,X,y,Math.min(band*0.62,30),ci);
   if(P.prev) P.prev.forEach((p,i)=>{ if(p!=null&&P.net[i]!=null) F.P.push(`<line x1="${X(i)-band*0.36}" x2="${X(i)+band*0.36}" y1="${y(p)}" y2="${y(p)}" stroke="${F.cK}" stroke-width="1.6"/>`); });
   kbXLabels(F,P.labels,X,H,iw);
@@ -20056,12 +20056,12 @@ function kbAccount(D){
   const idx=[]; for(let i=0;i<C.ci;i++) if(C.stock_change[i]!=null) idx.push(i);
   if(idx.length<2) return;
   const n=idx.length, W=svg.clientWidth||svg.parentElement.clientWidth||560, narrow=W<560;
-  const m={l:narrow?36:42, r:10, t:16, b:24}, H=Math.round(Math.min(270,Math.max(200,W*0.48)));
+  const m={l:narrow?36:42, r:10, t:26, b:24}, H=Math.round(Math.min(270,Math.max(200,W*0.48)));
   const iw=W-m.l-m.r, ih=H-m.t-m.b, band=iw/n, X=k=>m.l+band*(k+0.5), bw=Math.min(band*0.3,30), gap=3;
   const vals=idx.flatMap(i=>[C.net[i],C.stock_change[i]]);
   const T=turnTicks(Math.min(0,...vals)*1.12, Math.max(0,...vals)*1.12, 4), y=v=>m.t+ih*(T.hi-v)/(T.hi-T.lo);
   const F=kbFrame(svg,W,H), cNet=F.cI2;
-  kbAxis(F,m,W,T.ticks,y,t=>(t>0?"+":"")+t);
+  kbAxis(F,m,W,T.ticks,y,t=>(t>0?"+":"")+t); kbTitle(F,m.l,m.t-12,"Net balance and observed stock change, mb/d");
   idx.forEach((i,k)=>{
     [[C.net[i],cNet,-1],[C.stock_change[i],KB_C.stock,1]].forEach(([v,c,side])=>{
       const x=side<0? X(k)-gap/2-bw : X(k)+gap/2, y0=y(0), y1=y(v);
