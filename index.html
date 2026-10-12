@@ -539,6 +539,11 @@
   .kbmap .h.fc{color:var(--ink)}
   .kbmap .l{font-size:12.5px;color:var(--ink);align-self:center;white-space:nowrap}
   .kbmap .c{font-size:12.5px;font-weight:650;text-align:center;padding:9px 2px;border-radius:3px;color:var(--ink)}
+  /* the three product balances side by side (one column below 980px) */
+  .kbgrid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+  @media(max-width:980px){.kbgrid3{grid-template-columns:minmax(0,1fr)}}
+  .kbgrid3 .card{padding:14px 15px 10px}
+  .kbgrid3 .card h2{font-size:14.5px}
 </style>
 </head>
 <body>
@@ -19856,6 +19861,10 @@ const KBAL_DATA = {"meta":{"source":"Kpler","snapshot":"2026-10-12","updated":"2
 const KB_C={supply:"#2563eb", demand:"#7c3aed", opec:"#dc2626", opx:"#7c3aed", nonopx:"#2563eb",
   oecd:"#16a34a", nonoecd:"#926030", kpler:"#7c3aed", stock:"#2563eb", exports:"#fb22a5", bal:"#858585"};
 const KB_NAME={crude:"Crude & condensate", gasoline:"Gasoline", gasoil:"Gasoil / diesel", jet:"Kerosene / jet"};
+// the components of the two change charts, in stacking order (crude-table row keys)
+const KB_SUPPLY=[{key:"opec",name:"OPEC",c:KB_C.opec},{key:"opec_plus_ex",name:"OPEC+ excl. OPEC",c:KB_C.opx},
+  {key:"non_opec_plus",name:"Non-OPEC+",c:KB_C.nonopx}];
+const KB_RUNS=[{key:"runs_oecd",name:"OECD",c:KB_C.oecd},{key:"runs_non_oecd",name:"Non-OECD",c:KB_C.nonoecd}];
 function kbSrc(extra){ return `<p class="turnsrc">Source: Kpler${extra?"; "+extra:""}</p>`; }
 function kbS(v,d){ return v==null? "" : (v>0?"+":"")+v.toFixed(d==null?2:d); }
 function kbP(D,key){ return (D.products||[]).find(p=>p.key===key)||null; }
@@ -19929,39 +19938,62 @@ function kbCrude(D){
   fbHover(svg,"kbCrudeTip",W,H,{l:m.l,r:m.r,t:tA,b:H-(tB+hB)},n,true,i=>{
     const v=C.net[i]; if(v==null) return null;
     const pr=C.prev&&C.prev[i]!=null? turnRow(null,"vs previous update",kbS(v-C.prev[i])) : "";
-    const hist=i<ci&&C.stock_change&&C.stock_change[i]!=null? turnRow(KB_C.stock,"Observed stock change",kbS(C.stock_change[i]))
-      +turnRow(KB_C.exports,"Net exports",kbS(C.net_exports[i]))+turnRow(KB_C.bal,"Balancing factor",kbS(C.balancing[i])) : "";
+    const hist=i<ci&&C.stock_change&&C.stock_change[i]!=null? turnRow(KB_C.stock,"Observed stock change",kbS(C.stock_change[i])) : "";
     return `<b>${C.labels[i]}</b> <span class="mut">${i<ci?"actual":"forecast"} · mb/d</span>`
       +turnRow(KB_C.supply,"Supply",C.supply[i].toFixed(2))+turnRow(KB_C.demand,"Demand",C.demand[i].toFixed(2))
       +turnRow(v>=0?F.cP:F.cN,v>=0?"Surplus":"Deficit",kbS(v))+pr+hist;
   });
 }
 
-/* What moves the crude balance: supply by producer group, refinery runs by region. */
-function kbDrivers(D){
-  const C=kbP(D,"crude"), svg=$("#kbDrv"); if(!C||!svg||!C.opec) return;
-  const n=C.labels.length, ci=C.ci, W=svg.clientWidth||svg.parentElement.clientWidth||560, narrow=W<560;
-  const m={l:narrow?34:40, r:10, t:24, b:24};
-  const hA=Math.round(Math.min(170,Math.max(120,W*0.30))), hB=hA, g=38;
-  const tA=m.t, tB=tA+hA+g, H=tB+hB+m.b, iw=W-m.l-m.r, band=iw/n, X=i=>m.l+band*(i+0.5);
+/* Quarterly averages of crude-table rows, complete quarters only (three months in the table). */
+function kbQuarterly(C){
+  const q={}; C.months.forEach((m,i)=>{ const lab=`${Math.floor((+m.slice(5,7)-1)/3)+1}Q${m.slice(2,4)}`; (q[lab]=q[lab]||[]).push(i); });
+  const labs=Object.keys(q).filter(l=>q[l].length===3);
+  return {labs, avg:k=>labs.map(l=>q[l].reduce((a,i)=>a+C[k][i],0)/3)};
+}
+/* What moves the crude balance, drawn like the Turnarounds capacity chart (Jason's pick,
+   2026-10-12): one bar per quarter, the quarter-on-quarter change in each component stacked up
+   (gains) and down (losses) in a fixed order, the black tick the total change. Quarter on
+   quarter because the screenshots carry six months of history; the one true year-on-year pair
+   (the last quarter vs the same quarter a year earlier) goes in the subtitle (kbYoY). */
+function kbStackChange(D, svgId, parts){
+  const C=kbP(D,"crude"), svg=$("#"+svgId); if(!C||!svg||parts.some(p=>!C[p.key])) return;
+  const Q=kbQuarterly(C); if(Q.labs.length<2) return;
+  const labs=Q.labs.slice(1), n=labs.length;
+  const ch=parts.map(p=>{ const a=Q.avg(p.key); return a.slice(1).map((v,i)=>v-a[i]); });
+  const net=labs.map((_,i)=>ch.reduce((s,c)=>s+c[i],0));
+  const pos=labs.map((_,i)=>ch.reduce((s,c)=>s+Math.max(0,c[i]),0)), neg=labs.map((_,i)=>ch.reduce((s,c)=>s+Math.min(0,c[i]),0));
+  const W=svg.clientWidth||svg.parentElement.clientWidth||560, narrow=W<560;
+  const H=Math.round(Math.min(310,Math.max(230,W*0.56))), m={l:narrow?36:44, r:10, t:24, b:26};
+  const iw=W-m.l-m.r, ih=H-m.t-m.b, band=iw/n, bw=Math.min(band*0.56,54), X=i=>m.l+band*(i+0.5);
+  const T=turnTicks(Math.min(0,...neg)*1.1, Math.max(0,...pos)*1.14, 5), y=v=>m.t+ih*(T.hi-v)/(T.hi-T.lo);
   const F=kbFrame(svg,W,H);
-  kbShade(F, m.l+band*ci, tA-6, W-m.r, tB+hB);
-  const s=[...C.opec,...C.opec_plus_ex,...C.non_opec_plus].filter(v=>v!=null);
-  const TA=turnTicks(Math.min(...s)-1, Math.max(...s)+1, narrow?4:6), yA=v=>tA+hA*(TA.hi-v)/(TA.hi-TA.lo);
-  kbAxis(F,m,W,TA.ticks,yA); kbTitle(F,m.l,tA-11,"Crude supply by producer group, mb/d");
-  kbLine(F,C.non_opec_plus,X,yA,KB_C.nonopx); kbLine(F,C.opec_plus_ex,X,yA,KB_C.opx); kbLine(F,C.opec,X,yA,KB_C.opec);
-  const r=[...C.runs_oecd,...C.runs_non_oecd].filter(v=>v!=null);
-  const TB=turnTicks(Math.min(...r)-1, Math.max(...r)+1, narrow?4:6), yB=v=>tB+hB*(TB.hi-v)/(TB.hi-TB.lo);
-  kbAxis(F,m,W,TB.ticks,yB); kbTitle(F,m.l,tB-11,"Crude demand: refinery runs, mb/d");
-  kbLine(F,C.runs_oecd,X,yB,KB_C.oecd); kbLine(F,C.runs_non_oecd,X,yB,KB_C.nonoecd);
-  kbXLabels(F,C.labels,X,H,iw);
-  F.P.push(`<rect class="fbov" x="${m.l}" y="${tA}" width="${iw}" height="${tB+hB-tA}" fill="transparent"/>`);
+  const fq=labs.indexOf((D.quarters||{}).firstForecast);
+  if(fq>=0) kbShade(F, m.l+band*fq, m.t, W-m.r, H-m.b);
+  kbAxis(F,m,W,T.ticks,y,t=>(t>0?"+":"")+t);
+  kbTitle(F,m.l,m.t-10,"Change vs previous quarter, mb/d");
+  labs.forEach((l,i)=>{ let up=0, dn=0;
+    parts.forEach((p,j)=>{ const v=ch[j][i]; if(!v) return; let a,b;
+      if(v>0){ a=y(up); up+=v; b=y(up); } else { b=y(dn); dn+=v; a=y(dn); }
+      F.P.push(`<rect x="${X(i)-bw/2}" y="${Math.min(a,b)}" width="${bw}" height="${Math.abs(a-b)}" fill="${p.c}" stroke="${F.cS}" stroke-width="1"/>`); });
+    const yn=y(net[i]);
+    F.P.push(`<line x1="${X(i)-bw/2-4}" x2="${X(i)+bw/2+4}" y1="${yn}" y2="${yn}" stroke="${F.cK}" stroke-width="2.4" stroke-linecap="round"/>`);
+    const yl=net[i]>=0? y(pos[i])-6 : y(neg[i])+14;
+    F.P.push(`<text x="${X(i)}" y="${yl}" text-anchor="middle" font-size="10.5" font-weight="700" fill="${F.cK}">${kbS(net[i])}</text>`);
+    F.P.push(`<text x="${X(i)}" y="${H-7}" text-anchor="middle" font-size="10.5" fill="${F.cI2}">${l}</text>`); });
+  F.P.push(`<rect class="fbov" x="${m.l}" y="${m.t}" width="${iw}" height="${ih}" fill="transparent"/>`);
   svg.innerHTML=F.P.join("");
-  fbHover(svg,"kbDrvTip",W,H,{l:m.l,r:m.r,t:tA,b:H-(tB+hB)},n,true,i=>`<b>${C.labels[i]}</b> <span class="mut">${i<ci?"actual":"forecast"} · mb/d</span>`
-    +turnRow(KB_C.opec,"OPEC",C.opec[i].toFixed(2))+turnRow(KB_C.opx,"OPEC+ (excl. OPEC)",C.opec_plus_ex[i].toFixed(2))
-    +turnRow(KB_C.nonopx,"Non-OPEC+",C.non_opec_plus[i].toFixed(2))
-    +turnRow(KB_C.oecd,"Runs OECD",C.runs_oecd[i].toFixed(2))+turnRow(KB_C.nonoecd,"Runs non-OECD",C.runs_non_oecd[i].toFixed(2))
-    +turnRow(null,"Direct crude burn",C.direct_crude[i].toFixed(2)));
+  fbHover(svg,svgId+"Tip",W,H,m,n,true,i=>`<b>${labs[i]}</b> <span class="mut">vs ${Q.labs[i]} · ${i>=fq&&fq>=0?"forecast":"actual"} · mb/d</span>`
+    +parts.map((p,j)=>turnRow(p.c,p.name,kbS(ch[j][i]))).join("")+turnRow(F.cK,"Total change",kbS(net[i])));
+}
+/* Subtitle: the last complete quarter vs the same quarter a year earlier (true year on year). */
+function kbYoY(C, parts){
+  const Q=kbQuarterly(C), last=Q.labs[Q.labs.length-1];
+  const prior=last? last.slice(0,2)+String(+last.slice(2)-1).padStart(2,"0") : null;
+  const j=Q.labs.indexOf(prior); if(j<0) return "";
+  const d=parts.map(p=>{ const a=Q.avg(p.key); return {name:p.name, v:a[a.length-1]-a[j]}; });
+  const tot=d.reduce((s,x)=>s+x.v,0);
+  return `${last} vs ${prior}, year on year: ${d.slice().sort((a,b)=>Math.abs(b.v)-Math.abs(a.v)).map(x=>`${x.name} ${kbS(x.v)}`).join(", ")} → ${kbS(tot)} mb/d`;
 }
 
 /* Kpler's crude balance against the tab's own EIA/OPEC model, quarter by quarter. */
@@ -20015,33 +20047,33 @@ function kbProduct(D,key){
       +(i<ci&&P.net_exports&&P.net_exports[i]!=null? turnRow(null,"Net exports",kbS(P.net_exports[i]))+turnRow(null,"Other changes",kbS(P.other[i])) : ""); });
 }
 
-/* Where the crude balance went (complete months): observed stocks, net exports and Kpler's
-   balancing factor, which together equal the net balance (the black tick). */
+/* Implied vs observed (complete months): the net balance beside the stock change Kpler
+   observes. Only the pair, as Jason asked (2026-10-12: "just do observed vs net balance"); the
+   gap between them is Kpler's net exports + balancing factor, rows the payload still carries
+   but the card no longer draws. */
 function kbAccount(D){
   const C=kbP(D,"crude"), svg=$("#kbAcc"); if(!C||!svg||!C.stock_change) return;
   const idx=[]; for(let i=0;i<C.ci;i++) if(C.stock_change[i]!=null) idx.push(i);
   if(idx.length<2) return;
   const n=idx.length, W=svg.clientWidth||svg.parentElement.clientWidth||560, narrow=W<560;
-  const m={l:narrow?36:42, r:10, t:16, b:24}, H=Math.round(Math.min(250,Math.max(180,W*0.42)));
-  const iw=W-m.l-m.r, ih=H-m.t-m.b, band=iw/n, X=k=>m.l+band*(k+0.5), bw=Math.min(band*0.5,34);
-  const parts=[["stock_change",KB_C.stock],["net_exports",KB_C.exports],["balancing",KB_C.bal]];
-  let lo=0, hi=0; idx.forEach(i=>{ let p=0,q=0; parts.forEach(([k])=>{ const v=C[k][i]; if(v>0) p+=v; else q+=v; }); hi=Math.max(hi,p,C.net[i]); lo=Math.min(lo,q,C.net[i]); });
-  const T=turnTicks(lo,hi,4), y=v=>m.t+ih*(T.hi-v)/(T.hi-T.lo);
-  const F=kbFrame(svg,W,H);
+  const m={l:narrow?36:42, r:10, t:16, b:24}, H=Math.round(Math.min(270,Math.max(200,W*0.48)));
+  const iw=W-m.l-m.r, ih=H-m.t-m.b, band=iw/n, X=k=>m.l+band*(k+0.5), bw=Math.min(band*0.3,30), gap=3;
+  const vals=idx.flatMap(i=>[C.net[i],C.stock_change[i]]);
+  const T=turnTicks(Math.min(0,...vals)*1.12, Math.max(0,...vals)*1.12, 4), y=v=>m.t+ih*(T.hi-v)/(T.hi-T.lo);
+  const F=kbFrame(svg,W,H), cNet=F.cI2;
   kbAxis(F,m,W,T.ticks,y,t=>(t>0?"+":"")+t);
-  idx.forEach((i,k)=>{ let up=0, dn=0;
-    parts.forEach(([key,c])=>{ const v=C[key][i]; if(!v) return; let a,b;
-      if(v>0){ a=y(up); up+=v; b=y(up); } else { b=y(dn); dn+=v; a=y(dn); }
-      F.P.push(`<rect x="${X(k)-bw/2}" y="${Math.min(a,b)}" width="${bw}" height="${Math.abs(a-b)}" fill="${c}" stroke="${F.cS}" stroke-width="1"/>`); });
-    const yn=y(C.net[i]);
-    F.P.push(`<line x1="${X(k)-bw/2-5}" x2="${X(k)+bw/2+5}" y1="${yn}" y2="${yn}" stroke="${F.cK}" stroke-width="2.6" stroke-linecap="round"/>`);
+  idx.forEach((i,k)=>{
+    [[C.net[i],cNet,-1],[C.stock_change[i],KB_C.stock,1]].forEach(([v,c,side])=>{
+      const x=side<0? X(k)-gap/2-bw : X(k)+gap/2, y0=y(0), y1=y(v);
+      F.P.push(`<rect x="${x}" y="${Math.min(y0,y1)}" width="${bw}" height="${Math.max(Math.abs(y1-y0),0.8)}" rx="1.5" fill="${c}"/>`);
+      if(band>=56) F.P.push(`<text x="${x+bw/2}" y="${v>=0?y1-4:y1+11}" text-anchor="middle" font-size="9.5" fill="${F.cI2}">${kbS(v,1)}</text>`); });
     F.P.push(`<text x="${X(k)}" y="${H-7}" text-anchor="middle" font-size="10.5" fill="${F.cI2}">${C.labels[i]}</text>`); });
   F.P.push(`<rect class="fbov" x="${m.l}" y="${m.t}" width="${iw}" height="${ih}" fill="transparent"/>`);
   svg.innerHTML=F.P.join("");
   fbHover(svg,"kbAccTip",W,H,m,n,true,k=>{ const i=idx[k];
-    return `<b>${C.labels[i]}</b> <span class="mut">mb/d</span>`+turnRow(F.cK,"Net balance",kbS(C.net[i]))
-      +turnRow(KB_C.stock,"Observed stock change",kbS(C.stock_change[i]))+turnRow(KB_C.exports,"Net exports",kbS(C.net_exports[i]))
-      +turnRow(KB_C.bal,"Balancing factor",kbS(C.balancing[i])); });
+    return `<b>${C.labels[i]}</b> <span class="mut">mb/d</span>`+turnRow(cNet,"Net balance (supply − demand)",kbS(C.net[i]))
+      +turnRow(KB_C.stock,"Observed stock change",kbS(C.stock_change[i]))
+      +turnRow(null,"Difference",kbS(C.net[i]-C.stock_change[i])); });
 }
 
 function renderKplerBalances(){
@@ -20055,44 +20087,45 @@ function renderKplerBalances(){
     <p class="csub">Supply minus demand, average per quarter, mb/d; green = surplus, red = deficit; forecast from ${turnEsc(Q.firstForecast||"")} (Kpler, ${turnEsc(M.currentLabel||"")} update). Each row is shaded on its own scale.</p>
     ${kbMapHTML(D)}${kbSrc()}</section>`;
   if(C){
-    const ci=C.ci, last=C.labels.length-1;
+    const ci=C.ci, ink=css('--ink');
     const dN=C.net[ci]-C.net[ci-1], dS=C.supply[ci]-C.supply[ci-1], dD=C.demand[ci]-C.demand[ci-1];
     const mn=C.net.reduce((a,v,i)=>v!=null&&v<C.net[a]?i:a,0), mx=C.net.reduce((a,v,i)=>v!=null&&v>C.net[a]?i:a,0);
     h+=`<section class="card"><h2>Kpler: global crude balance</h2>
       <p class="csub">Crude &amp; condensate. ${C.labels[ci]}: ${kbS(C.net[ci])} mb/d (m/m ${kbS(dN)}: supply ${kbS(dS)}, demand ${kbS(dD)}) · deepest deficit ${C.labels[mn]} ${kbS(C.net[mn])} · widest surplus ${C.labels[mx]} ${kbS(C.net[mx])}</p>
       ${leg([[KB_C.supply,"Supply",1],[KB_C.demand,"Demand",1],[pos,"Surplus"],[neg,"Deficit"]])}
       <div class="chartbox"><div class="tip" id="kbCrudeTip"></div><svg id="kbCrude"></svg></div>${kbSrc()}</section>`;
-    const ds=k=>C[k][last]-C[k][ci];
-    h+=`<div class="chartgrid"><section class="card"><h2>Kpler: what moves the crude balance</h2>
-      <p class="csub">${C.labels[ci]} → ${C.labels[last]}: supply ${kbS(ds("supply"),1)} mb/d (OPEC ${kbS(ds("opec"),1)}, OPEC+ excl. OPEC ${kbS(ds("opec_plus_ex"),1)}, non-OPEC+ ${kbS(ds("non_opec_plus"),1)}); refinery runs ${kbS(ds("runs"),1)} (non-OECD ${kbS(ds("runs_non_oecd"),1)}, OECD ${kbS(ds("runs_oecd"),1)})</p>
-      ${leg([[KB_C.opec,"OPEC",1],[KB_C.opx,"OPEC+ excl. OPEC",1],[KB_C.nonopx,"Non-OPEC+",1],[KB_C.oecd,"Runs OECD",1],[KB_C.nonoecd,"Runs non-OECD",1]])}
-      <div class="chartbox"><div class="tip" id="kbDrvTip"></div><svg id="kbDrv"></svg></div>${kbSrc()}</section>`;
+    const chg=(id,title,parts)=>`<section class="card"><h2>${title}</h2>
+      <p class="csub">${kbYoY(C,parts)}</p>
+      ${leg(parts.map(p=>[p.c,p.name]).concat([[ink,"Total change",1]]))}
+      <div class="chartbox"><div class="tip" id="${id}Tip"></div><svg id="${id}"></svg></div>${kbSrc()}</section>`;
+    h+=`<div class="chartgrid">${chg("kbSup","Kpler: global crude supply — change by producer group",KB_SUPPLY)}${chg("kbRun","Kpler: global refinery runs — change by region",KB_RUNS)}</div>`;
     const G=(typeof FB_DATA!=="undefined"&&FB_DATA&&FB_DATA.global_crude_balance)||null;
     let vsSub="";
     if(G&&Q.labels){ const d=Q.labels.filter(l=>G.quarters.includes(l)&&G.quarters.indexOf(l)>G.quarters.indexOf(G.history_through))
       .map(l=>{ const k=Q.rows.crude[Q.labels.indexOf(l)], b=G.balance_blend[G.quarters.indexOf(l)]; return (k!=null&&b!=null)?`${l} ${kbS(k-b,1)}`:""; }).filter(Boolean);
       vsSub=d.length? `Kpler minus the EIA/OPEC blend, forecast quarters: ${d.join(" · ")} mb/d` : ""; }
-    h+=`<section class="card"><h2>Kpler vs EIA/OPEC: global crude balance</h2>
+    let acc="";
+    if(C.stock_change){ const i=ci-1;
+      acc=`<section class="card"><h2>Kpler: global crude balance vs observed stocks</h2>
+        <p class="csub">Complete months, mb/d: the net balance (supply − demand) beside the stock change Kpler observes. ${C.labels[i]}: balance ${kbS(C.net[i])} vs observed stocks ${kbS(C.stock_change[i])}.</p>
+        ${leg([[css('--ink-2'),"Net balance"],[KB_C.stock,"Observed stock change"]])}
+        <div class="chartbox"><div class="tip" id="kbAccTip"></div><svg id="kbAcc"></svg></div>${kbSrc()}</section>`; }
+    h+=`<div class="chartgrid"><section class="card"><h2>Kpler vs EIA/OPEC: global crude balance</h2>
       <p class="csub">${vsSub}</p>
       ${leg([[KB_C.kpler,"Kpler (crude & condensate)",1],[pos,"EIA/OPEC blend (all liquids)",1],["rgba(120,127,140,0.45)","EIA↔OPEC range"]])}
-      <div class="chartbox"><div class="tip" id="kbVsTip"></div><svg id="kbVs"></svg></div>${kbSrc("EIA STEO and OPEC MOMR for the blend and range")}</section></div>`;
+      <div class="chartbox"><div class="tip" id="kbVsTip"></div><svg id="kbVs"></svg></div>${kbSrc("EIA STEO and OPEC MOMR for the blend and range")}</section>${acc}</div>`;
   }
   const prodCard=k=>{ const P=kbP(D,k); if(!P) return "";
     const ci=P.ci, nx=kbAvg(P.net.slice(ci,ci+12));
     const mm=(P.net[ci]!=null&&P.net[ci-1]!=null)? ` (m/m ${kbS(P.net[ci]-P.net[ci-1])}`+(P.supply[ci]!=null&&P.supply[ci-1]!=null? `: supply ${kbS(P.supply[ci]-P.supply[ci-1])}, demand ${kbS(P.demand[ci]-P.demand[ci-1])}`:"")+")" : "";
-    return `<section class="card"><h2>Kpler: ${turnEsc(P.label.toLowerCase())} balance</h2>
+    return `<section class="card"><h2>Kpler: global ${turnEsc(P.label.toLowerCase())} balance</h2>
       <p class="csub">${P.labels[ci]}: ${kbS(P.net[ci])} mb/d${mm}${nx!=null?` · next 12 months avg ${kbS(nx)}`:""}</p>
       ${leg([[pos,"Surplus"],[neg,"Deficit"]])}
       <div class="chartbox"><div class="tip" id="kb_${k}Tip"></div><svg id="kb_${k}"></svg></div>${kbSrc()}</section>`; };
-  let acc="";
-  if(C&&C.stock_change){ const i=C.ci-1;
-    acc=`<section class="card"><h2>Kpler: where the crude balance went</h2>
-      <p class="csub">Complete months: the net balance (black tick) = observed stock change + net exports + Kpler's balancing factor. ${C.labels[i]}: balance ${kbS(C.net[i])} vs observed stocks ${kbS(C.stock_change[i])}; balancing factor ${kbS(C.balancing[i])} mb/d</p>
-      ${leg([[KB_C.stock,"Observed stock change"],[KB_C.exports,"Net exports"],[KB_C.bal,"Balancing factor"],[css('--ink'),"Net balance",1]])}
-      <div class="chartbox"><div class="tip" id="kbAccTip"></div><svg id="kbAcc"></svg></div>${kbSrc()}</section>`; }
-  h+=`<div class="chartgrid">${prodCard("gasoline")}${prodCard("gasoil")}</div><div class="chartgrid">${prodCard("jet")}${acc}</div>`;
+  h+=`<div class="kbgrid3">${prodCard("gasoline")}${prodCard("gasoil")}${prodCard("jet")}</div>`;
   box.innerHTML=h;
-  kbCrude(D); kbDrivers(D); kbVsAgencies(D); ["gasoline","gasoil","jet"].forEach(k=>kbProduct(D,k)); kbAccount(D);
+  kbCrude(D); kbStackChange(D,"kbSup",KB_SUPPLY); kbStackChange(D,"kbRun",KB_RUNS); kbVsAgencies(D);
+  ["gasoline","gasoil","jet"].forEach(k=>kbProduct(D,k)); kbAccount(D);
 }
 
 function renderForward(){
