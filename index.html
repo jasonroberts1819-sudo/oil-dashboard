@@ -19219,9 +19219,15 @@ function macroRegime(f, wtiRet, assets, win, S, zf){
   const eligible = ranked.filter(R=>!R.gated);
   const winner = clearing.length? clearing[0] : (eligible[0] || ranked[0]);
   const ruledOut = clearing.length? [] : ranked.filter(R=>R.gated && R.fit > winner.fit);
+  /* NO ELIGIBLE FIT (2026-10-20, Jason: "and then say decoupled is closest read"). A fit <= 0
+     is evidence AGAINST a regime, not a near miss: the first version of the fix above named
+     Oil-Specific at fit -0.04 as the "closest fit" while the same card said "a genuine link
+     exists". With nothing clearing and no eligible fit above zero, the card says no eligible
+     regime fits and names what the correlations do match (the ruled-out regime), if any. */
+  const noFit = !clearing.length && !(winner.fit > 0);
   // regimes whose null bar is 1.00 can never be named however the data behaves
   const unnameable = ranked.filter(R=>!R.idio && R.bar>=1.0).map(R=>R.name);
-  return {name: mixed?'Mixed / transitional':winner.name, top:winner, mixed, eligible, ruledOut,
+  return {name: mixed?'Mixed / transitional':winner.name, top:winner, mixed, eligible, ruledOut, noFit,
           belowNoise, contested, naming, bar:winner.bar, unnameable, ranked, cp, nf,
           cov:macroCoverage(assets)};
 }
@@ -19353,7 +19359,7 @@ function renderMacro(){
     return `<div class="atile ${alarmLive(a)?'fired':''}">
       <div class="aw">${a.w}d${a.fired?(alarmLive(a)?`<span class="abadge">REGIME ALERT</span>`:`<span class="abadge prov">REGIME ALERT · provisional</span>`):''}</div>
       <div class="an">${a.fired? A.label : (!a.reg.naming?'Context lens — does not name':(a.reg.mixed?'No signal — mixed':a.reg.name))}</div>
-      <div class="am">${a.fired? a.reg.name+' · '+got : t.idio? 'closest read: decoupled — no alarm on it' : got+' · '+need}</div>
+      <div class="am">${a.fired? a.reg.name+' · '+got : a.reg.noFit? 'no eligible regime fits — nothing for an alarm' : t.idio? 'closest read: decoupled — no alarm on it' : got+' · '+need}</div>
     </div>`;
   }).join("") + `</div>`;
   /* Regime timeline ribbon (2026-07-27, mock approved first). One year of DAILY 28d regime
@@ -19573,10 +19579,11 @@ function renderMacro(){
       <div class="regcard">
         <div style="min-width:200px"><div class="regbig">${reg.name}</div>
           <div class="csub" style="margin:4px 0 0">
-            ${reg.mixed? `<b>closest fit:</b> ${reg.top.name} — ${reg.top.idio?'':Math.round(reg.top.alignment*100)+'% aligned, '}fit ${reg.top.fit.toFixed(2)} vs the ${reg.bar.toFixed(2)} ${reg.top.idio?'naming':'noise'} bar`
-                         + (reg.belowNoise? ` — <b>below a bar that chance alone clears on at most ~1.5% of days, so it is not a call</b>`:``)
+            ${reg.mixed? (reg.noFit? `<b>no eligible regime fits</b> — every regime WTI's direction allows scores at or below zero`
+                         : `<b>closest fit:</b> ${reg.top.name} — ${reg.top.idio?'':Math.round(reg.top.alignment*100)+'% aligned, '}fit ${reg.top.fit.toFixed(2)} vs the ${reg.bar.toFixed(2)} ${reg.top.idio?'naming':'noise'} bar`
+                         + (reg.belowNoise? ` — <b>below a bar that chance alone clears on at most ~1.5% of days, so it is not a call</b>`:``))
                          + (reg.contested&&!reg.belowNoise? ` — <b>two regimes tie; cannot separate them</b>`:``)
-                         + (reg.ruledOut&&reg.ruledOut.length? `<br>${reg.ruledOut[0].name}'s correlations match better (${Math.round(reg.ruledOut[0].alignment*100)}% aligned), but it needs WTI ${(REGIMES.find(x=>x.name===reg.ruledOut[0].name)||{}).dir==='down'?'falling':'rising'} and WTI is ${dir} over ${RW}d, so it is ruled out`:``)
+                         + (reg.ruledOut&&reg.ruledOut.length? `<br>${reg.noFit?`The correlations match ${reg.ruledOut[0].name}`:`${reg.ruledOut[0].name}'s correlations match better`} (${Math.round(reg.ruledOut[0].alignment*100)}% aligned), but it needs WTI ${(REGIMES.find(x=>x.name===reg.ruledOut[0].name)||{}).dir==='down'?'falling':'rising'} and WTI is ${dir} over ${RW}d, so it is ruled out`:``)
                        : reg.top.idio?
                          /* THE IDIO STATLINE IS ITS OWN BRANCH (2026-07-22). The generic line
                             mislabels both numbers for this read: "% aligned" duplicates fit
@@ -19591,9 +19598,9 @@ function renderMacro(){
         <div class="regscores">${regRows}</div>
       </div>
       ${reg.mixed? `<div class="dhealth" style="margin:10px 0 0"><b>${reg.belowNoise?'No regime clears its own noise bar':'Two regimes tie — cannot separate them'} — all ${reg.ranked.length} fits are shown above anyway.</b>
-        Closest eligible, this window: ${(reg.eligible&&reg.eligible.length?reg.eligible:reg.ranked).slice(0,3).map(R=>`${R.name} (fit ${R.fit.toFixed(2)} vs bar ${R.bar.toFixed(2)})`).join(' · ')}.${reg.ranked.some(R=>R.gated)?` Ruled out by WTI's direction: ${reg.ranked.filter(R=>R.gated).map(R=>R.name).join(', ')}.`:''} This is diagnostic detail, <b>not</b> a call.
+        ${reg.noFit? 'No regime WTI\'s direction allows has a positive fit' : 'Closest eligible, this window: '}${reg.noFit? '' : (reg.eligible&&reg.eligible.length?reg.eligible:reg.ranked).slice(0,3).map(R=>`${R.name} (fit ${R.fit.toFixed(2)} vs bar ${R.bar.toFixed(2)})`).join(' · ')}.${reg.ranked.some(R=>R.gated)?` Ruled out by WTI's direction: ${reg.ranked.filter(R=>R.gated).map(R=>R.name).join(', ')}.`:''} This is diagnostic detail, <b>not</b> a call.
         ${reg.unnameable && reg.unnameable.length? `<br><b style="color:var(--neg)">Unnameable by construction:</b> ${reg.unnameable.join(', ')} — their signatures are too small to ever clear a corrected bar, so they can never be named regardless of the data.`:''}</div>`:''}
-      <p class="cotnote" style="margin-top:10px">Each bar scores how closely WTI's current cross-asset correlations match that regime's historical fingerprint — based on how <i>unusual</i> each correlation is versus its own norm, not its raw level. A regime is only named when it clears its own noise bar; otherwise the read stays <b>Mixed</b>.</p>
+      <p class="cotnote" style="margin-top:10px">Each bar scores how closely WTI's current cross-asset correlations match that regime's historical fingerprint — based on how <i>unusual</i> each correlation is versus its own norm, not its raw level. The bar is sign agreement: ±100% means every leg of the fingerprint points the same way or the opposite way, so regimes that expect opposite patterns mirror each other; how strong the evidence is goes into the fit. A regime is only named when it clears its own noise bar; otherwise the read stays <b>Mixed</b>.</p>
       <p class="cotnote" style="margin-top:6px;border-top:1px solid var(--border);padding-top:8px"><b>How much to trust a name.</b> Backtested out-of-sample on the 36 episodes dated 1986–2026: when this panel names a regime it matches the historical label about <b>43%</b> of the time — so a name is a <b>hypothesis to check, never a conclusion</b>, and it is not sizeable on its own. What the panel is good for is the measured layer (the correlations and σ-scores below, which are facts) and its <b>silence</b>: it names a macro regime on fewer than 1 day in 10, and a strongly negative bar is firmer evidence <i>against</i> that story than a positive bar is for it. The ceiling is the evidence base — 36 episodes, and daily WTI does not exist before 1986.</p>
       ${covAlert? `<p class="cotnote" style="margin-top:6px">${covAlert}</p>`:``}
     </section>
