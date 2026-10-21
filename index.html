@@ -18510,7 +18510,7 @@ const COT = (function(){
         </section>`).join("");
       return `<div class="cotsec"><h3>${S.label}</h3></div><div class="cotgrid">${cards}</div>`;
     }).join("");
-    const recap=(d.recap||[]).map(n=>`<li><span class="wa ${n.dir}">${n.dir==='dn'?'▼':'▲'}</span> ${n.text}${(n.sub&&n.sub.length)?`<ul class="wsub">${n.sub.map(s=>`<li>${s}</li>`).join("")}</ul>`:""}</li>`).join("");
+    const recap=(d.recap||[]).map(n=>`<li><span class="wa ${n.dir}">${n.dir==='dn'?'▼':n.dir==='flat'?'■':'▲'}</span> ${n.text}${(n.sub&&n.sub.length)?`<ul class="wsub">${n.sub.map(s=>`<li>${s}</li>`).join("")}</ul>`:""}</li>`).join("");
     const recapCard = recap? `<section class="card" style="margin-bottom:16px"><h2 style="font-size:14px">This week's positioning</h2><ul class="wprint">${recap}</ul></section>` : "";
     // The SELECTED venue's own report week (2026-10-03). d.asOf is the newest across every
     // venue, so on a partial week (ICE posts hours before the CFTC feed) a reader on WTI saw
