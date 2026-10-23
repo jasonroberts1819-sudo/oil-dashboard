@@ -21715,6 +21715,13 @@ function renderOptions(){
   if(!D.products[optProd]) optProd=Object.keys(D.products)[0];
   const P=D.products[optProd], lad=P.months.filter(x=>x.k);
   if(optIdx>=lad.length) optIdx=0;
+  if(!lad.length){   // every chain for this market read empty: keep the market switch, draw no ladders
+    box.innerHTML=`<div class="optbar"><div class="seg" role="group" aria-label="Market">`+
+      Object.entries(D.products).map(([k,v])=>`<button data-optp="${k}" aria-pressed="${k===optProd}">${v.label}<small>${v.exch}</small></button>`).join("")+
+      `</div></div><section class="card"><p class="csub" style="padding:10px">No strike data for ${P.label} on ${optD(P.tradeDate)}.</p></section>`;
+    box.querySelectorAll("[data-optp]").forEach(b=>b.addEventListener("click",()=>{ optProd=b.dataset.optp; optIdx=0; renderOptions(); }));
+    return;
+  }
   const M=lad[optIdx], R=optRows(M,optAll), bd=M.bd, pc=M.C?(M.P/M.C):null;
   const name=`${P.label} ${M.label}`, prev=P.prevDate?optD(P.prevDate):null;
   const kpi=(l,v,n)=>`<div class="kpi"><div class="label">${l}</div><div class="val">${v}</div><div class="note">${n||""}</div></div>`;
