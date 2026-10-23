@@ -21447,10 +21447,12 @@ const OPT_DATA = {"generated":"2026-10-23 14:15","asOf":"2026-10-22","source":"C
 const OPT_SRC='<p class="optsrc">Source: CME (WTI) / ICE (Brent) via Barchart</p>';
 const OPT_C={put:"#2563eb", call:"#dc2626", mp:"#7c3aed", flip:"#ca8a04", gpos:"#16a34a", gneg:"#ea580c",
   wti:"#16a34a", brent:"#7c3aed", prev:"#9ca3af"};
-// gamma is published under ONE convention, named wherever it appears: dealers SHORT calls AND
-// puts (Jason, 2026-10-23 - oil's end-users buy both; it replaced the equity-index "long calls /
-// short puts" convention). Short gamma never changes sign, so there is no flip - the peak instead
-const OPT_GCONV="assumes dealers are short calls and puts";
+// gamma is computed under ONE convention: dealers SHORT calls AND puts (Jason, 2026-10-23 - oil's
+// end-users buy both; it replaced the equity-index "long calls / short puts" convention). Short
+// gamma never changes sign, so there is no flip - the peak instead. The convention, the total at
+// the settle and the side peaks are NOT written on the tab (Jason, 2026-10-23: removed from the
+// gamma card, the summary figure and the hedging card); the evidence and its limits live in
+// options_vol.py and checks/dealer_gamma_watch.py.
 const optM=v=>{ const a=Math.abs(v); return (v<0?"−":"")+"$"+(a>=1e9?(a/1e9).toFixed(1)+"bn":a>=1e6?(a/1e6).toFixed(a>=1e8?0:1)+"m":a>=1e3?(a/1e3).toFixed(0)+"k":Math.round(a)); };
 let optProd="wti", optIdx=0, optAll=false;
 const optN=v=>Math.round(v).toLocaleString("en-US");
@@ -21810,7 +21812,7 @@ function renderOptions(){
     kpi("At-the-money vol", Vv?Vv.atm.toFixed(2)+"%":"—", Vv?vsrc+dpt(Vv.atm,Vv.atmPrev):"")+
     kpi("25-delta risk reversal", Vv?(Vv.rr>0?"+":"")+Vv.rr.toFixed(2):"—", Vv?`call vol minus put vol, ${Vv.rr>=0?"calls dearer":"puts dearer"}`+dpt(Vv.rr,Vv.rrPrev):"")+
     kpi("Expected move to expiry", Vv?`±$${Vv.em.toFixed(2)}`:"—", Vv&&M.fut?`one standard deviation, ±${(Vv.em/M.fut*100).toFixed(1)}%`:"")+
-    kpi("Peak net dealer gamma", Vv&&Vv.gPeak!=null?optPx(Vv.gPeak):"—", Vv&&Vv.gPeak!=null&&M.fut?`${Vv.gPeak>=M.fut?"+":"−"}${Math.abs(Vv.gPeak-M.fut).toFixed(2)} vs futures · ${optM(Vv.gPeakVal)} per 1% move there${Vv.gPeakP!=null?` · puts alone peak ${optPx(Vv.gPeakP)}`:""}${Vv.gPeakC!=null?`, calls alone ${optPx(Vv.gPeakC)}`:""} · ${OPT_GCONV}`:"")+
+    kpi("Peak net dealer gamma", Vv&&Vv.gPeak!=null?optPx(Vv.gPeak):"—", Vv&&Vv.gPeak!=null&&M.fut?`${Vv.gPeak>=M.fut?"+":"−"}${Math.abs(Vv.gPeak-M.fut).toFixed(2)} vs futures · ${optM(Vv.gPeakVal)} per 1% move there`:"")+
     kpi("Put / call (open interest)", pc==null?"—":pc.toFixed(2), `puts ${optN(M.P)} · calls ${optN(M.C)}`)+
     kpi("Max pain", optPx(M.maxPain), M.fut&&M.maxPain!=null?`${M.maxPain>=M.fut?"+":"−"}${Math.abs(M.maxPain-M.fut).toFixed(2)} (${((M.maxPain/M.fut-1)*100).toFixed(1)}%) vs futures${pd.moveLots!=null?` · ~${optN(pd.moveLots)} lots at a neighbouring strike would move it`:""}`:"")+
     kpi("Expires", optD(M.expiry), bd==null?"":`${bd} trading day${bd===1?"":"s"} left after ${optD(P.tradeDate)}`)+`</section>`;
@@ -21821,7 +21823,7 @@ function renderOptions(){
       <div class="optleg"><span><i style="background:${OPT_C.put}"></i>Puts</span><span><i style="background:${OPT_C.call}"></i>Calls</span><span><i class="ln" style="background:${css('--ink')}"></i>Futures settle</span><span><i class="ln" style="background:${OPT_C.mp}"></i>Max pain</span>${Vv&&Vv.gPeak!=null?`<span><i class="ln" style="background:${OPT_C.flip}"></i>Peak net dealer gamma</span>`:""}</div>
       <div class="chartbox"><div class="tip" id="optLadTip"></div><svg id="optLad"></svg></div>${OPT_SRC}</section>`;
   const gamC=(Vv&&Vv.gc)? `<section class="card"><h2>Dealer gamma by strike — ${name}</h2>
-      <p class="csub">Dealers' short gamma per 1% move in the futures, by strike - puts left, calls right - ${OPT_GCONV} (oil's end-users buy both). Total at the settle ${optM(Vv.gNet)}; calls and puts together it is largest with the futures at ${optPx(Vv.gPeak)}${Vv.gPeakP!=null&&Vv.gPeakC!=null?` - the puts alone at ${optPx(Vv.gPeakP)}, the calls alone at ${optPx(Vv.gPeakC)}`:""}.</p>
+      <p class="csub">Dealers' short gamma per 1% move in the futures, by strike - puts left, calls right.</p>
       <div class="optleg"><span><i style="background:${OPT_C.put}"></i>Short gamma from puts</span><span><i style="background:${OPT_C.call}"></i>Short gamma from calls</span><span><i class="ln" style="background:${css('--ink')}"></i>Futures settle</span>${optPeakLeg(Vv)}</div>
       <div class="chartbox"><div class="tip" id="optGamTip"></div><svg id="optGam"></svg></div>${OPT_SRC}</section>` : "";
   const chgC=M.dc? `<section class="card"><h2>Change in open interest since ${prev} — ${name}</h2>
@@ -21838,7 +21840,7 @@ function renderOptions(){
     <div class="chartbox"><div class="tip" id="optTermVolTip"></div><svg id="optTermVol"></svg></div>${OPT_SRC}</section>` : "";
   const H0=Vv&&Vv.hedge? optHedgeAt(Vv.hedge,M.fut) : null;
   const hedC=(Vv&&Vv.hedge)? `<section class="card"><h2>Dealer hedging as futures move — ${name}</h2>
-      <p class="csub">Futures lots dealers would have to buy (above the settle) or sell (below) to stay hedged if ${name} futures moved to each level, ${OPT_GCONV}; it grows fastest through the heavy strikes.${H0?` At the settle each $1 move is about ${optN(H0.per)} lots.`:""}</p>
+      <p class="csub">Futures lots dealers would have to buy (above the settle) or sell (below) to stay hedged if ${name} futures moved to each level; it grows fastest through the heavy strikes.${H0?` At the settle each $1 move is about ${optN(H0.per)} lots.`:""}</p>
       <div class="optleg"><span><i style="background:${OPT_C.gpos}"></i>Dealers buy</span><span><i style="background:${OPT_C.gneg}"></i>Dealers sell</span><span><i class="ln" style="background:${css('--ink')}"></i>Futures settle</span>${optPeakLeg(Vv)}</div>
       <div class="chartbox"><div class="tip" id="optHedgeTip"></div><svg id="optHedge"></svg></div>
       ${optHedgeTable(M)}${OPT_SRC}</section>` : "";
