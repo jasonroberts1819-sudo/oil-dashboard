@@ -21810,7 +21810,7 @@ function renderOptions(){
   h+=`<section class="kpis">`+
     kpi(`${name} futures`, optPx(M.fut), M.futDate?`settle ${optD(M.futDate)}`:"")+
     kpi("At-the-money vol", Vv?Vv.atm.toFixed(2)+"%":"—", Vv?vsrc+dpt(Vv.atm,Vv.atmPrev):"")+
-    kpi("25-delta risk reversal", Vv?(Vv.rr>0?"+":"")+Vv.rr.toFixed(2):"—", Vv?`25-delta call vol minus put vol: ${Vv.rr>0?"call skew":Vv.rr<0?"put skew":"flat skew"}`+dpt(Vv.rr,Vv.rrPrev):"")+
+    kpi("25-delta risk reversal", Vv?(Vv.rr>0?"+":"")+Vv.rr.toFixed(2):"—", Vv?(Vv.rr>0?"Call skew: upside calls trade at a higher vol than downside puts - the market is paying up to protect against a rally":Vv.rr<0?"Put skew: downside puts trade at a higher vol than upside calls - the market is paying up to protect against a fall":"Flat skew: upside calls and downside puts trade at the same vol")+dpt(Vv.rr,Vv.rrPrev):"")+
     kpi("Expected move to expiry", Vv?`±$${Vv.em.toFixed(2)}`:"—", Vv&&M.fut?`one standard deviation, ±${(Vv.em/M.fut*100).toFixed(1)}%`:"")+
     kpi("Peak net dealer gamma", Vv&&Vv.gPeak!=null?optPx(Vv.gPeak):"—", Vv&&Vv.gPeak!=null&&M.fut?`${Vv.gPeak>=M.fut?"+":"−"}${Math.abs(Vv.gPeak-M.fut).toFixed(2)} vs futures · ${optM(Vv.gPeakVal)} per 1% move there`:"")+
     kpi("Put / call (open interest)", pc==null?"—":pc.toFixed(2), `puts ${optN(M.P)} · calls ${optN(M.C)}`)+
