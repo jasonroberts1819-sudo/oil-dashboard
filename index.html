@@ -813,7 +813,7 @@ const DATA = {
     "May": -64.1,
     "Jun": -54.3,
     "Jul": -13.0,
-    "Aug": -1.4,
+    "Aug": -11.4,
     "Sep": 0.7,
     "Oct": -17.9
   },
@@ -825,7 +825,7 @@ const DATA = {
     "May": "psm",
     "Jun": "psm",
     "Jul": "psm",
-    "Aug": "weekly",
+    "Aug": "psm",
     "Sep": "weekly",
     "Oct": "partial"
   },
@@ -865,7 +865,7 @@ const DATA = {
     "May": -25.0,
     "Jun": -21.1,
     "Jul": 4.4,
-    "Aug": 17.3,
+    "Aug": 7.9,
     "Sep": 3.0,
     "Oct": -16.7
   },
@@ -877,7 +877,7 @@ const DATA = {
     "May": -39.1,
     "Jun": -33.2,
     "Jul": -17.4,
-    "Aug": -18.7,
+    "Aug": -19.2,
     "Sep": -2.3,
     "Oct": -1.2
   },
@@ -889,7 +889,7 @@ const DATA = {
     "May": -7.8,
     "Jun": -0.9,
     "Jul": 1.8,
-    "Aug": 1.3,
+    "Aug": -0.2,
     "Sep": 2.1,
     "Oct": 2.7
   },
@@ -901,7 +901,7 @@ const DATA = {
     "May": "psm",
     "Jun": "psm",
     "Jul": "psm",
-    "Aug": "weekly",
+    "Aug": "psm",
     "Sep": "weekly",
     "Oct": "partial"
   },
@@ -2581,7 +2581,7 @@ const DATA = {
         "May": -1.3,
         "Jun": -0.9,
         "Jul": -4.8,
-        "Aug": -3.4,
+        "Aug": -5.3,
         "Sep": -1.9,
         "Oct": 4.8
       },
@@ -2593,7 +2593,7 @@ const DATA = {
         "May": "psm",
         "Jun": "psm",
         "Jul": "psm",
-        "Aug": "weekly",
+        "Aug": "psm",
         "Sep": "weekly",
         "Oct": "partial"
       },
@@ -2636,7 +2636,7 @@ const DATA = {
         "May": 0.3,
         "Jun": 3.1,
         "Jul": -0.7,
-        "Aug": -2.1,
+        "Aug": -2.4,
         "Sep": 0.1,
         "Oct": -2.4
       },
@@ -2648,7 +2648,7 @@ const DATA = {
         "May": "psm",
         "Jun": "psm",
         "Jul": "psm",
-        "Aug": "weekly",
+        "Aug": "psm",
         "Sep": "weekly",
         "Oct": "partial"
       },
@@ -2691,7 +2691,7 @@ const DATA = {
         "May": 1.8,
         "Jun": 2.7,
         "Jul": -2.6,
-        "Aug": -0.9,
+        "Aug": 0.6,
         "Sep": -2.3,
         "Oct": -1.4
       },
@@ -2703,7 +2703,7 @@ const DATA = {
         "May": "psm",
         "Jun": "psm",
         "Jul": "psm",
-        "Aug": "weekly",
+        "Aug": "psm",
         "Sep": "weekly",
         "Oct": "partial"
       },
@@ -2786,6 +2786,13 @@ const DATA = {
 
 /* ===== LOG:START — auto-maintained by update_oil_dashboard.py (newest first). Do not hand-edit. ===== */
 const UPDATE_LOG = [
+  {
+    "time": "2026-10-30 13:30",
+    "outcome": "updated",
+    "label": "Dashboard updated",
+    "detail": "data through 2026-10-23; new: MCRSCUS1, MCESTUS1, MCSSTUS1, MCRSTUS1, MCRST_YCUOK_1, MGTSTUS1, MDISTUS1, MKJSTUS1",
+    "dataThrough": "2026-10-23"
+  },
   {
     "time": "2026-10-29 09:25",
     "outcome": "nochange",
@@ -3245,7 +3252,7 @@ const UPDATE_LOG = [
    as the crude-balance tab). ===== */
 const INV_DATA = {
   "asOf": "2026-10-23",
-  "generated": "2026-10-28 09:30",
+  "generated": "2026-10-30 13:41",
   "source": "WPSR psw09/psw01",
   "years": [
     2021,
@@ -3278,148 +3285,148 @@ const INV_DATA = {
           "code": "DERIV_CRUDE_TOTAL",
           "label": "U.S. total crude incl. SPR",
           "unit": "mmbbl",
-          "src": "Derived from EIA weekly WCESTUS1 + WCSSTUS1; months through Jul 2026 use EIA's monthly figures",
-          "psm": "2026-07"
+          "src": "Derived from EIA weekly WCESTUS1 + WCSSTUS1; months through Aug 2026 use EIA's monthly figures",
+          "psm": "2026-08"
         },
         {
           "code": "WCESTUS1",
           "label": "U.S. commercial crude (excl SPR)",
           "unit": "mmbbl",
-          "psm": "2026-07",
-          "src": "EIA weekly WCESTUS1; months through Jul 2026 are EIA's monthly figure (MCESTUS1)"
+          "psm": "2026-08",
+          "src": "EIA weekly WCESTUS1; months through Aug 2026 are EIA's monthly figure (MCESTUS1)"
         },
         {
           "code": "WCSSTUS1",
           "label": "U.S. SPR crude",
           "unit": "mmbbl",
-          "psm": "2026-07",
-          "src": "EIA weekly WCSSTUS1; months through Jul 2026 are EIA's monthly figure (MCSSTUS1)"
+          "psm": "2026-08",
+          "src": "EIA weekly WCSSTUS1; months through Aug 2026 are EIA's monthly figure (MCSSTUS1)"
         },
         {
           "code": "W_EPC0_SAX_YCUOK_MBBL",
           "label": "Cushing, OK",
           "unit": "mmbbl",
-          "psm": "2026-07",
-          "src": "EIA weekly W_EPC0_SAX_YCUOK_MBBL; months through Jul 2026 are EIA's monthly figure (MCRST_YCUOK_1)"
+          "psm": "2026-08",
+          "src": "EIA weekly W_EPC0_SAX_YCUOK_MBBL; months through Aug 2026 are EIA's monthly figure (MCRST_YCUOK_1)"
         },
         {
           "code": "WCESTP11",
           "label": "PADD 1 \u2014 East Coast",
           "unit": "mmbbl",
-          "psm": "2026-07",
-          "src": "EIA weekly WCESTP11; months through Jul 2026 are EIA's monthly figure (MCESTP11)"
+          "psm": "2026-08",
+          "src": "EIA weekly WCESTP11; months through Aug 2026 are EIA's monthly figure (MCESTP11)"
         },
         {
           "code": "WCESTP21",
           "label": "PADD 2 \u2014 Midwest",
           "unit": "mmbbl",
-          "psm": "2026-07",
-          "src": "EIA weekly WCESTP21; months through Jul 2026 are EIA's monthly figure (MCESTP21)"
+          "psm": "2026-08",
+          "src": "EIA weekly WCESTP21; months through Aug 2026 are EIA's monthly figure (MCESTP21)"
         },
         {
           "code": "WCESTP31",
           "label": "PADD 3 \u2014 Gulf Coast",
           "unit": "mmbbl",
-          "psm": "2026-07",
-          "src": "EIA weekly WCESTP31; months through Jul 2026 are EIA's monthly figure (MCESTP31)"
+          "psm": "2026-08",
+          "src": "EIA weekly WCESTP31; months through Aug 2026 are EIA's monthly figure (MCESTP31)"
         },
         {
           "code": "WCESTP41",
           "label": "PADD 4 \u2014 Rocky Mountain",
           "unit": "mmbbl",
-          "psm": "2026-07",
-          "src": "EIA weekly WCESTP41; months through Jul 2026 are EIA's monthly figure (MCESTP41)"
+          "psm": "2026-08",
+          "src": "EIA weekly WCESTP41; months through Aug 2026 are EIA's monthly figure (MCESTP41)"
         },
         {
           "code": "WCESTP51",
           "label": "PADD 5 \u2014 West Coast",
           "unit": "mmbbl",
-          "psm": "2026-07",
-          "src": "EIA weekly WCESTP51; months through Jul 2026 are EIA's monthly figure (MCESTP51)"
+          "psm": "2026-08",
+          "src": "EIA weekly WCESTP51; months through Aug 2026 are EIA's monthly figure (MCESTP51)"
         },
         {
           "code": "WCRFPUS2",
           "label": "Crude production \u2014 U.S.",
           "unit": "mmbbl/d",
-          "psm": "2026-07",
-          "src": "EIA weekly WCRFPUS2; months through Jul 2026 are EIA's monthly figure (MCRFPUS2)"
+          "psm": "2026-08",
+          "src": "EIA weekly WCRFPUS2; months through Aug 2026 are EIA's monthly figure (MCRFPUS2)"
         },
         {
           "code": "WCEIMUS2",
           "label": "Crude imports \u2014 U.S.",
           "unit": "kbbl/d",
-          "psm": "2026-07",
-          "src": "EIA weekly WCEIMUS2; months through Jul 2026 are EIA's monthly figure (MCRIMUS2)"
+          "psm": "2026-08",
+          "src": "EIA weekly WCEIMUS2; months through Aug 2026 are EIA's monthly figure (MCRIMUS2)"
         },
         {
           "code": "WCREXUS2",
           "label": "Crude exports \u2014 U.S.",
           "unit": "kbbl/d",
-          "psm": "2026-07",
-          "src": "EIA weekly WCREXUS2; months through Jul 2026 are EIA's monthly figure (MCREXUS2)"
+          "psm": "2026-08",
+          "src": "EIA weekly WCREXUS2; months through Aug 2026 are EIA's monthly figure (MCREXUS2)"
         },
         {
           "code": "DERIV_CRUDE_NETIMP",
           "label": "Crude net imports \u2014 U.S.",
           "unit": "kbbl/d",
-          "src": "Derived from EIA weekly WCEIMUS2 \u2212 WCREXUS2; months through Jul 2026 use EIA's monthly figures",
-          "psm": "2026-07"
+          "src": "Derived from EIA weekly WCEIMUS2 \u2212 WCREXUS2; months through Aug 2026 use EIA's monthly figures",
+          "psm": "2026-08"
         },
         {
           "code": "WCRAIUS2",
           "label": "Adjustment (unaccounted-for crude) \u2014 U.S.",
           "unit": "kbbl/d",
-          "psm": "2026-07",
-          "src": "EIA weekly WCRAUUS2; months through Jul 2026 are EIA's monthly figure (MCRUA_NUS_2)"
+          "psm": "2026-08",
+          "src": "EIA weekly WCRAUUS2; months through Aug 2026 are EIA's monthly figure (MCRUA_NUS_2)"
         },
         {
           "code": "WCRTPUS2",
           "label": "Transfers to crude oil supply \u2014 U.S.",
           "unit": "kbbl/d",
-          "psm": "2026-07",
-          "src": "EIA weekly W_EPC0_TVP_NUS_MBBLD; months through Jul 2026 are EIA's monthly figure (M_EPC0_TVP_NUS_MBBLD)"
+          "psm": "2026-08",
+          "src": "EIA weekly W_EPC0_TVP_NUS_MBBLD; months through Aug 2026 are EIA's monthly figure (M_EPC0_TVP_NUS_MBBLD)"
         },
         {
           "code": "DERIV_DOS_CRUDE",
           "label": "Days of crude cover \u2014 U.S.",
           "unit": "days",
-          "src": "Derived from EIA weekly WCESTUS1 \u00f7 WCRRIUS2; months through Jul 2026 use EIA's monthly figures",
-          "psm": "2026-07"
+          "src": "Derived from EIA weekly WCESTUS1 \u00f7 WCRRIUS2; months through Aug 2026 use EIA's monthly figures",
+          "psm": "2026-08"
         },
         {
           "code": "DERIV_DOS_CRUDE_P1",
           "label": "Days of crude cover \u2014 PADD 1",
           "unit": "days",
-          "src": "Derived from EIA weekly WCESTP11 \u00f7 WCRRIP12; months through Jul 2026 use EIA's monthly figures",
-          "psm": "2026-07"
+          "src": "Derived from EIA weekly WCESTP11 \u00f7 WCRRIP12; months through Aug 2026 use EIA's monthly figures",
+          "psm": "2026-08"
         },
         {
           "code": "DERIV_DOS_CRUDE_P2",
           "label": "Days of crude cover \u2014 PADD 2",
           "unit": "days",
-          "src": "Derived from EIA weekly WCESTP21 \u00f7 WCRRIP22; months through Jul 2026 use EIA's monthly figures",
-          "psm": "2026-07"
+          "src": "Derived from EIA weekly WCESTP21 \u00f7 WCRRIP22; months through Aug 2026 use EIA's monthly figures",
+          "psm": "2026-08"
         },
         {
           "code": "DERIV_DOS_CRUDE_P3",
           "label": "Days of crude cover \u2014 PADD 3",
           "unit": "days",
-          "src": "Derived from EIA weekly WCESTP31 \u00f7 WCRRIP32; months through Jul 2026 use EIA's monthly figures",
-          "psm": "2026-07"
+          "src": "Derived from EIA weekly WCESTP31 \u00f7 WCRRIP32; months through Aug 2026 use EIA's monthly figures",
+          "psm": "2026-08"
         },
         {
           "code": "DERIV_DOS_CRUDE_P4",
           "label": "Days of crude cover \u2014 PADD 4",
           "unit": "days",
-          "src": "Derived from EIA weekly WCESTP41 \u00f7 WCRRIP42; months through Jul 2026 use EIA's monthly figures",
-          "psm": "2026-07"
+          "src": "Derived from EIA weekly WCESTP41 \u00f7 WCRRIP42; months through Aug 2026 use EIA's monthly figures",
+          "psm": "2026-08"
         },
         {
           "code": "DERIV_DOS_CRUDE_P5",
           "label": "Days of crude cover \u2014 PADD 5",
           "unit": "days",
-          "src": "Derived from EIA weekly WCESTP51 \u00f7 WCRRIP52; months through Jul 2026 use EIA's monthly figures",
-          "psm": "2026-07"
+          "src": "Derived from EIA weekly WCESTP51 \u00f7 WCRRIP52; months through Aug 2026 use EIA's monthly figures",
+          "psm": "2026-08"
         }
       ],
       "level": {
@@ -3502,7 +3509,7 @@ const INV_DATA = {
             425.203,
             404.121,
             408.533,
-            424.46,
+            416.392,
             427.32,
             410.625,
             null,
@@ -3588,7 +3595,7 @@ const INV_DATA = {
             355.381,
             322.186,
             304.81,
-            286.604,
+            285.57,
             283.767,
             282.583,
             null,
@@ -3674,7 +3681,7 @@ const INV_DATA = {
             20.462,
             19.515,
             21.337,
-            22.508,
+            21.154,
             24.301,
             26.97,
             null,
@@ -3760,7 +3767,7 @@ const INV_DATA = {
             8.707,
             9.139,
             7.557,
-            8.534,
+            8.904,
             7.994,
             8.032,
             null,
@@ -3846,7 +3853,7 @@ const INV_DATA = {
             100.616,
             98.619,
             100.849,
-            100.484,
+            99.061,
             105.11,
             107.884,
             null,
@@ -3932,7 +3939,7 @@ const INV_DATA = {
             244.403,
             233.275,
             231.74,
-            245.061,
+            240.586,
             247.497,
             227.776,
             null,
@@ -4018,7 +4025,7 @@ const INV_DATA = {
             24.106,
             22.336,
             22.539,
-            22.714,
+            23.106,
             22.496,
             24.915,
             null,
@@ -4104,7 +4111,7 @@ const INV_DATA = {
             47.371,
             40.752,
             45.848,
-            47.667,
+            44.735,
             44.224,
             42.019,
             null,
@@ -4188,9 +4195,9 @@ const INV_DATA = {
             13.726,
             13.981,
             13.811,
-            13.844,
-            13.948,
-            13.862,
+            13.865,
+            13.946,
+            13.965,
             13.955,
             13.992,
             null,
@@ -4276,7 +4283,7 @@ const INV_DATA = {
             5953.0,
             6044.0,
             6224.0,
-            6770.0,
+            6594.0,
             5698.0,
             6374.0,
             null,
@@ -4362,7 +4369,7 @@ const INV_DATA = {
             5728.0,
             4735.0,
             3556.0,
-            4483.0,
+            3992.0,
             3570.0,
             4854.0,
             null,
@@ -4446,9 +4453,9 @@ const INV_DATA = {
             228.0,
             336.0,
             -354.0,
-            -332.0,
-            -469.0,
-            -623.0,
+            -353.0,
+            -468.0,
+            -155.0,
             -238.0,
             189.0,
             null,
@@ -4520,7 +4527,7 @@ const INV_DATA = {
             1037.0,
             570.0,
             666.0,
-            887.0,
+            747.0,
             431.0,
             540.0,
             null,
@@ -4606,7 +4613,7 @@ const INV_DATA = {
             780.584,
             726.307,
             713.343,
-            711.064,
+            701.962,
             711.087,
             693.208,
             null,
@@ -4692,7 +4699,7 @@ const INV_DATA = {
             225.0,
             1309.0,
             2668.0,
-            2287.0,
+            2602.0,
             2128.0,
             1520.0,
             null,
@@ -4778,7 +4785,7 @@ const INV_DATA = {
             25.329,
             23.495,
             23.711,
-            24.26,
+            23.759,
             26.285,
             24.847,
             null,
@@ -4864,7 +4871,7 @@ const INV_DATA = {
             10.83,
             12.571,
             9.602,
-            10.83,
+            11.228,
             10.574,
             10.624,
             null,
@@ -4950,7 +4957,7 @@ const INV_DATA = {
             25.268,
             22.983,
             23.464,
-            22.708,
+            22.857,
             28.837,
             28.624,
             null,
@@ -5036,7 +5043,7 @@ const INV_DATA = {
             25.576,
             24.491,
             24.296,
-            25.527,
+            24.877,
             26.905,
             24.563,
             null,
@@ -5122,7 +5129,7 @@ const INV_DATA = {
             42.366,
             34.049,
             34.306,
-            34.731,
+            34.956,
             35.427,
             37.807,
             null,
@@ -5208,7 +5215,7 @@ const INV_DATA = {
             25.238,
             20.376,
             23.5,
-            23.493,
+            21.653,
             21.871,
             20.299,
             null,
@@ -5296,7 +5303,7 @@ const INV_DATA = {
             -24.97,
             -21.082,
             4.412,
-            17.305,
+            7.859,
             3.028,
             -16.695,
             null,
@@ -5382,7 +5389,7 @@ const INV_DATA = {
             -39.143,
             -33.195,
             -17.376,
-            -18.738,
+            -19.24,
             -2.304,
             -1.184,
             null,
@@ -5468,7 +5475,7 @@ const INV_DATA = {
             -7.81,
             -0.947,
             1.822,
-            1.26,
+            -0.183,
             2.086,
             2.669,
             null,
@@ -5554,7 +5561,7 @@ const INV_DATA = {
             -0.125,
             0.432,
             -1.582,
-            0.854,
+            1.347,
             -0.477,
             0.038,
             null,
@@ -5640,7 +5647,7 @@ const INV_DATA = {
             -9.978,
             -1.997,
             2.23,
-            0.748,
+            -1.788,
             4.789,
             2.774,
             null,
@@ -5726,7 +5733,7 @@ const INV_DATA = {
             -14.355,
             -11.128,
             -1.535,
-            15.546,
+            8.846,
             1.396,
             -19.721,
             null,
@@ -5812,7 +5819,7 @@ const INV_DATA = {
             -1.794,
             -1.77,
             0.203,
-            0.517,
+            0.567,
             -0.389,
             2.419,
             null,
@@ -5898,7 +5905,7 @@ const INV_DATA = {
             1.282,
             -6.619,
             5.096,
-            -0.36,
+            -1.113,
             -2.291,
             -2.205,
             null,
@@ -5982,10 +5989,10 @@ const INV_DATA = {
             0.015,
             0.255,
             -0.17,
-            0.033,
-            0.104,
-            -0.086,
-            0.093,
+            0.054,
+            0.081,
+            0.019,
+            -0.01,
             0.037,
             null,
             null
@@ -6070,8 +6077,8 @@ const INV_DATA = {
             -304.0,
             91.0,
             180.0,
-            546.0,
-            -1072.0,
+            370.0,
+            -896.0,
             676.0,
             null,
             null
@@ -6156,8 +6163,8 @@ const INV_DATA = {
             135.0,
             -993.0,
             -1179.0,
-            927.0,
-            -913.0,
+            436.0,
+            -422.0,
             1284.0,
             null,
             null
@@ -6240,10 +6247,10 @@ const INV_DATA = {
             -266.0,
             108.0,
             -690.0,
-            22.0,
-            -137.0,
-            -154.0,
-            385.0,
+            1.0,
+            -115.0,
+            313.0,
+            -83.0,
             427.0,
             null,
             null
@@ -6314,8 +6321,8 @@ const INV_DATA = {
             658.0,
             -467.0,
             96.0,
-            221.0,
-            -456.0,
+            81.0,
+            -316.0,
             109.0,
             null,
             null
@@ -6400,7 +6407,7 @@ const INV_DATA = {
             -64.113,
             -54.277,
             -12.964,
-            -1.433,
+            -11.381,
             0.724,
             -17.879,
             null,
@@ -6486,8 +6493,8 @@ const INV_DATA = {
             -439.0,
             1084.0,
             1359.0,
-            -381.0,
-            -159.0,
+            -66.0,
+            -474.0,
             -608.0,
             null,
             null
@@ -6572,8 +6579,8 @@ const INV_DATA = {
             -2.554,
             -1.834,
             0.215,
-            0.55,
-            2.025,
+            0.048,
+            2.527,
             -1.438,
             null,
             null
@@ -6658,8 +6665,8 @@ const INV_DATA = {
             -0.061,
             1.741,
             -2.969,
-            1.228,
-            -0.256,
+            1.626,
+            -0.654,
             0.05,
             null,
             null
@@ -6744,8 +6751,8 @@ const INV_DATA = {
             -5.283,
             -2.285,
             0.481,
-            -0.756,
-            6.129,
+            -0.607,
+            5.98,
             -0.213,
             null,
             null
@@ -6830,8 +6837,8 @@ const INV_DATA = {
             -2.069,
             -1.085,
             -0.194,
-            1.231,
-            1.378,
+            0.581,
+            2.028,
             -2.341,
             null,
             null
@@ -6916,8 +6923,8 @@ const INV_DATA = {
             -12.276,
             -8.317,
             0.257,
-            0.425,
-            0.696,
+            0.65,
+            0.471,
             2.381,
             null,
             null
@@ -7002,8 +7009,8 @@ const INV_DATA = {
             0.709,
             -4.862,
             3.124,
-            -0.007,
-            -1.621,
+            -1.847,
+            0.218,
             -1.572,
             null,
             null
@@ -7019,99 +7026,99 @@ const INV_DATA = {
           "code": "WGTSTUS1",
           "label": "Gasoline stocks \u2014 U.S. total",
           "unit": "mmbbl",
-          "psm": "2026-07",
-          "src": "EIA weekly WGTSTUS1; months through Jul 2026 are EIA's monthly figure (MGTSTUS1)"
+          "psm": "2026-08",
+          "src": "EIA weekly WGTSTUS1; months through Aug 2026 are EIA's monthly figure (MGTSTUS1)"
         },
         {
           "code": "WGTSTP11",
           "label": "Gasoline stocks \u2014 PADD 1 (East Coast)",
           "unit": "mmbbl",
-          "psm": "2026-07",
-          "src": "EIA weekly WGTSTP11; months through Jul 2026 are EIA's monthly figure (MGTSTP11)"
+          "psm": "2026-08",
+          "src": "EIA weekly WGTSTP11; months through Aug 2026 are EIA's monthly figure (MGTSTP11)"
         },
         {
           "code": "WGTSTP21",
           "label": "Gasoline stocks \u2014 PADD 2 (Midwest)",
           "unit": "mmbbl",
-          "psm": "2026-07",
-          "src": "EIA weekly WGTSTP21; months through Jul 2026 are EIA's monthly figure (MGTSTP21)"
+          "psm": "2026-08",
+          "src": "EIA weekly WGTSTP21; months through Aug 2026 are EIA's monthly figure (MGTSTP21)"
         },
         {
           "code": "WGTSTP31",
           "label": "Gasoline stocks \u2014 PADD 3 (Gulf Coast)",
           "unit": "mmbbl",
-          "psm": "2026-07",
-          "src": "EIA weekly WGTSTP31; months through Jul 2026 are EIA's monthly figure (MGTSTP31)"
+          "psm": "2026-08",
+          "src": "EIA weekly WGTSTP31; months through Aug 2026 are EIA's monthly figure (MGTSTP31)"
         },
         {
           "code": "WGTSTP41",
           "label": "Gasoline stocks \u2014 PADD 4 (Rockies)",
           "unit": "mmbbl",
-          "psm": "2026-07",
-          "src": "EIA weekly WGTSTP41; months through Jul 2026 are EIA's monthly figure (MGTSTP41)"
+          "psm": "2026-08",
+          "src": "EIA weekly WGTSTP41; months through Aug 2026 are EIA's monthly figure (MGTSTP41)"
         },
         {
           "code": "WGTSTP51",
           "label": "Gasoline stocks \u2014 PADD 5 (West Coast)",
           "unit": "mmbbl",
-          "psm": "2026-07",
-          "src": "EIA weekly WGTSTP51; months through Jul 2026 are EIA's monthly figure (MGTSTP51)"
+          "psm": "2026-08",
+          "src": "EIA weekly WGTSTP51; months through Aug 2026 are EIA's monthly figure (MGTSTP51)"
         },
         {
           "code": "W_EPOBGRR_SAE_NUS_MBBL",
           "label": "RBOB stocks \u2014 U.S. total",
           "unit": "mmbbl",
-          "psm": "2026-07",
-          "src": "EIA weekly W_EPOBGRR_SAE_NUS_MBBL; months through Jul 2026 are EIA's monthly figure (M_EPOBGRR_SAE_NUS_MBBL)"
+          "psm": "2026-08",
+          "src": "EIA weekly W_EPOBGRR_SAE_NUS_MBBL; months through Aug 2026 are EIA's monthly figure (M_EPOBGRR_SAE_NUS_MBBL)"
         },
         {
           "code": "W_EPOBGRR_SAE_R10_MBBL",
           "label": "RBOB stocks \u2014 PADD 1 (East Coast)",
           "unit": "mmbbl",
-          "psm": "2026-07",
-          "src": "EIA weekly W_EPOBGRR_SAE_R10_MBBL; months through Jul 2026 are EIA's monthly figure (M_EPOBGRR_SAE_R10_MBBL)"
+          "psm": "2026-08",
+          "src": "EIA weekly W_EPOBGRR_SAE_R10_MBBL; months through Aug 2026 are EIA's monthly figure (M_EPOBGRR_SAE_R10_MBBL)"
         },
         {
           "code": "W_EPOBGRR_SAE_R30_MBBL",
           "label": "RBOB stocks \u2014 PADD 3 (Gulf Coast)",
           "unit": "mmbbl",
-          "psm": "2026-07",
-          "src": "EIA weekly W_EPOBGRR_SAE_R30_MBBL; months through Jul 2026 are EIA's monthly figure (M_EPOBGRR_SAE_R30_MBBL)"
+          "psm": "2026-08",
+          "src": "EIA weekly W_EPOBGRR_SAE_R30_MBBL; months through Aug 2026 are EIA's monthly figure (M_EPOBGRR_SAE_R30_MBBL)"
         },
         {
           "code": "W_EPOBGRR_SAE_R50_MBBL",
           "label": "RBOB stocks \u2014 PADD 5 (West Coast)",
           "unit": "mmbbl",
-          "psm": "2026-07",
-          "src": "EIA weekly W_EPOBGRR_SAE_R50_MBBL; months through Jul 2026 are EIA's monthly figure (M_EPOBGRR_SAE_R50_MBBL)"
+          "psm": "2026-08",
+          "src": "EIA weekly W_EPOBGRR_SAE_R50_MBBL; months through Aug 2026 are EIA's monthly figure (M_EPOBGRR_SAE_R50_MBBL)"
         },
         {
           "code": "W_EPM0F_EEX_NUS-Z00_MBBLD",
           "label": "Gasoline exports \u2014 U.S.",
           "unit": "kbbl/d",
-          "psm": "2026-07",
-          "src": "EIA weekly W_EPM0F_EEX_NUS-Z00_MBBLD; months through Jul 2026 are EIA's monthly figure (MGFEXUS2 + MBCEXUS2)"
+          "psm": "2026-08",
+          "src": "EIA weekly W_EPM0F_EEX_NUS-Z00_MBBLD; months through Aug 2026 are EIA's monthly figure (MGFEXUS2 + MBCEXUS2)"
         },
         {
           "code": "WGTIMUS2",
           "label": "Gasoline imports \u2014 U.S.",
           "unit": "kbbl/d",
-          "psm": "2026-07",
-          "src": "EIA weekly WGTIMUS2; months through Jul 2026 are EIA's monthly figure (MGFIMUS2 + MBCIMUS2)"
+          "psm": "2026-08",
+          "src": "EIA weekly WGTIMUS2; months through Aug 2026 are EIA's monthly figure (MGFIMUS2 + MBCIMUS2)"
         },
         {
           "code": "WGFUPUS2",
           "label": "Gasoline product supplied (demand) \u2014 U.S.",
           "unit": "kbbl/d",
-          "psm": "2026-07",
-          "src": "EIA weekly WGFUPUS2; months through Jul 2026 are EIA's monthly figure (MGFUPUS2)"
+          "psm": "2026-08",
+          "src": "EIA weekly WGFUPUS2; months through Aug 2026 are EIA's monthly figure (MGFUPUS2)"
         },
         {
           "code": "DERIV_DOS_GAS",
           "label": "Days of gasoline supply",
           "unit": "days",
-          "src": "Derived from EIA weekly WGTSTUS1 \u00f7 WGFUPUS2; months through Jul 2026 use EIA's monthly figures",
-          "psm": "2026-07"
+          "src": "Derived from EIA weekly WGTSTUS1 \u00f7 WGFUPUS2; months through Aug 2026 use EIA's monthly figures",
+          "psm": "2026-08"
         }
       ],
       "level": {
@@ -7194,7 +7201,7 @@ const INV_DATA = {
             220.389,
             219.441,
             214.632,
-            205.669,
+            209.337,
             204.362,
             209.18,
             null,
@@ -7280,7 +7287,7 @@ const INV_DATA = {
             57.919,
             56.678,
             52.812,
-            52.569,
+            52.669,
             50.94,
             53.939,
             null,
@@ -7366,7 +7373,7 @@ const INV_DATA = {
             45.724,
             48.362,
             46.91,
-            43.382,
+            43.934,
             41.83,
             41.043,
             null,
@@ -7452,7 +7459,7 @@ const INV_DATA = {
             82.467,
             78.218,
             80.005,
-            76.155,
+            78.844,
             76.87,
             79.85,
             null,
@@ -7538,7 +7545,7 @@ const INV_DATA = {
             7.067,
             7.075,
             6.211,
-            6.36,
+            6.697,
             6.731,
             6.781,
             null,
@@ -7624,7 +7631,7 @@ const INV_DATA = {
             27.212,
             29.108,
             28.694,
-            27.203,
+            27.193,
             27.99,
             27.567,
             null,
@@ -7710,7 +7717,7 @@ const INV_DATA = {
             40.767,
             41.672,
             39.143,
-            36.833,
+            37.509,
             42.425,
             44.025,
             null,
@@ -7796,7 +7803,7 @@ const INV_DATA = {
             15.463,
             14.781,
             12.871,
-            12.396,
+            12.236,
             16.725,
             17.325,
             null,
@@ -7882,7 +7889,7 @@ const INV_DATA = {
             8.555,
             9.283,
             9.183,
-            7.615,
+            8.489,
             9.314,
             9.919,
             null,
@@ -7968,7 +7975,7 @@ const INV_DATA = {
             11.791,
             12.764,
             12.698,
-            12.484,
+            12.015,
             12.166,
             11.96,
             null,
@@ -8054,7 +8061,7 @@ const INV_DATA = {
             922.0,
             949.0,
             927.0,
-            934.0,
+            888.0,
             932.0,
             845.0,
             null,
@@ -8140,7 +8147,7 @@ const INV_DATA = {
             647.0,
             664.0,
             543.0,
-            370.0,
+            477.0,
             500.0,
             399.0,
             null,
@@ -8226,7 +8233,7 @@ const INV_DATA = {
             8682.0,
             8917.0,
             8946.0,
-            8922.0,
+            8980.0,
             8689.0,
             8358.0,
             null,
@@ -8312,7 +8319,7 @@ const INV_DATA = {
             25.385,
             24.609,
             23.992,
-            23.052,
+            23.311,
             23.52,
             25.028,
             null,
@@ -8400,7 +8407,7 @@ const INV_DATA = {
             -1.31,
             -0.948,
             -4.809,
-            -3.445,
+            -5.295,
             -1.851,
             4.818,
             null,
@@ -8486,7 +8493,7 @@ const INV_DATA = {
             1.167,
             -1.241,
             -3.866,
-            0.524,
+            -0.143,
             -1.814,
             2.999,
             null,
@@ -8572,7 +8579,7 @@ const INV_DATA = {
             -1.36,
             2.638,
             -1.452,
-            -0.049,
+            -2.976,
             -1.494,
             -0.787,
             null,
@@ -8658,7 +8665,7 @@ const INV_DATA = {
             1.049,
             -4.249,
             1.787,
-            -1.85,
+            -1.161,
             0.235,
             2.98,
             null,
@@ -8744,7 +8751,7 @@ const INV_DATA = {
             -0.37,
             0.008,
             -0.864,
-            0.157,
+            0.486,
             0.378,
             0.05,
             null,
@@ -8830,7 +8837,7 @@ const INV_DATA = {
             -1.796,
             1.896,
             -0.414,
-            -2.228,
+            -1.501,
             0.844,
             -0.423,
             null,
@@ -8916,7 +8923,7 @@ const INV_DATA = {
             -4.351,
             0.905,
             -2.529,
-            -2.107,
+            -1.634,
             5.069,
             1.6,
             null,
@@ -9002,7 +9009,7 @@ const INV_DATA = {
             -2.461,
             -0.682,
             -1.91,
-            -0.432,
+            -0.635,
             4.059,
             0.6,
             null,
@@ -9088,7 +9095,7 @@ const INV_DATA = {
             -1.672,
             0.728,
             -0.1,
-            -0.877,
+            -0.694,
             1.453,
             0.605,
             null,
@@ -9174,7 +9181,7 @@ const INV_DATA = {
             -0.64,
             0.973,
             -0.066,
-            -1.304,
+            -0.683,
             -0.153,
             -0.206,
             null,
@@ -9260,8 +9267,8 @@ const INV_DATA = {
             119.0,
             27.0,
             -22.0,
-            7.0,
-            -2.0,
+            -39.0,
+            44.0,
             -87.0,
             null,
             null
@@ -9346,8 +9353,8 @@ const INV_DATA = {
             69.0,
             17.0,
             -121.0,
-            -173.0,
-            130.0,
+            -66.0,
+            23.0,
             -101.0,
             null,
             null
@@ -9432,8 +9439,8 @@ const INV_DATA = {
             -441.0,
             235.0,
             29.0,
-            -24.0,
-            -233.0,
+            34.0,
+            -291.0,
             -331.0,
             null,
             null
@@ -9518,8 +9525,8 @@ const INV_DATA = {
             1.083,
             -0.775,
             -0.617,
-            -0.94,
-            0.468,
+            -0.68,
+            0.208,
             1.508,
             null,
             null
@@ -9535,71 +9542,71 @@ const INV_DATA = {
           "code": "WDISTUS1",
           "label": "Distillate stocks \u2014 U.S. total",
           "unit": "mmbbl",
-          "psm": "2026-07",
-          "src": "EIA weekly WDISTUS1; months through Jul 2026 are EIA's monthly figure (MDISTUS1)"
+          "psm": "2026-08",
+          "src": "EIA weekly WDISTUS1; months through Aug 2026 are EIA's monthly figure (MDISTUS1)"
         },
         {
           "code": "WDISTP11",
           "label": "Distillate stocks \u2014 PADD 1 (East Coast)",
           "unit": "mmbbl",
-          "psm": "2026-07",
-          "src": "EIA weekly WDISTP11; months through Jul 2026 are EIA's monthly figure (MDISTP11)"
+          "psm": "2026-08",
+          "src": "EIA weekly WDISTP11; months through Aug 2026 are EIA's monthly figure (MDISTP11)"
         },
         {
           "code": "WDISTP21",
           "label": "Distillate stocks \u2014 PADD 2 (Midwest)",
           "unit": "mmbbl",
-          "psm": "2026-07",
-          "src": "EIA weekly WDISTP21; months through Jul 2026 are EIA's monthly figure (MDISTP21)"
+          "psm": "2026-08",
+          "src": "EIA weekly WDISTP21; months through Aug 2026 are EIA's monthly figure (MDISTP21)"
         },
         {
           "code": "WDISTP31",
           "label": "Distillate stocks \u2014 PADD 3 (Gulf Coast)",
           "unit": "mmbbl",
-          "psm": "2026-07",
-          "src": "EIA weekly WDISTP31; months through Jul 2026 are EIA's monthly figure (MDISTP31)"
+          "psm": "2026-08",
+          "src": "EIA weekly WDISTP31; months through Aug 2026 are EIA's monthly figure (MDISTP31)"
         },
         {
           "code": "WDISTP41",
           "label": "Distillate stocks \u2014 PADD 4 (Rockies)",
           "unit": "mmbbl",
-          "psm": "2026-07",
-          "src": "EIA weekly WDISTP41; months through Jul 2026 are EIA's monthly figure (MDISTP41)"
+          "psm": "2026-08",
+          "src": "EIA weekly WDISTP41; months through Aug 2026 are EIA's monthly figure (MDISTP41)"
         },
         {
           "code": "WDISTP51",
           "label": "Distillate stocks \u2014 PADD 5 (West Coast)",
           "unit": "mmbbl",
-          "psm": "2026-07",
-          "src": "EIA weekly WDISTP51; months through Jul 2026 are EIA's monthly figure (MDISTP51)"
+          "psm": "2026-08",
+          "src": "EIA weekly WDISTP51; months through Aug 2026 are EIA's monthly figure (MDISTP51)"
         },
         {
           "code": "WDIEXUS2",
           "label": "Distillate exports \u2014 U.S.",
           "unit": "kbbl/d",
-          "psm": "2026-07",
-          "src": "EIA weekly WDIEXUS2; months through Jul 2026 are EIA's monthly figure (MDIEXUS2)"
+          "psm": "2026-08",
+          "src": "EIA weekly WDIEXUS2; months through Aug 2026 are EIA's monthly figure (MDIEXUS2)"
         },
         {
           "code": "WDIIMUS2",
           "label": "Distillate imports \u2014 U.S.",
           "unit": "kbbl/d",
-          "psm": "2026-07",
-          "src": "EIA weekly WDIIMUS2; months through Jul 2026 are EIA's monthly figure (MDIIMUS2)"
+          "psm": "2026-08",
+          "src": "EIA weekly WDIIMUS2; months through Aug 2026 are EIA's monthly figure (MDIIMUS2)"
         },
         {
           "code": "WDIUPUS2",
           "label": "Distillate product supplied (demand) \u2014 U.S.",
           "unit": "kbbl/d",
-          "psm": "2026-07",
-          "src": "EIA weekly WDIUPUS2; months through Jul 2026 are EIA's monthly figure (MDIUPUS2)"
+          "psm": "2026-08",
+          "src": "EIA weekly WDIUPUS2; months through Aug 2026 are EIA's monthly figure (MDIUPUS2)"
         },
         {
           "code": "DERIV_DOS_DIST",
           "label": "Days of distillate supply",
           "unit": "days",
-          "src": "Derived from EIA weekly WDISTUS1 \u00f7 WDIUPUS2; months through Jul 2026 use EIA's monthly figures",
-          "psm": "2026-07"
+          "src": "Derived from EIA weekly WDISTUS1 \u00f7 WDIUPUS2; months through Aug 2026 use EIA's monthly figures",
+          "psm": "2026-08"
         }
       ],
       "level": {
@@ -9682,7 +9689,7 @@ const INV_DATA = {
             106.302,
             109.448,
             108.797,
-            104.187,
+            106.426,
             105.18,
             102.824,
             null,
@@ -9768,7 +9775,7 @@ const INV_DATA = {
             24.311,
             22.93,
             25.085,
-            19.318,
+            20.885,
             21.92,
             21.832,
             null,
@@ -9854,7 +9861,7 @@ const INV_DATA = {
             25.948,
             30.048,
             28.964,
-            28.786,
+            29.012,
             25.937,
             24.215,
             null,
@@ -9940,7 +9947,7 @@ const INV_DATA = {
             41.913,
             41.635,
             41.032,
-            42.666,
+            43.245,
             43.897,
             43.359,
             null,
@@ -10026,7 +10033,7 @@ const INV_DATA = {
             3.807,
             3.348,
             3.222,
-            3.53,
+            3.683,
             3.194,
             3.296,
             null,
@@ -10112,7 +10119,7 @@ const INV_DATA = {
             10.323,
             11.486,
             10.494,
-            9.887,
+            9.6,
             10.233,
             10.122,
             null,
@@ -10198,7 +10205,7 @@ const INV_DATA = {
             1655.0,
             1432.0,
             1745.0,
-            1735.0,
+            1733.0,
             1529.0,
             1320.0,
             null,
@@ -10284,7 +10291,7 @@ const INV_DATA = {
             160.0,
             127.0,
             139.0,
-            113.0,
+            130.0,
             153.0,
             157.0,
             null,
@@ -10370,7 +10377,7 @@ const INV_DATA = {
             3567.0,
             3810.0,
             3685.0,
-            3390.0,
+            3705.0,
             3948.0,
             4207.0,
             null,
@@ -10456,7 +10463,7 @@ const INV_DATA = {
             29.802,
             28.727,
             29.524,
-            30.734,
+            28.725,
             26.641,
             24.441,
             null,
@@ -10544,7 +10551,7 @@ const INV_DATA = {
             0.255,
             3.146,
             -0.651,
-            -2.078,
+            -2.371,
             0.099,
             -2.356,
             null,
@@ -10630,7 +10637,7 @@ const INV_DATA = {
             -0.455,
             -1.381,
             2.155,
-            -4.816,
+            -4.2,
             1.581,
             -0.088,
             null,
@@ -10716,7 +10723,7 @@ const INV_DATA = {
             0.631,
             4.1,
             -1.084,
-            0.62,
+            0.048,
             -2.713,
             -1.722,
             null,
@@ -10802,7 +10809,7 @@ const INV_DATA = {
             -0.429,
             -0.278,
             -0.603,
-            2.101,
+            2.213,
             1.298,
             -0.538,
             null,
@@ -10888,7 +10895,7 @@ const INV_DATA = {
             0.288,
             -0.459,
             -0.126,
-            0.385,
+            0.461,
             -0.339,
             0.102,
             null,
@@ -10974,7 +10981,7 @@ const INV_DATA = {
             0.22,
             1.163,
             -0.992,
-            -0.369,
+            -0.894,
             0.274,
             -0.111,
             null,
@@ -11060,8 +11067,8 @@ const INV_DATA = {
             58.0,
             -223.0,
             313.0,
-            -10.0,
-            -206.0,
+            -12.0,
+            -204.0,
             -209.0,
             null,
             null
@@ -11146,8 +11153,8 @@ const INV_DATA = {
             27.0,
             -33.0,
             12.0,
-            -26.0,
-            40.0,
+            -9.0,
+            23.0,
             4.0,
             null,
             null
@@ -11232,8 +11239,8 @@ const INV_DATA = {
             -320.0,
             243.0,
             -125.0,
-            -295.0,
-            558.0,
+            20.0,
+            243.0,
             259.0,
             null,
             null
@@ -11318,8 +11325,8 @@ const INV_DATA = {
             2.519,
             -1.075,
             0.798,
-            1.209,
-            -4.092,
+            -0.799,
+            -2.084,
             -2.2,
             null,
             null
@@ -11335,64 +11342,64 @@ const INV_DATA = {
           "code": "WKJSTUS1",
           "label": "Jet stocks \u2014 U.S. total",
           "unit": "mmbbl",
-          "psm": "2026-07",
-          "src": "EIA weekly WKJSTUS1; months through Jul 2026 are EIA's monthly figure (MKJSTUS1)"
+          "psm": "2026-08",
+          "src": "EIA weekly WKJSTUS1; months through Aug 2026 are EIA's monthly figure (MKJSTUS1)"
         },
         {
           "code": "WKJSTP11",
           "label": "Jet stocks \u2014 PADD 1 (East Coast)",
           "unit": "mmbbl",
-          "psm": "2026-07",
-          "src": "EIA weekly WKJSTP11; months through Jul 2026 are EIA's monthly figure (MKJSTP11)"
+          "psm": "2026-08",
+          "src": "EIA weekly WKJSTP11; months through Aug 2026 are EIA's monthly figure (MKJSTP11)"
         },
         {
           "code": "WKJSTP21",
           "label": "Jet stocks \u2014 PADD 2 (Midwest)",
           "unit": "mmbbl",
-          "psm": "2026-07",
-          "src": "EIA weekly WKJSTP21; months through Jul 2026 are EIA's monthly figure (MKJSTP21)"
+          "psm": "2026-08",
+          "src": "EIA weekly WKJSTP21; months through Aug 2026 are EIA's monthly figure (MKJSTP21)"
         },
         {
           "code": "WKJSTP31",
           "label": "Jet stocks \u2014 PADD 3 (Gulf Coast)",
           "unit": "mmbbl",
-          "psm": "2026-07",
-          "src": "EIA weekly WKJSTP31; months through Jul 2026 are EIA's monthly figure (MKJSTP31)"
+          "psm": "2026-08",
+          "src": "EIA weekly WKJSTP31; months through Aug 2026 are EIA's monthly figure (MKJSTP31)"
         },
         {
           "code": "WKJSTP41",
           "label": "Jet stocks \u2014 PADD 4 (Rockies)",
           "unit": "mmbbl",
-          "psm": "2026-07",
-          "src": "EIA weekly WKJSTP41; months through Jul 2026 are EIA's monthly figure (MKJSTP41)"
+          "psm": "2026-08",
+          "src": "EIA weekly WKJSTP41; months through Aug 2026 are EIA's monthly figure (MKJSTP41)"
         },
         {
           "code": "WKJSTP51",
           "label": "Jet stocks \u2014 PADD 5 (West Coast)",
           "unit": "mmbbl",
-          "psm": "2026-07",
-          "src": "EIA weekly WKJSTP51; months through Jul 2026 are EIA's monthly figure (MKJSTP51)"
+          "psm": "2026-08",
+          "src": "EIA weekly WKJSTP51; months through Aug 2026 are EIA's monthly figure (MKJSTP51)"
         },
         {
           "code": "WKJEXUS2",
           "label": "Jet exports \u2014 U.S.",
           "unit": "kbbl/d",
-          "psm": "2026-07",
-          "src": "EIA weekly WKJEXUS2; months through Jul 2026 are EIA's monthly figure (MKJEXUS2)"
+          "psm": "2026-08",
+          "src": "EIA weekly WKJEXUS2; months through Aug 2026 are EIA's monthly figure (MKJEXUS2)"
         },
         {
           "code": "WKJIMUS2",
           "label": "Jet imports \u2014 U.S.",
           "unit": "kbbl/d",
-          "psm": "2026-07",
-          "src": "EIA weekly WKJIMUS2; months through Jul 2026 are EIA's monthly figure (MKJIMUS2)"
+          "psm": "2026-08",
+          "src": "EIA weekly WKJIMUS2; months through Aug 2026 are EIA's monthly figure (MKJIMUS2)"
         },
         {
           "code": "WKJUPUS2",
           "label": "Jet product supplied (demand) \u2014 U.S.",
           "unit": "kbbl/d",
-          "psm": "2026-07",
-          "src": "EIA weekly WKJUPUS2; months through Jul 2026 are EIA's monthly figure (MKJUPUS2)"
+          "psm": "2026-08",
+          "src": "EIA weekly WKJUPUS2; months through Aug 2026 are EIA's monthly figure (MKJUPUS2)"
         },
         {
           "code": "TSA_TRAVELERS",
@@ -11406,8 +11413,8 @@ const INV_DATA = {
           "code": "DERIV_DOS_JET",
           "label": "Days of jet supply",
           "unit": "days",
-          "src": "Derived from EIA weekly WKJSTUS1 \u00f7 WKJUPUS2; months through Jul 2026 use EIA's monthly figures",
-          "psm": "2026-07"
+          "src": "Derived from EIA weekly WKJSTUS1 \u00f7 WKJUPUS2; months through Aug 2026 use EIA's monthly figures",
+          "psm": "2026-08"
         }
       ],
       "level": {
@@ -11490,7 +11497,7 @@ const INV_DATA = {
             46.012,
             48.759,
             46.183,
-            45.874,
+            46.742,
             43.612,
             42.217,
             null,
@@ -11576,7 +11583,7 @@ const INV_DATA = {
             10.943,
             11.178,
             11.285,
-            11.239,
+            11.271,
             9.685,
             9.292,
             null,
@@ -11662,7 +11669,7 @@ const INV_DATA = {
             7.497,
             8.01,
             8.178,
-            8.212,
+            8.221,
             7.735,
             6.826,
             null,
@@ -11748,7 +11755,7 @@ const INV_DATA = {
             15.542,
             16.493,
             14.79,
-            14.304,
+            14.681,
             14.767,
             14.562,
             null,
@@ -11834,7 +11841,7 @@ const INV_DATA = {
             0.673,
             0.744,
             0.8,
-            0.747,
+            0.906,
             0.71,
             0.697,
             null,
@@ -11920,7 +11927,7 @@ const INV_DATA = {
             11.357,
             12.334,
             11.13,
-            11.371,
+            11.663,
             10.714,
             10.839,
             null,
@@ -12006,7 +12013,7 @@ const INV_DATA = {
             336.0,
             350.0,
             368.0,
-            331.0,
+            347.0,
             358.0,
             272.0,
             null,
@@ -12092,7 +12099,7 @@ const INV_DATA = {
             57.0,
             84.0,
             81.0,
-            81.0,
+            79.0,
             50.0,
             76.0,
             null,
@@ -12178,7 +12185,7 @@ const INV_DATA = {
             1706.0,
             1817.0,
             1890.0,
-            1754.0,
+            1797.0,
             1809.0,
             1679.0,
             null,
@@ -12350,7 +12357,7 @@ const INV_DATA = {
             26.971,
             26.835,
             24.435,
-            26.154,
+            26.011,
             24.108,
             25.144,
             null,
@@ -12438,7 +12445,7 @@ const INV_DATA = {
             1.771,
             2.747,
             -2.576,
-            -0.936,
+            0.559,
             -2.33,
             -1.395,
             null,
@@ -12524,7 +12531,7 @@ const INV_DATA = {
             0.754,
             0.235,
             0.107,
-            -0.547,
+            -0.014,
             -1.321,
             -0.393,
             null,
@@ -12610,7 +12617,7 @@ const INV_DATA = {
             0.141,
             0.513,
             0.168,
-            0.348,
+            0.043,
             -0.284,
             -0.909,
             null,
@@ -12696,7 +12703,7 @@ const INV_DATA = {
             0.523,
             0.951,
             -1.703,
-            -0.779,
+            -0.109,
             -0.086,
             -0.205,
             null,
@@ -12782,7 +12789,7 @@ const INV_DATA = {
             -0.011,
             0.071,
             0.056,
-            -0.007,
+            0.106,
             -0.061,
             -0.013,
             null,
@@ -12868,7 +12875,7 @@ const INV_DATA = {
             0.364,
             0.977,
             -1.204,
-            0.049,
+            0.533,
             -0.578,
             0.125,
             null,
@@ -12954,8 +12961,8 @@ const INV_DATA = {
             2.0,
             14.0,
             18.0,
-            -37.0,
-            27.0,
+            -21.0,
+            11.0,
             -86.0,
             null,
             null
@@ -13040,8 +13047,8 @@ const INV_DATA = {
             -22.0,
             27.0,
             -3.0,
-            0.0,
-            -31.0,
+            -2.0,
+            -29.0,
             26.0,
             null,
             null
@@ -13126,8 +13133,8 @@ const INV_DATA = {
             -108.0,
             111.0,
             73.0,
-            -136.0,
-            55.0,
+            -93.0,
+            12.0,
             -130.0,
             null,
             null
@@ -13298,8 +13305,8 @@ const INV_DATA = {
             2.582,
             -0.136,
             -2.399,
-            1.718,
-            -2.046,
+            1.576,
+            -1.903,
             1.036,
             null,
             null
@@ -13315,85 +13322,85 @@ const INV_DATA = {
           "code": "WCRRIUS2",
           "label": "Crude runs \u2014 U.S. total",
           "unit": "mmbbl/d",
-          "psm": "2026-07",
-          "src": "EIA weekly WCRRIUS2; months through Jul 2026 are EIA's monthly figure (MCRRIUS2)"
+          "psm": "2026-08",
+          "src": "EIA weekly WCRRIUS2; months through Aug 2026 are EIA's monthly figure (MCRRIUS2)"
         },
         {
           "code": "WCRRIP12",
           "label": "Crude runs \u2014 PADD 1 (East Coast)",
           "unit": "mmbbl/d",
-          "psm": "2026-07",
-          "src": "EIA weekly WCRRIP12; months through Jul 2026 are EIA's monthly figure (MCRRIP12)"
+          "psm": "2026-08",
+          "src": "EIA weekly WCRRIP12; months through Aug 2026 are EIA's monthly figure (MCRRIP12)"
         },
         {
           "code": "WCRRIP22",
           "label": "Crude runs \u2014 PADD 2 (Midwest)",
           "unit": "mmbbl/d",
-          "psm": "2026-07",
-          "src": "EIA weekly WCRRIP22; months through Jul 2026 are EIA's monthly figure (MCRRIP22)"
+          "psm": "2026-08",
+          "src": "EIA weekly WCRRIP22; months through Aug 2026 are EIA's monthly figure (MCRRIP22)"
         },
         {
           "code": "WCRRIP32",
           "label": "Crude runs \u2014 PADD 3 (Gulf Coast)",
           "unit": "mmbbl/d",
-          "psm": "2026-07",
-          "src": "EIA weekly WCRRIP32; months through Jul 2026 are EIA's monthly figure (MCRRIP32)"
+          "psm": "2026-08",
+          "src": "EIA weekly WCRRIP32; months through Aug 2026 are EIA's monthly figure (MCRRIP32)"
         },
         {
           "code": "WCRRIP42",
           "label": "Crude runs \u2014 PADD 4 (Rockies)",
           "unit": "mmbbl/d",
-          "psm": "2026-07",
-          "src": "EIA weekly WCRRIP42; months through Jul 2026 are EIA's monthly figure (MCRRIP42)"
+          "psm": "2026-08",
+          "src": "EIA weekly WCRRIP42; months through Aug 2026 are EIA's monthly figure (MCRRIP42)"
         },
         {
           "code": "WCRRIP52",
           "label": "Crude runs \u2014 PADD 5 (West Coast)",
           "unit": "mmbbl/d",
-          "psm": "2026-07",
-          "src": "EIA weekly WCRRIP52; months through Jul 2026 are EIA's monthly figure (MCRRIP52)"
+          "psm": "2026-08",
+          "src": "EIA weekly WCRRIP52; months through Aug 2026 are EIA's monthly figure (MCRRIP52)"
         },
         {
           "code": "WPULEUS3",
           "label": "Refinery utilization \u2014 U.S. total",
           "unit": "%",
-          "psm": "2026-07",
-          "src": "EIA weekly WPULEUS3; months through Jul 2026 are EIA's monthly figure (MOPUEUS2)"
+          "psm": "2026-08",
+          "src": "EIA weekly WPULEUS3; months through Aug 2026 are EIA's monthly figure (MOPUEUS2)"
         },
         {
           "code": "W_NA_YUP_R10_PER",
           "label": "Refinery utilization \u2014 PADD 1 (East Coast)",
           "unit": "%",
-          "psm": "2026-07",
-          "src": "EIA weekly W_NA_YUP_R10_PER; months through Jul 2026 are EIA's monthly figure (MOPUEP12)"
+          "psm": "2026-08",
+          "src": "EIA weekly W_NA_YUP_R10_PER; months through Aug 2026 are EIA's monthly figure (MOPUEP12)"
         },
         {
           "code": "W_NA_YUP_R20_PER",
           "label": "Refinery utilization \u2014 PADD 2 (Midwest)",
           "unit": "%",
-          "psm": "2026-07",
-          "src": "EIA weekly W_NA_YUP_R20_PER; months through Jul 2026 are EIA's monthly figure (MOPUEP22)"
+          "psm": "2026-08",
+          "src": "EIA weekly W_NA_YUP_R20_PER; months through Aug 2026 are EIA's monthly figure (MOPUEP22)"
         },
         {
           "code": "W_NA_YUP_R30_PER",
           "label": "Refinery utilization \u2014 PADD 3 (Gulf Coast)",
           "unit": "%",
-          "psm": "2026-07",
-          "src": "EIA weekly W_NA_YUP_R30_PER; months through Jul 2026 are EIA's monthly figure (MOPUEP32)"
+          "psm": "2026-08",
+          "src": "EIA weekly W_NA_YUP_R30_PER; months through Aug 2026 are EIA's monthly figure (MOPUEP32)"
         },
         {
           "code": "W_NA_YUP_R40_PER",
           "label": "Refinery utilization \u2014 PADD 4 (Rockies)",
           "unit": "%",
-          "psm": "2026-07",
-          "src": "EIA weekly W_NA_YUP_R40_PER; months through Jul 2026 are EIA's monthly figure (MOPUEP42)"
+          "psm": "2026-08",
+          "src": "EIA weekly W_NA_YUP_R40_PER; months through Aug 2026 are EIA's monthly figure (MOPUEP42)"
         },
         {
           "code": "W_NA_YUP_R50_PER",
           "label": "Refinery utilization \u2014 PADD 5 (West Coast)",
           "unit": "%",
-          "psm": "2026-07",
-          "src": "EIA weekly W_NA_YUP_R50_PER; months through Jul 2026 are EIA's monthly figure (MOPUEP52)"
+          "psm": "2026-08",
+          "src": "EIA weekly W_NA_YUP_R50_PER; months through Aug 2026 are EIA's monthly figure (MOPUEP52)"
         }
       ],
       "level": {
@@ -13476,7 +13483,7 @@ const INV_DATA = {
             16.787,
             17.2,
             17.23,
-            17.496,
+            17.526,
             16.257,
             16.526,
             null,
@@ -13562,7 +13569,7 @@ const INV_DATA = {
             0.804,
             0.727,
             0.787,
-            0.788,
+            0.793,
             0.756,
             0.756,
             null,
@@ -13648,7 +13655,7 @@ const INV_DATA = {
             3.982,
             4.291,
             4.298,
-            4.425,
+            4.334,
             3.645,
             3.769,
             null,
@@ -13734,7 +13741,7 @@ const INV_DATA = {
             9.556,
             9.525,
             9.538,
-            9.6,
+            9.671,
             9.199,
             9.273,
             null,
@@ -13820,7 +13827,7 @@ const INV_DATA = {
             0.569,
             0.656,
             0.657,
-            0.654,
+            0.661,
             0.635,
             0.659,
             null,
@@ -13906,7 +13913,7 @@ const INV_DATA = {
             1.877,
             2.0,
             1.951,
-            2.029,
+            2.066,
             2.022,
             2.07,
             null,
@@ -13992,7 +13999,7 @@ const INV_DATA = {
             94.0,
             96.5,
             96.5,
-            98.0,
+            97.6,
             92.5,
             92.8,
             null,
@@ -14078,7 +14085,7 @@ const INV_DATA = {
             86.3,
             78.4,
             84.9,
-            86.6,
+            88.5,
             82.5,
             81.7,
             null,
@@ -14164,7 +14171,7 @@ const INV_DATA = {
             93.7,
             100.6,
             100.9,
-            103.5,
+            101.6,
             85.6,
             88.1,
             null,
@@ -14250,7 +14257,7 @@ const INV_DATA = {
             96.9,
             96.6,
             96.7,
-            97.7,
+            97.0,
             95.9,
             94.9,
             null,
@@ -14336,7 +14343,7 @@ const INV_DATA = {
             87.9,
             100.8,
             100.7,
-            99.8,
+            101.2,
             97.3,
             100.4,
             null,
@@ -14422,7 +14429,7 @@ const INV_DATA = {
             86.5,
             94.3,
             91.3,
-            92.8,
+            95.7,
             93.4,
             95.1,
             null,
@@ -14510,8 +14517,8 @@ const INV_DATA = {
             0.642,
             0.413,
             0.03,
-            0.266,
-            -1.239,
+            0.296,
+            -1.269,
             0.269,
             null,
             null
@@ -14596,8 +14603,8 @@ const INV_DATA = {
             -0.007,
             -0.077,
             0.06,
-            0.001,
-            -0.032,
+            0.006,
+            -0.037,
             0.0,
             null,
             null
@@ -14682,8 +14689,8 @@ const INV_DATA = {
             0.362,
             0.309,
             0.007,
-            0.127,
-            -0.78,
+            0.036,
+            -0.689,
             0.124,
             null,
             null
@@ -14768,8 +14775,8 @@ const INV_DATA = {
             0.196,
             -0.031,
             0.013,
-            0.062,
-            -0.401,
+            0.133,
+            -0.472,
             0.074,
             null,
             null
@@ -14854,8 +14861,8 @@ const INV_DATA = {
             0.095,
             0.087,
             0.001,
-            -0.003,
-            -0.019,
+            0.004,
+            -0.026,
             0.024,
             null,
             null
@@ -14940,8 +14947,8 @@ const INV_DATA = {
             -0.002,
             0.123,
             -0.049,
-            0.078,
-            -0.007,
+            0.115,
+            -0.044,
             0.048,
             null,
             null
@@ -15026,8 +15033,8 @@ const INV_DATA = {
             3.9,
             2.5,
             0.0,
-            1.5,
-            -5.5,
+            1.1,
+            -5.1,
             0.3,
             null,
             null
@@ -15112,8 +15119,8 @@ const INV_DATA = {
             -1.4,
             -7.9,
             6.5,
-            1.7,
-            -4.1,
+            3.6,
+            -6.0,
             -0.8,
             null,
             null
@@ -15198,8 +15205,8 @@ const INV_DATA = {
             9.3,
             6.9,
             0.3,
-            2.6,
-            -17.9,
+            0.7,
+            -16.0,
             2.5,
             null,
             null
@@ -15284,8 +15291,8 @@ const INV_DATA = {
             2.1,
             -0.3,
             0.1,
-            1.0,
-            -1.8,
+            0.3,
+            -1.1,
             -1.0,
             null,
             null
@@ -15370,8 +15377,8 @@ const INV_DATA = {
             16.4,
             12.9,
             -0.1,
-            -0.9,
-            -2.5,
+            0.5,
+            -3.9,
             3.1,
             null,
             null
@@ -15456,8 +15463,8 @@ const INV_DATA = {
             0.0,
             7.8,
             -3.0,
-            1.5,
-            0.6,
+            4.4,
+            -2.3,
             1.7,
             null,
             null
@@ -17499,7 +17506,7 @@ const INV_DATA = {
   },
   "weeklyReport": {
     "asOf": "2026-10-23",
-    "generated": "2026-10-28 09:30",
+    "generated": "2026-10-30 13:41",
     "signal": {
       "lean": "bullish",
       "split": true,
