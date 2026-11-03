@@ -367,7 +367,7 @@
   td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
   .wbal tr.wsum td{font-weight:700;border-top:1px solid var(--border)}
   .wgrid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-  @media(max-width:760px){.wgrid2{grid-template-columns:1fr}}
+  @media(max-width:760px){.wgrid2{grid-template-columns:minmax(0,1fr)}}
 
   .controls{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;margin-bottom:18px;
     background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:11px 15px;box-shadow:var(--shadow)}
@@ -403,6 +403,12 @@
   table.data th,table.data td{padding:6px 8px;text-align:right;border-bottom:1px solid var(--border)}
   table.data th:first-child,table.data td:first-child{text-align:left}
   table.data thead th{color:var(--ink-3);font-weight:600;font-size:11.5px;text-transform:uppercase;letter-spacing:.04em}
+  /* phone (2026-11-03): a long unbroken detail token held the Updates table at 409 px, and
+     the six PADD buttons held Product Yields at 413 px; break the token, wrap the buttons */
+  @media (max-width:560px){
+    #updatesView table.data td:last-child{overflow-wrap:anywhere}
+    #yldSeg{flex-wrap:wrap;max-width:100%}
+  }
   td.neg{color:var(--neg)} td.pos{color:var(--pos)}
   .hidden{display:none}
 
@@ -19903,7 +19909,7 @@ function renderWeeklyReport(){
       <section class="card">
         <h2>Products</h2>
         <p class="csub">kbbl/d · stock change (kbbl/d) too</p>
-        <table class="data"><thead><tr><th>Product</th><th class="num">Demand</th><th class="num">Imports</th><th class="num">Exports</th><th class="num">Stock chg</th></tr></thead><tbody>${prows}</tbody></table>
+        <div style="overflow-x:auto;margin-top:6px"><table class="data" style="margin-top:0"><thead><tr><th>Product</th><th class="num">Demand</th><th class="num">Imports</th><th class="num">Exports</th><th class="num">Stock chg</th></tr></thead><tbody>${prows}</tbody></table></div>
       </section>
     </div>
     ${seasonalNormHTML()}`;
@@ -23184,8 +23190,8 @@ function renderIndexRolls(){
     const tot=cons.map(c=>{const vs=Object.values(a.bal[c]); const e=vs.reduce((s,v)=>s+v[1],0), g=vs.reduce((s,v)=>s+v[0],0);
       return `<td class="pbv ${g<0?"neg":"pos"}"><b>${skfmt(e)}</b><span class="pbgross">${skfmt(g)}</span></td>`;}).join("");
     return `<div class="pbblock"><div class="pbbh"><span class="rolldot" style="background:${PCOL[p]}"></span><b>${p}</b><span class="pbbsub">${kfmt(a.est)} lots on exchange of ${kfmt(a.gross)} gross</span></div>
-      <table class="rolltab pbbal"><thead><tr><th>Who rolls</th>${cons.map(c=>`<th>${esc(c)}</th>`).join("")}</tr></thead>
-      <tbody>${rows}<tr class="pbtot"><td class="pbfund"><b>Net on exchange</b><span class="pbmeta">grey = gross</span></td>${tot}</tr></tbody></table></div>`;
+      <div style="overflow-x:auto"><table class="rolltab pbbal"><thead><tr><th>Who rolls</th>${cons.map(c=>`<th>${esc(c)}</th>`).join("")}</tr></thead>
+      <tbody>${rows}<tr class="pbtot"><td class="pbfund"><b>Net on exchange</b><span class="pbmeta">grey = gross</span></td>${tot}</tr></tbody></table></div></div>`;
   }).join("");
   const sel=(typeof window.__rollsBalMonth==="string"&&balMonths.includes(window.__rollsBalMonth))?window.__rollsBalMonth:balMonths[0];
   const exLine=EX?`Index share that trades — GSCI: ${PRODS.map(p=>`${p} ${Math.round(EX.GSCI[p]*100)}%`).join(" · ")}; BCOM: ${PRODS.map(p=>`${p} ${Math.round(shareOf("BCOM",p)*100)}%`).join(" · ")}`+(EX.bcomIdx?`; BCOM-linked funds (3-Month Forward, WisdomTree): ${PRODS.map(p=>`${p} ${Math.round(EX.BCOM[p]*100)}%`).join(" · ")}`:"")+`. Funds holding futures roll in full.`:"";
@@ -23269,7 +23275,7 @@ function renderIndexRolls(){
     .pbtabs{margin-left:10px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-weight:400}
     .pbtab{border:1px solid var(--border);border-radius:10px;padding:1px 9px;font-size:11.5px;color:var(--ink-3);background:transparent;margin-right:4px;cursor:pointer}
     .pbtab.on{background:var(--ink);color:var(--surface);border-color:var(--ink)}
-    .pbblocks{display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:10px 22px}
+    .pbblocks{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(420px,100%),1fr));gap:10px 22px}
     .pbbh{font-size:13px;margin:6px 0 2px}
     .pbbsub{color:var(--ink-3);font-size:12px;margin-left:8px}
     .pbbal td,.pbbal th{padding:4px 6px}
