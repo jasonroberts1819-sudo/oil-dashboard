@@ -92,6 +92,9 @@
   .glance .ghead{font-size:11.5px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em;
     padding:0 14px 10px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
   .glance .ghead b{color:var(--ink-2)}
+  /* phone width (2026-11-02): the title span's chips sized it past the card (scrollWidth
+     492 at 375 px); min-width:0 + wrapping chips keep it inside, a no-op when they fit */
+  .glance .ghead>span{min-width:0}
   /* margin/overflow pair clips each wrapped row's leading divider at the card edge */
   .glance .grow{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
     row-gap:14px;margin-left:-1px;overflow:hidden}
@@ -106,7 +109,8 @@
   .gseas.bull{color:var(--pos)} .gseas.bear{color:var(--neg)} .gseas.neutral{color:var(--ink-3)}
   .gseas small{font-weight:600;color:var(--ink-3);font-variant-numeric:tabular-nums}
   .gsig{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:800;
-    padding:2px 9px;border-radius:20px;text-transform:uppercase;letter-spacing:.04em}
+    padding:2px 9px;border-radius:20px;text-transform:uppercase;letter-spacing:.04em;
+    flex-wrap:wrap;row-gap:2px;max-width:100%}
   .gsig.bullish{color:var(--pos);background:color-mix(in srgb,var(--pos) 16%,transparent)}
   .gsig.bearish{color:var(--neg);background:color-mix(in srgb,var(--neg) 16%,transparent)}
   .gsig.mixed,.gsig.balanced{color:var(--ink-2);background:var(--surface-2)}
@@ -116,6 +120,7 @@
   .gcot{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;
     padding:2px 9px;border-radius:20px;color:var(--cavg);
     background:color-mix(in srgb,var(--cavg) 15%,transparent);white-space:nowrap}
+  @media (max-width:560px){.gcot{white-space:normal;max-width:100%}}
   /* catalyst calendar */
   .gnext{font-weight:600;color:var(--ink-3);margin-right:14px}
   .gnext b{color:var(--ink-2);font-weight:700}
@@ -123,6 +128,13 @@
     text-transform:uppercase;letter-spacing:.05em}
   .calrow{display:grid;grid-template-columns:92px 52px 1fr auto;gap:10px;align-items:baseline;
     padding:5px 8px;border-radius:8px;font-size:13.5px}
+  /* phone (2026-11-02): the 92+52px tracks + chip + gaps need ~350px; the rows get ~297 at
+     375 px and the chip ran off the screen. Date, time and chip on one line, label under */
+  @media (max-width:560px){
+    .calrow{grid-template-columns:auto auto 1fr;grid-template-areas:"d t c" "l l l";gap:2px 10px}
+    .calrow .cd{grid-area:d} .calrow .ct{grid-area:t} .calrow .cl{grid-area:l}
+    .calrow .calcat{grid-area:c;justify-self:end}
+  }
   .calrow:nth-child(even){background:var(--surface-2)}
   .calrow.past{opacity:.45}
   .calrow.today{outline:1.5px solid var(--ccur);outline-offset:-1.5px}
