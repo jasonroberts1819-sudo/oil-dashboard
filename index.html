@@ -22928,7 +22928,7 @@ const GL_CTRY_COL={"Saudi Arabia":"#1f5fa8","Iraq":"#d9822b","Iran":"#2e8b57","K
   "UAE":"#7b4fa0","Qatar":"#8b5a2b","Oman":"#d35d9a","Saudi Arabia/Kuwait":"#b8a01c","Bahrain":"#7f8c8d"};
 // NCSI = Oman's official cargo per vessel, which books Mina al-Fahal's barrels (gulf_match.official_cargo)
 function glSrc(oman){ return `<p class="glsrc">Source: Copernicus Sentinel-1/2, aisstream.io AIS${oman?", NCSI":""}; own analysis</p>`; }
-const glState={period:60, term:"all", cls:"all", src:"all", sortK:"day", sortD:-1, page:0};
+const glState={period:60, term:"all", cls:"all", src:"all", view:"avg", sortK:"day", sortD:-1, page:0};
 function glEsc(s){ return String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
 function glDate(D,i){ const d=new Date(D.meta.start+"T00:00:00Z"); d.setUTCDate(d.getUTCDate()+i); return d; }
 function glFmtD(d){ return d.toLocaleDateString("en-GB",{day:"numeric",month:"short",timeZone:"UTC"}); }
@@ -22977,6 +22977,7 @@ function glFilters(D){
       <optgroup label="Terminal">${D.terminals.map(t=>opt(t.id,t.name,glState.term)).join("")}</optgroup></select></label>
     <label>Ship size <select data-gl="cls">${opt("all","All sizes",glState.cls)}${D.classes.map(c=>opt(c[0],c[0],glState.cls)).join("")}</select></label>
     <label>Source <select data-gl="src">${opt("all","Satellite + AIS",glState.src)}${opt("sat","Satellite only",glState.src)}${opt("ais","AIS-matched",glState.src)}</select></label>
+    <label>Charts <select data-gl="view">${opt("avg","7-day average",glState.view)}${opt("daily","Daily",glState.view)}</select></label>
   </div></section>`;
 }
 function glKpis(D,rows,all){
@@ -23003,7 +23004,7 @@ function glGroups(D,all){
     by[key].terms.add(i); });
   G.forEach(g=>{ g.mb=new Array(N).fill(0); g.n=cls.map(()=>new Array(N).fill(0)); g.rows=all.filter(r=>g.terms.has(r.term));
     g.rows.forEach(r=>{ const ci=cls.indexOf(r.cls); glSp(r).forEach(([d,w])=>{ if(d<0||d>=N) return; g.mb[d]+=r.mb*w; if(ci>=0) g.n[ci][d]+=w; }); });
-    g.mb7=glRoll(g.mb).slice(f); g.n7=g.n.map(a=>glRoll(a).slice(f));
+    g.mb7=glRoll(g.mb).slice(f); g.n7=g.n.map(a=>glRoll(a).slice(f)); g.mbD=g.mb.slice(f); g.nD=g.n.map(a=>a.slice(f));
     g.win=g.rows.filter(r=>r.day>=f).reduce((s,r)=>s+r.mb,0); });
   return G.filter(g=>g.mb7.some(v=>v)).sort((a,b)=>b.win-a.win||a.label.localeCompare(b.label));
 }
@@ -23015,7 +23016,7 @@ function glChart(svg,tip,D,o){
   const tot=[...Array(len)].map((_,i)=>L.every(l=>l.v[i]==null)?null:L.reduce((s,l)=>s+(l.v[i]||0),0));
   const vals=tot.filter(v=>v!=null);
   if(!vals.length||!L.length){ svg.innerHTML=""; svg.setAttribute("height",0); svg.onmousemove=null; return false; }
-  const ymax=(Math.max(...vals)||1)*1.1, dx=len>1?(W-m.l-m.r)/(len-1):0;
+  const A=o.avg||null, ymax=(Math.max(...vals,...(A||[]).filter(v=>v!=null))||1)*1.1, dx=len>1?(W-m.l-m.r)/(len-1):0;
   const x=i=>len>1?m.l+i*dx:(m.l+W-m.r)/2, y=v=>m.t+(1-v/ymax)*(H-m.t-m.b);
   let s=`<text x="0" y="11" font-size="11" fill="${css('--ink-3')}">${glEsc(o.unit)}</text>`;
   niceTicks(0,ymax,4).forEach(t=>{ s+=`<line x1="${m.l}" x2="${W-m.r}" y1="${y(t).toFixed(1)}" y2="${y(t).toFixed(1)}" stroke="${t===0?css('--axis'):css('--grid')}"/><text x="${m.l-6}" y="${(y(t)+3.5).toFixed(1)}" text-anchor="end" font-size="10.5" fill="${css('--ink-3')}">${t}</text>`; });
@@ -23030,6 +23031,9 @@ function glChart(svg,tip,D,o){
       s+=`<path d="M${up.join("L")}L${dn.join("L")}Z" fill="${l.col}" fill-opacity="${L.length>1?.82:.16}" stroke="none"/>`;
       if(L.length===1) s+=`<path d="M${up.join("L")}" fill="none" stroke="${l.col}" stroke-width="2"/>`; });
     base=top; });
+  if(A){ let run=[];                                                    // the 7-day average line (daily view)
+    const flush=()=>{ if(run.length>1) s+=`<path d="M${run.join("L")}" fill="none" stroke="${css('--ink')}" stroke-width="1.8"/>`; run=[]; };
+    A.forEach((v,i)=>{ if(v==null) flush(); else run.push(P(i,v)); }); flush(); }
   const step=Math.max(1,Math.ceil(len/(W<420?4:6)));
   for(let i=0;i<len;i+=step) s+=`<text x="${x(i).toFixed(1)}" y="${H-6}" text-anchor="${i===0&&len>1?"start":"middle"}" font-size="10.5" fill="${css('--ink-3')}">${glFmtD(glDate(D,f+i))}</text>`;
   svg.setAttribute("viewBox",`0 0 ${W} ${H}`); svg.setAttribute("height",H); svg.innerHTML=s;
@@ -23037,7 +23041,8 @@ function glChart(svg,tip,D,o){
     const i=Math.max(0,Math.min(len-1,len>1?Math.round((px-m.l)/dx):0));
     if(tot[i]==null){ tip.style.opacity=0; return; }
     const rows=L.length>1?L.map(l=>`<div class="row"><span class="k"><i style="background:${l.col}"></i>${glEsc(l.name)}</span><span>${(l.v[i]||0).toFixed(o.dec)}</span></div>`).join(""):"";
-    tip.innerHTML=`<b>${glFmtD(glDate(D,f+i))}</b> <span class="mut">7-day average</span>${rows}<div class="row"><span>${L.length>1?"Total":glEsc(L[0].name)}</span><span>${tot[i].toFixed(o.dec)} ${o.tipUnit}</span></div>`;
+    const av=A&&A[i]!=null?`<div class="row"><span>7-day average</span><span>${A[i].toFixed(o.dec)}</span></div>`:"";
+    tip.innerHTML=`<b>${glFmtD(glDate(D,f+i))}</b> <span class="mut">${A?"Daily":"7-day average"}</span>${rows}${av}<div class="row"><span>${L.length>1?"Total":glEsc(L[0].name)}</span><span>${tot[i].toFixed(o.dec)} ${o.tipUnit}</span></div>`;
     tip.style.left=Math.max(80,Math.min((bx.width||W)-80,x(i)*k))+"px"; tip.style.top=(y(tot[i])*k)+"px"; tip.style.opacity=1; };
   svg.onmouseleave=()=>{ tip.style.opacity=0; };
   return true;
@@ -23139,7 +23144,9 @@ function renderGulfLoadings(){
   if(!D||!D.terminals||!D.rows||!D.meta){ box.innerHTML=""; return; }
   const all=glAll(D), rows=glRows(D,all), n=glNDays(D), len=n-glFirst(D), cls=D.classes.map(c=>c[0]);
   const groups=glGroups(D,all), oman=glOman(D), src=glSrc(oman);
-  const clsLeg=cls.map(c=>`<span><i class="swatch" style="background:${GL_CLS_COL[c]||css('--ink-3')}"></i>${glEsc(c)}</span>`).join("");
+  const daily=glState.view==="daily", avgLeg=daily?`<span><i class="swatch" style="background:${css('--ink')}"></i>7-day average</span>`:"";
+  const sumL=Ls=>Ls.length?Ls[0].map((_,i)=>Ls.every(a=>a[i]==null)?null:Ls.reduce((s,a)=>s+(a[i]||0),0)):null;
+  const clsLeg=cls.map(c=>`<span><i class="swatch" style="background:${GL_CLS_COL[c]||css('--ink-3')}"></i>${glEsc(c)}</span>`).join("")+avgLeg;
   let h=glFilters(D)+glKpis(D,rows,all);
   h+=`<section class="card" id="glTlCard"><h2>Gulf crude loadings by country</h2>
       <p class="csub">Every terminal tracked: inside the Gulf, Fujairah, Oman and the Red Sea outlets</p>
@@ -23154,7 +23161,7 @@ function renderGulfLoadings(){
       <h3 class="glpt">${glEsc(g.label)}: tankers loaded, by size</h3>
       <div class="legend">${clsLeg}</div>
       <div class="chartbox"><div class="tip" id="glSTip${k}"></div><svg id="glS${k}"></svg></div>
-      <h3 class="glpt">${glEsc(g.label)}: crude loaded</h3>
+      <h3 class="glpt">${glEsc(g.label)}: crude loaded</h3>${daily?`<div class="legend">${avgLeg}</div>`:""}
       <div class="chartbox"><div class="tip" id="glBTip${k}"></div><svg id="glB${k}"></svg></div>${glSrc(g.country==="Oman")}</section>`; }).join("")}</div>`;
   h+=`<div class="chartgrid gl-top"><section class="card"><h2>Gulf crude terminals: where the tankers load</h2>
       <p class="csub">Circles sized by barrels loaded in the last ${len} days; dots are tankers seen in the last 7 days (filled at a berth, open at anchor)</p>
@@ -23168,14 +23175,16 @@ function renderGulfLoadings(){
   h+=`<section class="card"><h2>Gulf crude terminals: recent loadings</h2><p class="csub">One row per tanker visit, dated when first seen at the berth; sort by any column</p><div id="glTblBox">${glTable(D,rows)}</div>${src}</section>`;
   box.innerHTML=h;
   // the all-terminal chart: barrels stacked by country (or the one terminal picked)
-  const tl=groups.map(g=>({name:g.label,col:glCol(g.country),v:g.mb7}));
-  if(glChart($("#glTl"),$("#glTlTip"),D,{layers:tl,unit:"mb/d, 7-day average",dec:2,tipUnit:"mb/d",H:250}))
-    $("#glTlLeg").innerHTML=tl.map(l=>`<span><i class="swatch" style="background:${l.col}"></i>${glEsc(l.name)}</span>`).join("");
+  const tl=groups.map(g=>({name:g.label,col:glCol(g.country),v:daily?g.mbD:g.mb7}));
+  if(glChart($("#glTl"),$("#glTlTip"),D,{layers:tl,unit:daily?"mb/d, daily":"mb/d, 7-day average",dec:2,tipUnit:"mb/d",H:250,
+      avg:daily?sumL(groups.map(g=>g.mb7)):null}))
+    $("#glTlLeg").innerHTML=tl.map(l=>`<span><i class="swatch" style="background:${l.col}"></i>${glEsc(l.name)}</span>`).join("")+avgLeg;
   else $("#glTlCard").remove();
   groups.forEach((g,k)=>{
-    glChart($("#glS"+k),$("#glSTip"+k),D,{layers:cls.map((c,ci)=>({name:c,col:GL_CLS_COL[c]||css('--ink-3'),v:g.n7[ci]})).filter(l=>l.v.some(v=>v)),
-      unit:"tankers per day, 7-day average",dec:1,tipUnit:"tankers/day"});
-    glChart($("#glB"+k),$("#glBTip"+k),D,{layers:[{name:g.label,col:glCol(g.country),v:g.mb7}],unit:"mb/d, 7-day average",dec:2,tipUnit:"mb/d"}); });
+    glChart($("#glS"+k),$("#glSTip"+k),D,{layers:cls.map((c,ci)=>({name:c,col:GL_CLS_COL[c]||css('--ink-3'),v:daily?g.nD[ci]:g.n7[ci]})).filter(l=>l.v.some(v=>v)),
+      unit:daily?"tankers per day, daily":"tankers per day, 7-day average",dec:1,tipUnit:"tankers/day",avg:daily?sumL(g.n7):null});
+    glChart($("#glB"+k),$("#glBTip"+k),D,{layers:[{name:g.label,col:glCol(g.country),v:daily?g.mbD:g.mb7}],unit:daily?"mb/d, daily":"mb/d, 7-day average",
+      dec:2,tipUnit:"mb/d",avg:daily?g.mb7:null}); });
   const mapBox=$("#glMap"), W=Math.max(300,mapBox.clientWidth||600);
   mapBox.innerHTML=glMapSvg(D,rows,W);
   const mt=$("#glMapTip");
