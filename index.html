@@ -23159,6 +23159,8 @@ const GULF_DATA = {"meta":{"asof":"2026-11-17","start":"2026-07-21","generated":
      registry's condensate terminals (South Pars, Ras Laffan) are in no crude figure; their own card states
      those loadings as condensate (glCond).
    - condensate list's terminal cell wraps on a phone (.gl-cd-list; tabs/gulf_loadings.py PAGE_JS_MARK5).
+   - condensate card names each terminal's cargo (Jason 2026-11-17; tabs/gulf_loadings.py PAGE_JS_MARK6): "Qatar condensate:
+     Ras Laffan", "Iran condensate: Assaluyeh (South Pars)" on the legend, hover and list.
    The 11-07 draft's "waiting at anchor" (single-look daily counts; Fujairah's bunkering anchorage read
    60+ tankers on some looks) and "eyes on the berths" coverage cards were left off at install
    (2026-11-12): single-day readings and data-coverage evidence, not a reading of loadings.
@@ -23494,7 +23496,7 @@ function glCond(D){
   const N=glNDays(D), f=glFirst(D), all=glRowObjs(D).filter(r=>terms.includes(r.term)&&glKeep(r));
   const L=terms.map(i=>{ const t=D.terminals[i], mb=new Array(N).fill(0);
       all.filter(r=>r.term===i).forEach(r=>glSp(r).forEach(([d,w])=>{ if(d>=0&&d<N) mb[d]+=r.mb*w; }));
-      return {name:`${t.country}: ${t.name}`,col:glCol(t.country),mb7:glRoll(mb).slice(f),mbD:mb.slice(f)}; })
+      return {name:`${t.country} condensate: ${t.name}`,col:glCol(t.country),mb7:glRoll(mb).slice(f),mbD:mb.slice(f)}; })
     .filter(l=>l.mb7.some(v=>v));
   if(!L.length) return null;
   return {L,l7:glLast7(D,all,0),list:all.filter(r=>r.day>=f).sort((a,b)=>b.day-a.day||a.term-b.term)};
@@ -23503,7 +23505,7 @@ function glCondTable(D,list){
   if(!list.length) return "";
   const T=D.terminals;
   return `<div class="gl-tbl gl-cd-list"><table><thead><tr><th>Date</th><th>Terminal</th><th>Size</th><th>Est. mb</th></tr></thead><tbody>
-    ${list.map(r=>`<tr><td>${glFmtD(glDate(D,r.day))}</td><td>${glEsc(T[r.term].name)}, ${glEsc(T[r.term].country)}</td><td><i class="swatch" style="background:${GL_CLS_COL[r.cls]||css('--ink-3')}"></i>${glEsc(r.cls)}</td><td>${r.mb.toFixed(2)}</td></tr>`).join("")}
+    ${list.map(r=>`<tr><td>${glFmtD(glDate(D,r.day))}</td><td>${glEsc(T[r.term].country)} condensate: ${glEsc(T[r.term].name)}</td><td><i class="swatch" style="background:${GL_CLS_COL[r.cls]||css('--ink-3')}"></i>${glEsc(r.cls)}</td><td>${r.mb.toFixed(2)}</td></tr>`).join("")}
   </tbody></table></div>`;
 }
 function renderGulfLoadings(){
