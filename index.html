@@ -11617,8 +11617,8 @@ const INV_DATA = {
           "label": "TSA checkpoint travelers \u2014 U.S. (monthly avg of daily)",
           "unit": "mn travelers/day",
           "src": "TSA checkpoint travel numbers (tsa.gov, public domain)",
-          "asOf": "2026-11-16",
-          "partialDays": 16
+          "asOf": "2026-11-17",
+          "partialDays": 17
         },
         {
           "code": "DERIV_DOS_JET",
@@ -12485,7 +12485,7 @@ const INV_DATA = {
             2.477,
             2.354,
             2.503,
-            2.363,
+            2.339,
             null
           ]
         },
@@ -13433,7 +13433,7 @@ const INV_DATA = {
             -0.211,
             -0.123,
             0.149,
-            -0.14,
+            -0.164,
             null
           ]
         },
@@ -21492,6 +21492,7 @@ function renderTradeIdeas(){
       <p class="tiwhy">${it.why}</p>
       <ul class="tidrv">${drv}</ul>
       <p class="tiinval"><b>What would make this wrong:</b> ${it.invalidation}</p>
+      ${it.source?`<p class="cotnote" style="margin:4px 2px 0">Source: ${it.source}</p>`:""}
       ${it.exposure&&it.exposure!=='—'?`<p class="tifac">Exposure: <b>${it.exposure}</b></p>`:""}
       ${(()=>{ /* the Products note is not a case against crude length (Jason, 2026-10-21); every other
         bearish note counts - INCLUDING the ARA, Fujairah and Singapore hub notes (his call). */
