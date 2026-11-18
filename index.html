@@ -20676,25 +20676,32 @@ function kbAccount(D){
       +turnRow(null,"Difference",kbS(C.net[i]-C.stock_change[i])); });
 }
 
-/* Kpler's newest global runs path against the balance table on this tab. The Turnarounds
-   headline chart's runs line IS the table's runs row (turnarounds.tie_runs_to_balance: finished
-   months must tie within 100 kb/d; issue 17's worst is 44), so the gap is a real revision, not a
-   difference of basis. Runs only: the monthly refinery report carries no supply, OECD split or
-   demand rows, so the balance cards stay on their own vintage (kpler_balances.py's identities
-   would break on a part-updated table). The card retires itself once a newer table is saved. */
+/* Kpler's refinery report (the Turnarounds tab's runs outlook) against the balance table on this
+   tab. The Turnarounds headline chart's runs line IS the table's runs row
+   (turnarounds.tie_runs_to_balance: finished months must tie within 100 kb/d; issue 17's worst is
+   44), so a gap is a real revision, not a difference of basis. Runs only: the monthly refinery
+   report carries no supply, OECD split or demand rows, so the balance cards stay on their own
+   vintage. The card stays on whichever of the two is newer (Jason: "it helps the reader see what
+   has changed"): each line keeps its colour, the bars are always the newer view minus the older,
+   and the labels carry each one's Kpler date. */
+function kbDay(d){ return d? `${+d.slice(8,10)} ${TURN_MON[+d.slice(5,7)-1]}` : ""; }
 function kbRunsCmp(D){
   const T=(typeof TURN_DATA!=="undefined")?TURN_DATA:null, C=kbP(D,"crude"), M=D.meta||{};
-  if(!T||!T.offline||!T.meta||!C||!C.runs||!M.snapshot||!(T.meta.published>M.snapshot)) return null;
+  const rDate=T&&T.meta&&T.meta.published, bDate=(C&&C.updated)||M.snapshot;
+  if(!T||!T.offline||!rDate||!C||!C.runs||!bDate||!M.current) return null;
   const O=T.offline, at=O.months.map(m=>C.months.indexOf(m));
   const I=O.months.map((_,i)=>i).filter(i=>at[i]>=0&&O.runs[i]!=null&&C.runs[at[i]]!=null);
   if(I.length<4) return null;
-  const months=I.map(i=>O.months[i]), labels=I.map(i=>O.labels[i]);
-  const nu=I.map(i=>O.runs[i]/1000), old=I.map(i=>C.runs[at[i]]), dif=nu.map((v,i)=>v-old[i]);
+  const refNewer=rDate>bDate, months=I.map(i=>O.months[i]), labels=I.map(i=>O.labels[i]);
+  const rep=I.map(i=>O.runs[i]/1000), bal=I.map(i=>C.runs[at[i]]);
+  const dif=rep.map((v,i)=>refNewer? v-bal[i] : bal[i]-v);
   const fi=months.findIndex(m=>m>=M.current);
   const by={}; months.forEach((m,i)=>{ if(m<M.current) return;
     const q=`Q${Math.floor((+m.slice(5,7)-1)/3)+1}-${m.slice(2,4)}`; (by[q]=by[q]||[]).push(dif[i]); });
   const qs=Object.entries(by).filter(([,v])=>v.length===3).map(([l,v])=>({l,d:kbAvg(v)}));
-  return {labels,nu,old,dif,fi,qs,newLab:turnLab(T.meta.published.slice(0,7)),oldLab:turnLab(M.snapshot.slice(0,7))};
+  const repLab=`${kbDay(rDate)} refinery report`, balLab=`${kbDay(bDate)} balance table`;
+  return {labels,rep,bal,dif,fi,qs,refNewer,repLab,balLab,
+          newLab:refNewer?repLab:balLab, oldLab:refNewer?balLab:repLab};
 }
 function kbRunsChart(R){
   const svg=$("#kbRunCmp"); if(!R||!svg) return;
@@ -20702,23 +20709,23 @@ function kbRunsChart(R){
   const m={l:narrow?36:44, r:10, t:24, b:26};
   const hA=Math.round(Math.min(230,Math.max(160,W*0.28))), hB=Math.round(Math.max(76,hA*0.38)), g=36;
   const tA=m.t, tB=tA+hA+g, H=tB+hB+m.b, iw=W-m.l-m.r, band=iw/n, X=i=>m.l+band*(i+0.5);
-  const F=kbFrame(svg,W,H), vs=R.nu.concat(R.old);
+  const F=kbFrame(svg,W,H), vs=R.rep.concat(R.bal);
   const T=turnTicks(Math.min(...vs)-0.2, Math.max(...vs)+0.2, narrow?4:5), yA=v=>tA+hA*(T.hi-v)/(T.hi-T.lo);
   if(R.fi>=0) kbShade(F, m.l+band*R.fi, tA, W-m.r, tB+hB);
   kbAxis(F,m,W,T.ticks,yA);
   kbTitle(F,m.l,tA-10,"Global refinery runs, mb/d");
-  kbLine(F,R.old,X,yA,KB_C.supply); kbLine(F,R.nu,X,yA,TURN_C.runs);
+  kbLine(F,R.bal,X,yA,KB_C.supply); kbLine(F,R.rep,X,yA,TURN_C.runs);
   const lo=Math.min(0,...R.dif), hi=Math.max(0,...R.dif), pad=(hi-lo)*0.2||0.2;
   const d0=lo<0?lo-pad:0, d1=hi+pad, yB=v=>tB+hB*(d1-v)/(d1-d0);
   kbAxis(F,m,W,[...new Set([...niceTicks(d0,d1,3),0])],yB,t=>(t>0?"+":"")+t);
-  kbTitle(F,m.l,tB-10,"New outlook minus balance table, mb/d");
+  kbTitle(F,m.l,tB-10,`${R.refNewer?"Refinery report minus balance table":"Balance table minus refinery report"}, mb/d`);
   kbBars(F,R.dif,X,yB,Math.min(band*0.5,30),R.fi<0?n:R.fi);
   if(band>=34) R.dif.forEach((v,i)=>{ if(Math.abs(v)>=0.05) F.P.push(`<text x="${X(i)}" y="${v>=0?yB(v)-4:yB(v)+11}" text-anchor="middle" font-size="9.5" fill="${F.cI2}">${kbS(v,1)}</text>`); });
   kbXLabels(F,R.labels,X,H,iw);
   F.P.push(`<rect class="fbov" x="${m.l}" y="${tA}" width="${iw}" height="${tB+hB-tA}" fill="transparent"/>`);
   svg.innerHTML=F.P.join("");
   fbHover(svg,"kbRunCmpTip",W,H,{l:m.l,r:m.r,t:tA,b:H-(tB+hB)},n,true,i=>`<b>${R.labels[i]}</b> <span class="mut">${i>=R.fi&&R.fi>=0?"forecast":"actual"} · mb/d</span>`
-    +turnRow(TURN_C.runs,`${R.newLab} outlook`,R.nu[i].toFixed(1))+turnRow(KB_C.supply,`${R.oldLab} balance table`,R.old[i].toFixed(1))+turnRow(null,"Change",kbS(R.dif[i])));
+    +turnRow(TURN_C.runs,R.repLab,R.rep[i].toFixed(1))+turnRow(KB_C.supply,R.balLab,R.bal[i].toFixed(1))+turnRow(null,"Change",kbS(R.dif[i])));
 }
 function renderKplerBalances(){
   const box=$("#fbKpler"); if(!box) return;
@@ -20745,9 +20752,12 @@ function renderKplerBalances(){
     const RUNP=kbRunParts(C);
     h+=`<div class="chartgrid">${chg("kbSup","Kpler: global crude supply — change by producer group",KB_SUPPLY)}${RUNP.length?chg("kbRun","Kpler: global refinery runs — change by region",RUNP):""}</div>`;
     if(RC){ const q=RC.qs.map(o=>`${Math.abs(o.d).toFixed(2)} mb/d ${o.d<0?"lower":"higher"} in ${o.l}`).join(" and ");
-      h+=`<section class="card"><h2>Kpler: global refinery runs — new outlook vs balance table</h2>
-      <p class="csub">${q?`Kpler's ${RC.newLab} refinery report puts global runs ${q} than its ${RC.oldLab} balance table, so refiners take ${RC.qs[0].d<0?"less":"more"} crude than the balances on this tab show`:`Kpler's ${RC.newLab} refinery report against its ${RC.oldLab} balance table`}</p>
-      ${leg([[TURN_C.runs,`${RC.newLab} outlook`,1],[KB_C.supply,`${RC.oldLab} balance table`,1]].concat(RC.dif.some(v=>v<=-0.05)?[[neg,"Lower"]]:[],RC.dif.some(v=>v>=0.05)?[[pos,"Higher"]]:[]))}
+      const sub=!q? `Kpler's ${RC.newLab} against its ${RC.oldLab}`
+        : RC.refNewer? `Kpler's ${RC.repLab} puts global runs ${q} than its ${RC.balLab}, so refiners take ${RC.qs[0].d<0?"less":"more"} crude than the balances on this tab show`
+        : `Kpler's ${RC.balLab} puts global runs ${q} than its ${RC.repLab}`;
+      h+=`<section class="card"><h2>Kpler: global refinery runs — refinery report vs balance table</h2>
+      <p class="csub">${sub}</p>
+      ${leg([[TURN_C.runs,RC.repLab,1],[KB_C.supply,RC.balLab,1]].concat(RC.dif.some(v=>v<=-0.05)?[[neg,"Lower"]]:[],RC.dif.some(v=>v>=0.05)?[[pos,"Higher"]]:[]))}
       <div class="chartbox"><div class="tip" id="kbRunCmpTip"></div><svg id="kbRunCmp"></svg></div>${kbSrc()}</section>`; }
     const G=(typeof FB_DATA!=="undefined"&&FB_DATA&&FB_DATA.global_crude_balance)||null;
     let vsSub="";
