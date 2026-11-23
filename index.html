@@ -23211,6 +23211,8 @@ const GULF_DATA = {"meta":{"asof":"2026-11-22","start":"2026-07-26","generated":
    - a day fades until every terminal is looked at after it (Jason 2026-11-22, "Go ahead"; tabs/gulf_loadings.py PAGE_JS_MARK7): on the
      country chart a day not every terminal has been looked at after is washed out and hatched, its hover names them;
      its 7-day / 30-day lines and each country card's 7-day line end at the last day every terminal was (glPend).
+   - each card's ships chart ends its 7-day line at the same day (2026-11-22; tabs/gulf_loadings.py PAGE_JS_MARK8): the card's ships chart
+     follows the card's barrels chart - the Daily view's 7-day line and a one-class 7-day outline end there too.
    The 11-07 draft's "waiting at anchor" (single-look daily counts; Fujairah's bunkering anchorage read
    60+ tankers on some looks) and "eyes on the berths" coverage cards were left off at install
    (2026-11-12): single-day readings and data-coverage evidence, not a reading of loadings.
@@ -23658,9 +23660,11 @@ function renderGulfLoadings(){
       +(pend?`<span><i class="swatch gl-pdk"></i>Faded: not every terminal looked at yet</span>`:"");
   else $("#glTlCard").remove();
   groups.forEach((g,k)=>{
-    glChart($("#glS"+k),$("#glSTip"+k),D,{layers:cls.map((c,ci)=>({name:c,col:GL_CLS_COL[c]||css('--ink-3'),v:daily?g.nD[ci]:g.n7[ci]})).filter(l=>l.v.some(v=>v)),
-      unit:daily?"tankers per day, daily":"tankers per day, 7-day average",dec:1,tipUnit:"tankers/day",avg:daily?sumL(g.n7):null});
     const pg=glPend(D,g.terms);     // the card's own terminals (PAGE_JS_MARK7): its 7-day line ends at their last final day
+    // the ships chart the same (PAGE_JS_MARK8): its Daily view's 7-day line, and a one-class chart's 7-day outline
+    const sEnd=pg&&!daily?pg.from-1-f:null;
+    glChart($("#glS"+k),$("#glSTip"+k),D,{layers:cls.map((c,ci)=>({name:c,col:GL_CLS_COL[c]||css('--ink-3'),v:daily?g.nD[ci]:g.n7[ci]})).filter(l=>l.v.some(v=>v)),
+      unit:daily?"tankers per day, daily":"tankers per day, 7-day average",dec:1,tipUnit:"tankers/day",avg:daily?cut(sumL(g.n7),pg):null,lineEnd:sEnd});
     glChart($("#glB"+k),$("#glBTip"+k),D,{layers:[{name:g.label,col:glCol(g.country),v:daily?g.mbD:g.mb7}],unit:daily?"mb/d, daily":"mb/d, 7-day average",
       dec:2,tipUnit:"mb/d",avg:daily?cut(g.mb7,pg):null,lineEnd:pg&&!daily?pg.from-1-f:null}); });
   if(cd&&glChart($("#glCd"),$("#glCdTip"),D,{layers:cd.L.map(l=>({name:l.name,col:l.col,v:daily?l.mbD:l.mb7})),
