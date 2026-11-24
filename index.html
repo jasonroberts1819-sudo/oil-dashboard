@@ -19759,7 +19759,11 @@ function renderMacro(){
   const regRet=(M.wtiReturn||{})[rw]||0;
   const ST=(M.stats||{})[w]||{};
   const zfoc=(M.wtiFocusZ||{})[w]||{};
-  const dir = (regRet>=0?'+':'')+(regRet*100).toFixed(Math.abs(regRet)<0.001?2:1)+'%';   // regime card = its own window
+  /* wtiReturn is a summed LOG return (the sign is all the direction gate reads). Printed raw it overstated
+     every fall and understated every rise - -14.9% shown for a -13.8% move - while the timeline's own
+     segments convert with exp(). Shown as the simple move since 2026-11-24. */  // rollover-ok: decision date
+  const regPct=(Math.exp(regRet)-1)*100;
+  const dir = (regPct>=0?'+':'')+regPct.toFixed(Math.abs(regPct)<0.1?2:1)+'%';   // regime card = its own window
   const regRows=reg.ranked.map(R=>{
     const win=R.name===reg.top.name&&!reg.mixed;
     const a=R.alignment, wd=Math.min(50,Math.abs(a)*50), left=a<0?50-wd:50;   // bar = alignment
@@ -19948,7 +19952,7 @@ function renderMacro(){
       const tR=REGIMES.find(x=>x.name===RB.today.top), tRet=(M.wtiReturn||{})['28'];
       const tGated=(RB.today.gated!=null)? !!RB.today.gated : (!!tR&&tRet!=null&&((tR.dir==='up'&&tRet<0)||(tR.dir==='down'&&tRet>0)));
       const tm=tGated
-        ? ` (today: the closest pattern, ${RB.today.top}, is ruled out because WTI is ${(tRet*100).toFixed(1)}% over 28d)`
+        ? ` (today: the closest pattern, ${RB.today.top}, is ruled out because WTI is ${((Math.exp(tRet)-1)*100).toFixed(1)}% over 28d)`
         : (RB.today.fit!=null&&RB.today.bar!=null)
         ? ` (today: ${RB.today.top} fit ${RB.today.fit.toFixed(3)} vs its ${RB.today.bar} bar, `
           + (RB.today.fit>RB.today.bar? `clear by ${(RB.today.fit-RB.today.bar).toFixed(3)}`
